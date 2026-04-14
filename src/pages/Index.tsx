@@ -6,14 +6,24 @@ import TodayTab from '@/components/TodayTab';
 import WeeklyTab from '@/components/WeeklyTab';
 import AdvancedTab from '@/components/AdvancedTab';
 import NewTaskDialog from '@/components/NewTaskDialog';
-import { LayoutDashboard, ListTodo, CalendarDays, Calendar, Zap } from 'lucide-react';
+import DailyQuote from '@/components/DailyQuote';
+import HabitsTracker from '@/components/HabitsTracker';
+import ReflectionJournal from '@/components/ReflectionJournal';
+import Heatmap from '@/components/Heatmap';
+import WeeklyReport from '@/components/WeeklyReport';
+import ProductiveHours from '@/components/ProductiveHours';
+import ChallengesAndPunishments from '@/components/ChallengesAndPunishments';
+import NightSummary from '@/components/NightSummary';
+import { LayoutDashboard, ListTodo, CalendarDays, Calendar, Zap, BarChart3, BookOpen } from 'lucide-react';
 
 const tabs = [
   { id: 'dashboard', label: 'ראשי', icon: LayoutDashboard },
   { id: 'tasks', label: 'משימות', icon: ListTodo },
   { id: 'today', label: 'היום', icon: CalendarDays },
   { id: 'weekly', label: 'לו״ז שבועי', icon: Calendar },
+  { id: 'analytics', label: 'ניתוח', icon: BarChart3 },
   { id: 'advanced', label: 'מצב מתקדם', icon: Zap },
+  { id: 'growth', label: 'צמיחה', icon: BookOpen },
 ];
 
 const AppContent = () => {
@@ -36,7 +46,7 @@ const AppContent = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-1.5 px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors border-b-2 ${
+                className={`flex items-center gap-1.5 px-3 py-3 text-sm font-medium whitespace-nowrap transition-colors border-b-2 ${
                   activeTab === tab.id
                     ? 'border-primary text-primary'
                     : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -51,11 +61,35 @@ const AppContent = () => {
       </nav>
 
       <main className="max-w-4xl mx-auto px-4 py-6">
-        {activeTab === 'dashboard' && <DashboardTab />}
+        {activeTab === 'dashboard' && (
+          <div className="space-y-6">
+            <DailyQuote />
+            <DashboardTab />
+            <NightSummary />
+          </div>
+        )}
         {activeTab === 'tasks' && <TasksTab />}
-        {activeTab === 'today' && <TodayTab />}
+        {activeTab === 'today' && (
+          <div className="space-y-6">
+            <TodayTab />
+            <HabitsTracker />
+          </div>
+        )}
         {activeTab === 'weekly' && <WeeklyTab />}
+        {activeTab === 'analytics' && (
+          <div className="space-y-6">
+            <Heatmap />
+            <WeeklyReport />
+            <ProductiveHours />
+          </div>
+        )}
         {activeTab === 'advanced' && <AdvancedTab />}
+        {activeTab === 'growth' && (
+          <div className="space-y-6">
+            <ChallengesAndPunishments />
+            <ReflectionJournal />
+          </div>
+        )}
       </main>
     </div>
   );
