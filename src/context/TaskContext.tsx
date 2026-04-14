@@ -71,7 +71,7 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
           category: t.category as Category,
           days: (t.days || []) as DayOfWeek[],
           completions: completionMap[t.id] || {},
-          workoutDetails: t.workout_details as Task['workoutDetails'],
+          workoutDetails: t.workout_details as unknown as Task['workoutDetails'],
         }));
         setTasks(mappedTasks);
       }
@@ -108,7 +108,7 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
         category: data.category as Category,
         days: (data.days || []) as DayOfWeek[],
         completions: {},
-        workoutDetails: data.workout_details as Task['workoutDetails'],
+        workoutDetails: data.workout_details as unknown as Task['workoutDetails'],
       }]);
     }
   }, [user]);
