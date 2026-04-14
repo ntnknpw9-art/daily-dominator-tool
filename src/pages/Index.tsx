@@ -27,7 +27,12 @@ import SettingsTab from '@/components/SettingsTab';
 import FriendsSystem from '@/components/FriendsSystem';
 import LeaguesAndSeasons from '@/components/LeaguesAndSeasons';
 import ProgressPhotos from '@/components/ProgressPhotos';
-import { LayoutDashboard, ListTodo, CalendarDays, Calendar, Zap, BarChart3, BookOpen, LogOut, Users, Timer, Apple, Settings, Camera } from 'lucide-react';
+import DailySpinWheel from '@/components/DailySpinWheel';
+import DisciplineDNA from '@/components/DisciplineDNA';
+import DuelSystem from '@/components/DuelSystem';
+import MotivationalSplash from '@/components/MotivationalSplash';
+import { ConfettiOverlay, useConfetti } from '@/components/CinematicEffects';
+import { LayoutDashboard, ListTodo, CalendarDays, Calendar, Zap, BarChart3, BookOpen, LogOut, Users, Timer, Apple, Settings, Camera, Dna } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const tabs = [
