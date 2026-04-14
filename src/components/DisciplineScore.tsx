@@ -75,6 +75,10 @@ const DisciplineScore = () => {
     return { score, completionPct, streak, hardTaskBonus, trend, weekScores: scores };
   }, [getDailyCompletionPercent, stats, tasks]);
 
+  const animatedScore = useCountUp(score);
+  const animatedCompletion = useCountUp(completionPct);
+  const animatedHard = useCountUp(hardTaskBonus);
+
   const getScoreColor = (s: number) => {
     if (s >= 80) return 'text-green-400';
     if (s >= 60) return 'text-accent';
