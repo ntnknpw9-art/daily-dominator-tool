@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
-import { Apple, Plus, Trash2, Calculator, Loader2, UtensilsCrossed, Target, TrendingUp, Calendar } from 'lucide-react';
+import { Apple, Plus, Trash2, Calculator, Loader2, UtensilsCrossed, Target, TrendingUp, Calendar, Camera, X, ScanLine, ChefHat } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface DailyNeeds {
