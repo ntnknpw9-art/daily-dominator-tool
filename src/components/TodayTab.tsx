@@ -1,20 +1,20 @@
 import { useTaskContext } from '@/context/TaskContext';
-import { formatDate } from '@/lib/dateUtils';
-import { ALL_DAYS, DayOfWeek } from '@/types/task';
+import { getNowInIsrael, getTodayStr, formatFullHebrew, getHebrewDayFromDate } from '@/lib/dateUtils';
+import { DayOfWeek } from '@/types/task';
 import { Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const TodayTab = () => {
   const { getTodayTasks, toggleCompletion } = useTaskContext();
-  const today = new Date();
-  const todayStr = formatDate(today);
+  const today = getNowInIsrael();
+  const todayStr = getTodayStr();
   const todayTasks = getTodayTasks();
-  const hebrewDay = ALL_DAYS[today.getDay()] as DayOfWeek;
+  const hebrewDay = getHebrewDayFromDate(today) as DayOfWeek;
 
   return (
     <div className="space-y-4">
       <div className="text-center text-muted-foreground text-sm">
-        {today.toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+        {formatFullHebrew(today)}
       </div>
 
       {todayTasks.length === 0 && (

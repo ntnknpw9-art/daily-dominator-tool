@@ -1,4 +1,5 @@
 import { useTaskContext } from '@/context/TaskContext';
+import { getNowInIsrael } from '@/lib/dateUtils';
 import { useMemo, useState } from 'react';
 
 const DashboardTab = () => {
@@ -13,11 +14,11 @@ const DashboardTab = () => {
   const chartData = useMemo(() => {
     const data: { date: string; dayName: string; percent: number }[] = [];
     for (let i = 13; i >= 0; i--) {
-      const d = new Date();
+      const d = getNowInIsrael();
       d.setDate(d.getDate() - i);
       data.push({
-        date: d.toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' }),
-        dayName: d.toLocaleDateString('he-IL', { weekday: 'short' }),
+        date: d.toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric', timeZone: 'Asia/Jerusalem' }),
+        dayName: d.toLocaleDateString('he-IL', { weekday: 'short', timeZone: 'Asia/Jerusalem' }),
         percent: getDailyCompletionPercent(d),
       });
     }
