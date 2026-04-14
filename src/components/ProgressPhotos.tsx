@@ -312,7 +312,60 @@ const ProgressPhotos = () => {
           </>
         )}
 
-        {viewMode === 'community' && (
+        {viewMode === 'compare' && (
+          <div className="space-y-4">
+            {/* Photo selection */}
+            {(!compareBefore || !compareAfter) && (
+              <div className="space-y-3">
+                {!compareBefore && (
+                  <div>
+                    <h4 className="text-sm font-semibold text-muted-foreground mb-2">📷 בחר תמונת לפני:</h4>
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                      {myBefore.map(p => (
+                        <button key={p.id} onClick={() => setCompareBefore(p)} className="rounded-lg overflow-hidden border-2 border-border/30 hover:border-primary transition-colors">
+                          <img src={p.image_url} alt="" className="w-full aspect-square object-cover" />
+                          <span className="text-[10px] text-muted-foreground block py-0.5">{p.photo_date}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {compareBefore && !compareAfter && (
+                  <div>
+                    <h4 className="text-sm font-semibold text-muted-foreground mb-2">💪 בחר תמונת אחרי:</h4>
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                      {myAfter.map(p => (
+                        <button key={p.id} onClick={() => setCompareAfter(p)} className="rounded-lg overflow-hidden border-2 border-border/30 hover:border-primary transition-colors">
+                          <img src={p.image_url} alt="" className="w-full aspect-square object-cover" />
+                          <span className="text-[10px] text-muted-foreground block py-0.5">{p.photo_date}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Slider comparison */}
+            {compareBefore && compareAfter && (
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">גרור את הסליידר להשוואה</span>
+                  <Button size="sm" variant="ghost" onClick={() => { setCompareBefore(null); setCompareAfter(null); }}>
+                    <X className="w-4 h-4 ml-1" />
+                    בחר מחדש
+                  </Button>
+                </div>
+                <BeforeAfterSlider before={compareBefore.image_url} after={compareAfter.image_url} />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>📷 לפני — {compareBefore.photo_date}</span>
+                  <span>💪 אחרי — {compareAfter.photo_date}</span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
           <div>
             {communityPhotos.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
