@@ -60,11 +60,11 @@ const AppContent = () => {
               </a>
             </Button>
             <NewTaskDialog />
-            <Button variant="ghost" size="icon" onClick={() => setActiveTab('settings')} title="הגדרות">
-              <Settings className="w-4 h-4" />
-            </Button>
             <Button variant="ghost" size="icon" onClick={signOut} title="התנתק">
               <LogOut className="w-4 h-4" />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={() => setActiveTab('settings')} title="הגדרות">
+              <Settings className="w-4 h-4" />
             </Button>
           </div>
         </div>
