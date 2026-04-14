@@ -507,7 +507,7 @@ const CalorieTracker = () => {
     setServingCount(1);
   };
 
-
+  const totals = foods.reduce(
     (acc, f) => ({
       calories: acc.calories + f.calories,
       protein: acc.protein + f.protein,
