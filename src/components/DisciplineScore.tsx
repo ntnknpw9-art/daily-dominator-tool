@@ -128,7 +128,13 @@ const DisciplineScore = () => {
 
         {/* Big score */}
         <div className="text-center mb-4">
-          <div className={`text-7xl font-black tracking-tight transition-colors duration-500 ${getScoreColor(score)}`}>
+          <div
+            className={`text-7xl font-black tracking-tight transition-all duration-500 ${getScoreColor(score)}`}
+            style={score >= 80 ? {
+              textShadow: '0 0 20px hsl(142 70% 45% / 0.6), 0 0 40px hsl(142 70% 45% / 0.3), 0 0 60px hsl(142 70% 45% / 0.15)',
+              filter: 'brightness(1.15)',
+            } : undefined}
+          >
             {animatedScore}
           </div>
           <div className="text-xs font-bold tracking-[0.3em] text-muted-foreground mt-1 uppercase">
