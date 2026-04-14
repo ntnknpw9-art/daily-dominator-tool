@@ -8,6 +8,7 @@ import { getHebrewDayFromDate } from '@/lib/dateUtils';
 import { isSoundEnabled, setSoundEnabled } from '@/lib/sounds';
 
 const AdvancedTab = () => {
+  const [soundOn, setSoundOn] = useState(isSoundEnabled);
   const ctx = useTaskContext();
   const { tasks, stats, getTodayTasks, toggleCompletion, getDailyCompletionPercent, getCategoryStats, getFailureAnalysis, timerTaskId, setTimerTaskId } = ctx;
 
@@ -255,14 +256,13 @@ const AdvancedTab = () => {
             size="sm"
             className="gap-2"
             onClick={() => {
-              const newVal = !isSoundEnabled();
+              const newVal = !soundOn;
               setSoundEnabled(newVal);
-              // Force re-render
-              setTimerTaskId(timerTaskId);
+              setSoundOn(newVal);
             }}
           >
-            {isSoundEnabled() ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-            {isSoundEnabled() ? 'מופעל' : 'מושבת'}
+            {soundOn ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+            {soundOn ? 'מופעל' : 'מושבת'}
           </Button>
         </div>
       </div>
