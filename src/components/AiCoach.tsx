@@ -1,8 +1,10 @@
-import { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, X, MessageCircle, BarChart3 } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { Send, Bot, User, X, MessageCircle, BarChart3, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useTaskContext } from '@/context/TaskContext';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { getNowInIsrael, getTodayStr, formatDateHebrew } from '@/lib/dateUtils';
 import ReactMarkdown from 'react-markdown';
 
@@ -15,12 +17,42 @@ const AiCoach = () => {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { user } = useAuth();
   const { tasks, stats, getTotalCompletions, getTodayTasks, getDailyCompletionPercent, getCategoryStats, getFailureAnalysis } = useTaskContext();
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages]);
+
+  // Load history from DB
+  useEffect(() => {
+    if (!user || historyLoaded) return;
+    supabase
+      .from('ai_chat_messages')
+      .select('role, content')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: true })
+      .limit(100)
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          setMessages(data.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })));
+        }
+        setHistoryLoaded(true);
+      });
+  }, [user, historyLoaded]);
+
+  const saveMessage = useCallback((role: 'user' | 'assistant', content: string) => {
+    if (!user) return;
+    supabase.from('ai_chat_messages').insert({ user_id: user.id, role, content }).then();
+  }, [user]);
+
+  const clearHistory = useCallback(async () => {
+    if (!user) return;
+    await supabase.from('ai_chat_messages').delete().eq('user_id', user.id);
+    setMessages([]);
+  }, [user]);
 
   const buildContext = () => {
     const now = getNowInIsrael();
@@ -28,29 +60,22 @@ const AiCoach = () => {
     const todayTasks = getTodayTasks();
     const completed = todayTasks.filter(t => t.completions[todayStr]);
 
-    // Per-task completion stats over last 7 days
     const taskStats = tasks.map(t => {
       const dates: string[] = [];
       for (let i = 0; i < 7; i++) {
         const d = new Date(now);
         d.setDate(d.getDate() - i);
-        const ds = d.toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
-        dates.push(ds);
+        dates.push(d.toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' }));
       }
-      const totalDays = dates.length;
       const completedDays = dates.filter(d => t.completions[d]).length;
-      const missedDays = dates.filter(d => !t.completions[d]);
       return {
-        name: t.name,
-        category: t.category,
-        time: `${t.startTime}-${t.endTime}`,
-        days: t.days.join(','),
-        completionRate: Math.round((completedDays / totalDays) * 100),
-        recentMisses: missedDays.length,
+        name: t.name, category: t.category,
+        time: `${t.startTime}-${t.endTime}`, days: t.days.join(','),
+        completionRate: Math.round((completedDays / dates.length) * 100),
+        recentMisses: dates.filter(d => !t.completions[d]).length,
       };
     });
 
-    // Daily completion over last 7 days
     const dailyScores: string[] = [];
     for (let i = 6; i >= 0; i--) {
       const d = new Date(now);
@@ -61,7 +86,6 @@ const AiCoach = () => {
       dailyScores.push(`${dayName} (${formatDateHebrew(ds)}): ${pct}%`);
     }
 
-    // Time-slot analysis
     const timeSlots = { morning: { total: 0, done: 0 }, afternoon: { total: 0, done: 0 }, evening: { total: 0, done: 0 } };
     todayTasks.forEach(t => {
       const hour = parseInt(t.startTime.split(':')[0]);
@@ -153,8 +177,14 @@ ${todayTasks.map(t => `- ${t.completions[todayStr] ? '✅' : '⬜'} ${t.name} ($
           } catch { /* partial */ }
         }
       }
+
+      // Save assistant message to DB
+      if (assistantSoFar) {
+        saveMessage('assistant', assistantSoFar);
+      }
     } catch (e: any) {
-      setMessages(prev => [...prev, { role: 'assistant', content: `❌ ${e.message || 'שגיאה זמנית. נסה שוב.'}` }]);
+      const errMsg = `❌ ${e.message || 'שגיאה זמנית. נסה שוב.'}`;
+      setMessages(prev => [...prev, { role: 'assistant', content: errMsg }]);
     }
     setLoading(false);
   };
@@ -165,14 +195,17 @@ ${todayTasks.map(t => `- ${t.completions[todayStr] ? '✅' : '⬜'} ${t.name} ($
     const allMsgs = [...messages, userMsg];
     setMessages(allMsgs);
     setInput('');
+    saveMessage('user', input);
     await streamResponse(allMsgs);
   };
 
   const analyzePerformance = async () => {
     if (loading) return;
-    const userMsg: Msg = { role: 'user', content: 'נתח את הביצועים שלי ותן לי פידבק מפורט עם המלצות לשינויים' };
+    const text = 'נתח את הביצועים שלי ותן לי פידבק מפורט עם המלצות לשינויים';
+    const userMsg: Msg = { role: 'user', content: text };
     const allMsgs = [...messages, userMsg];
     setMessages(allMsgs);
+    saveMessage('user', text);
     await streamResponse(allMsgs, 'analyze');
   };
 
@@ -206,6 +239,17 @@ ${todayTasks.map(t => `- ${t.completions[todayStr] ? '✅' : '⬜'} ${t.name} ($
             <BarChart3 className="w-3.5 h-3.5" />
             נתח ביצועים
           </Button>
+          {messages.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+              onClick={clearHistory}
+              title="מחק היסטוריה"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </Button>
+          )}
           <button onClick={() => setOpen(false)} className="text-muted-foreground hover:text-foreground">
             <X className="w-5 h-5" />
           </button>
