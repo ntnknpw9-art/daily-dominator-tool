@@ -51,9 +51,16 @@ const tabs = [
 const AppContent = () => {
   const { signOut } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [showSplash, setShowSplash] = useState(true);
+  const { fire: fireConfetti, particles } = useConfetti();
+
+  if (showSplash) {
+    return <MotivationalSplash onDismiss={() => setShowSplash(false)} />;
+  }
 
   return (
     <div className="min-h-screen bg-background">
+      <ConfettiOverlay particles={particles} />
       <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between gap-2">
           <h1 className="text-base sm:text-xl font-bold text-foreground whitespace-nowrap">🎯 מערכת המעקב שלך</h1>
