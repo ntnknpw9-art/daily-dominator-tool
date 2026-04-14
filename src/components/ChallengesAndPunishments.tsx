@@ -1,14 +1,9 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useTaskContext } from '@/context/TaskContext';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { getNowInIsrael, formatDate, getTodayStr } from '@/lib/dateUtils';
 import { Swords, Skull, Trophy } from 'lucide-react';
-
-interface ChallengeData {
-  activeChallenge: string | null;
-  startDate: string | null;
-  progress: number;
-  punishments: string[];
-}
 
 const WEEKLY_CHALLENGES = [
   { id: 'perfect5', name: '5 ימים מושלמים', description: '100% ביצוע ב-5 ימים השבוע', target: 5 },
@@ -26,37 +21,58 @@ const PUNISHMENTS = [
   'לקום 30 דקות מוקדם מחר',
 ];
 
+interface ChallengeData {
+  activeChallenge: string | null;
+  startDate: string | null;
+  progress: number;
+}
+
 const ChallengesAndPunishments = () => {
   const { getDailyCompletionPercent, stats } = useTaskContext();
+  const { user } = useAuth();
   const todayStr = getTodayStr();
 
-  const [challengeData, setChallengeData] = useState<ChallengeData>(() => {
-    const saved = localStorage.getItem('tracker-challenges');
-    return saved ? JSON.parse(saved) : { activeChallenge: null, startDate: null, progress: 0, punishments: [] };
-  });
+  const [challengeData, setChallengeData] = useState<ChallengeData>({ activeChallenge: null, startDate: null, progress: 0 });
 
   useEffect(() => {
-    localStorage.setItem('tracker-challenges', JSON.stringify(challengeData));
-  }, [challengeData]);
+    if (!user) return;
+    const fetch = async () => {
+      const { data } = await supabase
+        .from('challenges')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      if (data) {
+        setChallengeData({ activeChallenge: data.challenge_id, startDate: data.start_date, progress: data.progress || 0 });
+      }
+    };
+    fetch();
+  }, [user]);
 
   const dailyPercent = getDailyCompletionPercent(getNowInIsrael());
 
-  // Auto punishment when daily < 80%
   const todayPunishment = useMemo(() => {
     if (dailyPercent < 80 && dailyPercent > 0) {
-      const idx = new Date().getDay() % PUNISHMENTS.length;
-      return PUNISHMENTS[idx];
+      return PUNISHMENTS[new Date().getDay() % PUNISHMENTS.length];
     }
     return null;
   }, [dailyPercent]);
 
-  const startChallenge = (id: string) => {
-    setChallengeData({ activeChallenge: id, startDate: todayStr, progress: 0, punishments: [] });
+  const startChallenge = async (id: string) => {
+    if (!user) return;
+    setChallengeData({ activeChallenge: id, startDate: todayStr, progress: 0 });
+    await supabase.from('challenges').insert({
+      user_id: user.id,
+      challenge_id: id,
+      start_date: todayStr,
+      progress: 0,
+    });
   };
 
   const activeChallenge = WEEKLY_CHALLENGES.find(c => c.id === challengeData.activeChallenge);
 
-  // Leaderboard - best weeks
   const weeklyScores = useMemo(() => {
     const scores: { weekLabel: string; avg: number }[] = [];
     const today = getNowInIsrael();
@@ -78,12 +94,10 @@ const ChallengesAndPunishments = () => {
 
   return (
     <div className="space-y-4">
-      {/* Challenges */}
       <div className="glass-card p-5 animate-fade-in">
         <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
           <Swords className="w-5 h-5 text-primary" /> אתגרים שבועיים
         </h3>
-
         {activeChallenge ? (
           <div className="bg-primary/10 border border-primary/30 rounded-lg p-4">
             <div className="font-bold text-foreground">{activeChallenge.name}</div>
@@ -96,11 +110,8 @@ const ChallengesAndPunishments = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {WEEKLY_CHALLENGES.map(c => (
-              <button
-                key={c.id}
-                onClick={() => startChallenge(c.id)}
-                className="bg-secondary/30 rounded-lg p-3 text-right hover:bg-secondary/50 transition-all border border-transparent hover:border-primary/30"
-              >
+              <button key={c.id} onClick={() => startChallenge(c.id)}
+                className="bg-secondary/30 rounded-lg p-3 text-right hover:bg-secondary/50 transition-all border border-transparent hover:border-primary/30">
                 <div className="font-semibold text-sm">{c.name}</div>
                 <div className="text-xs text-muted-foreground">{c.description}</div>
               </button>
@@ -109,7 +120,6 @@ const ChallengesAndPunishments = () => {
         )}
       </div>
 
-      {/* Punishments */}
       <div className="glass-card p-5 animate-fade-in">
         <h3 className="text-lg font-bold mb-3 flex items-center gap-2">
           <Skull className="w-5 h-5 text-destructive" /> מערכת עונשים
@@ -131,7 +141,6 @@ const ChallengesAndPunishments = () => {
         )}
       </div>
 
-      {/* Leaderboard */}
       <div className="glass-card p-5 animate-fade-in">
         <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
           <Trophy className="w-5 h-5 text-accent" /> לוח מנהיגים — אתה נגד עצמך
@@ -154,7 +163,6 @@ const ChallengesAndPunishments = () => {
         </div>
       </div>
 
-      {/* No Retreat Mode */}
       {stats.streak === 0 && dailyPercent < 50 && (
         <div className="glass-card p-6 border-destructive/50 glow-red animate-shake text-center">
           <div className="text-4xl mb-3">💀</div>

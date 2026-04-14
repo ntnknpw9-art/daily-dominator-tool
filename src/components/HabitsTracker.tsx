@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
 import { getTodayStr } from '@/lib/dateUtils';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
 import { Droplets, Moon, Brain, BookOpen, Dumbbell } from 'lucide-react';
-
-interface HabitEntry {
-  [habitId: string]: boolean;
-}
 
 const HABITS = [
   { id: 'water', name: 'שתייה (2 ליטר)', icon: Droplets },
@@ -15,29 +13,41 @@ const HABITS = [
 ];
 
 const HabitsTracker = () => {
+  const { user } = useAuth();
   const todayStr = getTodayStr();
-
-  const [habits, setHabits] = useState<Record<string, HabitEntry>>(() => {
-    const saved = localStorage.getItem('tracker-habits');
-    return saved ? JSON.parse(saved) : {};
-  });
+  const [todayHabits, setTodayHabits] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
-    localStorage.setItem('tracker-habits', JSON.stringify(habits));
-  }, [habits]);
+    if (!user) return;
+    const fetch = async () => {
+      const { data } = await supabase
+        .from('habits')
+        .select('habit_id, completed')
+        .eq('user_id', user.id)
+        .eq('habit_date', todayStr);
+      if (data) {
+        const map: Record<string, boolean> = {};
+        data.forEach(h => { map[h.habit_id] = h.completed; });
+        setTodayHabits(map);
+      }
+    };
+    fetch();
+  }, [user, todayStr]);
 
-  const todayHabits = habits[todayStr] || {};
-  const completedCount = HABITS.filter(h => todayHabits[h.id]).length;
+  const toggleHabit = async (habitId: string) => {
+    if (!user) return;
+    const newVal = !todayHabits[habitId];
+    setTodayHabits(prev => ({ ...prev, [habitId]: newVal }));
 
-  const toggleHabit = (habitId: string) => {
-    setHabits(prev => ({
-      ...prev,
-      [todayStr]: {
-        ...(prev[todayStr] || {}),
-        [habitId]: !(prev[todayStr]?.[habitId]),
-      },
-    }));
+    await supabase.from('habits').upsert({
+      user_id: user.id,
+      habit_date: todayStr,
+      habit_id: habitId,
+      completed: newVal,
+    }, { onConflict: 'user_id,habit_date,habit_id' });
   };
+
+  const completedCount = HABITS.filter(h => todayHabits[h.id]).length;
 
   return (
     <div className="glass-card p-5 animate-fade-in">
@@ -54,9 +64,7 @@ const HabitsTracker = () => {
               key={habit.id}
               onClick={() => toggleHabit(habit.id)}
               className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all ${
-                done
-                  ? 'bg-success/15 border border-success/30'
-                  : 'bg-secondary/30 border border-transparent hover:border-border'
+                done ? 'bg-success/15 border border-success/30' : 'bg-secondary/30 border border-transparent hover:border-border'
               }`}
             >
               <Icon className={`w-5 h-5 ${done ? 'text-success' : 'text-muted-foreground'}`} />
