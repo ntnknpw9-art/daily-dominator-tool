@@ -34,6 +34,7 @@ const tabs = [
   { id: 'advanced', label: 'מצב מתקדם', icon: Zap },
   { id: 'growth', label: 'צמיחה', icon: BookOpen },
   { id: 'focus', label: 'פוקוס', icon: Timer },
+  { id: 'nutrition', label: 'תזונה', icon: Apple },
 ];
 
 const AppContent = () => {
@@ -128,6 +129,11 @@ const AppContent = () => {
         {activeTab === 'focus' && (
           <div className="space-y-6">
             <PomodoroTimer />
+          </div>
+        )}
+        {activeTab === 'nutrition' && (
+          <div className="space-y-6">
+            <CalorieTracker />
           </div>
         )}
       </main>
