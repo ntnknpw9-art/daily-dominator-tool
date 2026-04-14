@@ -3,6 +3,7 @@ import { getNowInIsrael, getTodayStr, formatFullHebrew, getHebrewDayFromDate } f
 import { DayOfWeek } from '@/types/task';
 import { Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { playSuccessSound, playWarningSound, createParticleBurst, vibrate } from '@/lib/sounds';
 
 const TodayTab = () => {
   const { getTodayTasks, toggleCompletion } = useTaskContext();

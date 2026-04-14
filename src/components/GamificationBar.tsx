@@ -4,6 +4,7 @@ import { useTaskContext } from '@/context/TaskContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Flame, Star, Trophy, Zap } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { playAchievementSound } from '@/lib/sounds';
 
 const LEVEL_XP = [0, 100, 250, 500, 1000, 2000, 3500, 5500, 8000, 12000, 20000];
 
