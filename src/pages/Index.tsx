@@ -120,14 +120,14 @@ const AppContent = () => {
 
       {/* Mobile horizontal scroll nav (all tabs) */}
       <nav className="sm:hidden border-b border-border/50 bg-card/30 sticky top-[45px] z-40 overflow-x-auto scrollbar-hide">
-        <div className="flex gap-0 px-1">
+        <div className="flex gap-1 px-2">
           {tabs.map(tab => {
             const Icon = tab.icon;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-1.5 px-3 py-3 text-[13px] font-medium whitespace-nowrap transition-all border-b-2 touch-target ${
+                className={`flex items-center gap-2 px-3 py-3 text-[14px] font-medium whitespace-nowrap transition-all border-b-2 touch-target ${
                   activeTab === tab.id
                     ? 'border-primary text-primary'
                     : 'border-transparent text-muted-foreground active:text-foreground'
