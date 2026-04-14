@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Volume2, VolumeX, Sun, Moon } from 'lucide-react';
+import { Volume2, VolumeX, Sun, Moon, Bell, BellOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { isSoundEnabled, setSoundEnabled } from '@/lib/sounds';
@@ -28,6 +28,11 @@ if (typeof window !== 'undefined') {
 const SettingsTab = () => {
   const [soundOn, setSoundOn] = useState(isSoundEnabled);
   const [theme, setTheme] = useState<'dark' | 'light'>(getTheme);
+  const [notificationsOn, setNotificationsOn] = useState(() => {
+    if (typeof window === 'undefined') return true;
+    const val = localStorage.getItem('app_notifications_enabled');
+    return val === null ? true : val === 'true';
+  });
 
   const toggleTheme = () => {
     const newTheme = theme === 'dark' ? 'light' : 'dark';
@@ -77,6 +82,27 @@ const SettingsTab = () => {
             >
               {soundOn ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
               {soundOn ? 'מופעל' : 'מושבת'}
+            </Button>
+          </div>
+
+          {/* Notifications */}
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-sm font-medium">התראות חכמות</div>
+              <div className="text-xs text-muted-foreground">תזכורות לפני משימות, התראות פספוס ועידוד</div>
+            </div>
+            <Button
+              variant={notificationsOn ? "default" : "outline"}
+              size="sm"
+              className="gap-2"
+              onClick={() => {
+                const newVal = !notificationsOn;
+                setNotificationsOn(newVal);
+                localStorage.setItem('app_notifications_enabled', String(newVal));
+              }}
+            >
+              {notificationsOn ? <Bell className="w-4 h-4" /> : <BellOff className="w-4 h-4" />}
+              {notificationsOn ? 'מופעל' : 'מושבת'}
             </Button>
           </div>
         </CardContent>
