@@ -209,23 +209,23 @@ const AppContent = () => {
 
       {/* Mobile bottom nav */}
       <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-t border-border/50 safe-bottom">
-        <div className="flex justify-around items-center px-1 py-1">
+        <div className="flex justify-around items-center px-1 py-1.5">
           {tabs.filter(t => mobileBottomTabs.includes(t.id)).map(tab => {
             const Icon = tab.icon;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg transition-all touch-target ${
+                className={`relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg transition-all ${
                   activeTab === tab.id
                     ? 'text-primary'
                     : 'text-muted-foreground active:text-foreground'
                 }`}
               >
                 <Icon className={`w-5 h-5 transition-transform ${activeTab === tab.id ? 'scale-110' : ''}`} />
-                <span className="text-[10px] font-medium">{tab.label}</span>
+                <span className="text-[11px] font-semibold">{tab.label}</span>
                 {activeTab === tab.id && (
-                  <div className="absolute -top-0.5 w-8 h-0.5 bg-primary rounded-full" />
+                  <div className="absolute -top-1 w-8 h-0.5 bg-primary rounded-full" />
                 )}
               </button>
             );
