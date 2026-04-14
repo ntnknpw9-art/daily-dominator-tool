@@ -81,8 +81,8 @@ const DisciplineScore = () => {
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Shield className="w-5 h-5 text-primary" />
-            <span className="text-xs font-bold tracking-[0.2em] text-muted-foreground uppercase">
-              DISCIPLINE SCORE
+            <span className="text-xs font-bold tracking-[0.2em] text-muted-foreground">
+              ציון משמעת
             </span>
           </div>
           <div className="flex items-center gap-1 text-xs">
