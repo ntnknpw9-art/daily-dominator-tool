@@ -843,7 +843,154 @@ const CalorieTracker = () => {
         </CardContent>
       </Card>
 
-      {/* Add food */}
+      {/* Barcode Scanner */}
+      <Card className="border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Barcode className="w-5 h-5 text-primary" />
+            סורק ברקוד
+          </CardTitle>
+          <p className="text-xs text-muted-foreground">סרוק ברקוד של מוצר או הזן ידנית כדי לקבל ערכים תזונתיים מדויקים</p>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {!barcodeMode && !barcodeResult && (
+            <div className="space-y-3">
+              <Button onClick={startBarcodeScanner} className="w-full gap-2" variant="outline">
+                <Camera className="w-4 h-4" />
+                סרוק ברקוד עם המצלמה
+              </Button>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="הזן מספר ברקוד ידנית"
+                  value={barcodeInput}
+                  onChange={e => setBarcodeInput(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && barcodeInput.trim() && lookupBarcode(barcodeInput.trim())}
+                  disabled={barcodeScanning}
+                  dir="ltr"
+                  className="text-center"
+                />
+                <Button
+                  onClick={() => barcodeInput.trim() && lookupBarcode(barcodeInput.trim())}
+                  disabled={barcodeScanning || !barcodeInput.trim()}
+                  size="icon"
+                  className="shrink-0"
+                >
+                  {barcodeScanning ? <Loader2 className="w-4 h-4 animate-spin" /> : <Search className="w-4 h-4" />}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {barcodeMode && (
+            <div className="relative rounded-lg overflow-hidden bg-black">
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full aspect-video object-cover"
+              />
+              <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                <div className="w-64 h-24 border-2 border-primary rounded-lg relative">
+                  <div className="absolute top-0 left-0 right-0 h-0.5 bg-primary animate-bounce" style={{ animationDuration: '1.5s' }} />
+                </div>
+              </div>
+              <p className="absolute bottom-12 left-1/2 -translate-x-1/2 text-white text-sm bg-black/50 px-3 py-1 rounded-full">
+                כוון את הברקוד למסגרת
+              </p>
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2">
+                <Button onClick={stopBarcodeScanner} size="sm" variant="destructive" className="gap-2">
+                  <X className="w-4 h-4" />
+                  ביטול
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {barcodeScanning && !barcodeMode && (
+            <div className="flex items-center justify-center gap-2 py-4">
+              <Loader2 className="w-5 h-5 animate-spin text-primary" />
+              <span className="text-sm text-muted-foreground">מחפש מוצר...</span>
+            </div>
+          )}
+
+          {barcodeResult && (
+            <div className="space-y-3 animate-fade-in">
+              <div className="p-4 rounded-lg bg-muted/40 border border-border/50 space-y-3">
+                <div className="flex gap-3">
+                  {barcodeResult.image_url && (
+                    <img src={barcodeResult.image_url} alt={barcodeResult.name} className="w-16 h-16 rounded-lg object-cover" />
+                  )}
+                  <div className="flex-1">
+                    <h4 className="font-bold text-base">{barcodeResult.name}</h4>
+                    {barcodeResult.brand && (
+                      <p className="text-xs text-muted-foreground">{barcodeResult.brand}</p>
+                    )}
+                    {barcodeResult.quantity && (
+                      <p className="text-xs text-muted-foreground">כמות: {barcodeResult.quantity}</p>
+                    )}
+                    <p className="text-xs text-muted-foreground mt-1">מנה: {barcodeResult.serving_size}</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Label className="text-xs whitespace-nowrap">כמות מנות:</Label>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      className="h-7 w-7"
+                      onClick={() => setServingCount(Math.max(0.5, servingCount - 0.5))}
+                    >-</Button>
+                    <span className="w-10 text-center font-bold text-sm">{servingCount}</span>
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      className="h-7 w-7"
+                      onClick={() => setServingCount(servingCount + 0.5)}
+                    >+</Button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-4 gap-2">
+                  <div className="text-center p-2 rounded-lg bg-primary/10 border border-primary/20">
+                    <p className="text-xs text-muted-foreground">קלוריות</p>
+                    <p className="font-bold text-primary">{Math.round(barcodeResult.per_serving.calories * servingCount)}</p>
+                  </div>
+                  <div className="text-center p-2 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                    <p className="text-xs text-muted-foreground">חלבון</p>
+                    <p className="font-bold text-blue-400">{Math.round(barcodeResult.per_serving.protein * servingCount)}g</p>
+                  </div>
+                  <div className="text-center p-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                    <p className="text-xs text-muted-foreground">שומן</p>
+                    <p className="font-bold text-yellow-400">{Math.round(barcodeResult.per_serving.fat * servingCount)}g</p>
+                  </div>
+                  <div className="text-center p-2 rounded-lg bg-green-500/10 border border-green-500/20">
+                    <p className="text-xs text-muted-foreground">פחמימות</p>
+                    <p className="font-bold text-green-400">{Math.round(barcodeResult.per_serving.carbs * servingCount)}g</p>
+                  </div>
+                </div>
+
+                <p className="text-xs text-muted-foreground text-center">
+                  ל-100 גרם: {barcodeResult.per_100g.calories} קל׳ | {barcodeResult.per_100g.protein}g ח׳ | {barcodeResult.per_100g.fat}g ש׳ | {barcodeResult.per_100g.carbs}g פ׳
+                </p>
+              </div>
+
+              <div className="flex gap-2">
+                <Button onClick={addBarcodeFood} className="flex-1 gap-2">
+                  <Plus className="w-4 h-4" />
+                  הוסף ללוג היומי
+                </Button>
+                <Button onClick={() => { setBarcodeResult(null); setBarcodeInput(''); }} variant="outline" className="gap-2">
+                  <Barcode className="w-4 h-4" />
+                  סרוק שוב
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center gap-2">
