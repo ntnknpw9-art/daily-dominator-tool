@@ -378,42 +378,17 @@ const ProgressPhotos = () => {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {(() => {
-                  // Group by user+date into before/after pairs
-                  const groups = new Map<string, { before?: ProgressPhoto; after?: ProgressPhoto }>();
+                  const groups = new Map<string, { before?: ProgressPhoto; after?: ProgressPhoto; photos: ProgressPhoto[] }>();
                   communityPhotos.forEach(p => {
                     const key = `${p.user_id}_${p.photo_date}`;
-                    if (!groups.has(key)) groups.set(key, {});
+                    if (!groups.has(key)) groups.set(key, { photos: [] });
                     const g = groups.get(key)!;
+                    g.photos.push(p);
                     if (p.photo_type === 'before' && !g.before) g.before = p;
                     if (p.photo_type === 'after' && !g.after) g.after = p;
                   });
-                  return Array.from(groups.entries()).map(([key, { before, after }]) => (
-                    <div key={key} className="rounded-xl border border-border/30 overflow-hidden bg-card/50">
-                      <div className="grid grid-cols-2 gap-0.5">
-                        <div className="relative">
-                          {before ? (
-                            <img src={before.image_url} alt="לפני" className="w-full aspect-square object-cover" loading="lazy" />
-                          ) : (
-                            <div className="w-full aspect-square bg-muted/30 flex items-center justify-center text-muted-foreground text-sm">אין תמונת לפני</div>
-                          )}
-                          <span className="absolute top-1 right-1 text-[10px] bg-black/60 text-white px-1.5 py-0.5 rounded">לפני</span>
-                        </div>
-                        <div className="relative">
-                          {after ? (
-                            <img src={after.image_url} alt="אחרי" className="w-full aspect-square object-cover" loading="lazy" />
-                          ) : (
-                            <div className="w-full aspect-square bg-muted/30 flex items-center justify-center text-muted-foreground text-sm">אין תמונת אחרי</div>
-                          )}
-                          <span className="absolute top-1 right-1 text-[10px] bg-primary/80 text-white px-1.5 py-0.5 rounded">אחרי</span>
-                        </div>
-                      </div>
-                      <div className="p-2 text-xs text-muted-foreground flex justify-between">
-                        <span>{(before || after)?.photo_date}</span>
-                        {(before?.caption || after?.caption) && (
-                          <span className="text-foreground/70 truncate mr-2">{before?.caption || after?.caption}</span>
-                        )}
-                      </div>
-                    </div>
+                  return Array.from(groups.entries()).map(([key, { before, after, photos }]) => (
+                    <CommunityCard key={key} before={before} after={after} photos={photos} userId={user?.id} />
                   ));
                 })()}
               </div>
