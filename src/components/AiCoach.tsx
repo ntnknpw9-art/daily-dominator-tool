@@ -232,7 +232,7 @@ ${todayTasks.map(t => `- ${t.completions[todayStr] ? '✅' : '⬜'} ${t.name} ($
     return (
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-6 left-6 z-50 bg-primary text-primary-foreground w-14 h-14 rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-transform"
+        className="fixed bottom-20 left-6 z-50 bg-primary text-primary-foreground w-14 h-14 rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-transform"
       >
         <MessageCircle className="w-6 h-6" />
       </button>
@@ -240,7 +240,7 @@ ${todayTasks.map(t => `- ${t.completions[todayStr] ? '✅' : '⬜'} ${t.name} ($
   }
 
   return (
-    <div className="fixed bottom-6 left-6 z-50 w-[380px] h-[560px] bg-card border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+    <div className="fixed bottom-20 left-6 z-50 w-[380px] h-[560px] bg-card border border-border rounded-2xl shadow-2xl flex flex-col overflow-hidden">
       {/* Header */}
       <div className="bg-primary/10 border-b border-border px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
