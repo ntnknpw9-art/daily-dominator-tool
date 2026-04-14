@@ -132,6 +132,7 @@ const AppContent = () => {
           <div className="space-y-6">
             <ChallengesAndPunishments />
             <FriendsSystem />
+            <ProgressPhotos />
             <ReflectionJournal />
           </div>
         )}
