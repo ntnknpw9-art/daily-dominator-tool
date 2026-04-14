@@ -86,7 +86,7 @@ const AppContent = () => {
         </div>
       </nav>
 
-      <main className="max-w-4xl mx-auto px-4 py-6">
+      <main className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
         {/* Gamification bar on all tabs */}
         <div className="mb-6">
           <GamificationBar />
