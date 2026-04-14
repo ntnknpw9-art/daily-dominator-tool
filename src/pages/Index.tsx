@@ -27,7 +27,12 @@ import SettingsTab from '@/components/SettingsTab';
 import FriendsSystem from '@/components/FriendsSystem';
 import LeaguesAndSeasons from '@/components/LeaguesAndSeasons';
 import ProgressPhotos from '@/components/ProgressPhotos';
-import { LayoutDashboard, ListTodo, CalendarDays, Calendar, Zap, BarChart3, BookOpen, LogOut, Users, Timer, Apple, Settings, Camera } from 'lucide-react';
+import DailySpinWheel from '@/components/DailySpinWheel';
+import DisciplineDNA from '@/components/DisciplineDNA';
+import DuelSystem from '@/components/DuelSystem';
+import MotivationalSplash from '@/components/MotivationalSplash';
+import { ConfettiOverlay, useConfetti } from '@/components/CinematicEffects';
+import { LayoutDashboard, ListTodo, CalendarDays, Calendar, Zap, BarChart3, BookOpen, LogOut, Users, Timer, Apple, Settings, Camera, Dna } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const tabs = [
@@ -46,9 +51,16 @@ const tabs = [
 const AppContent = () => {
   const { signOut } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [showSplash, setShowSplash] = useState(true);
+  const { fire: fireConfetti, particles } = useConfetti();
+
+  if (showSplash) {
+    return <MotivationalSplash onDismiss={() => setShowSplash(false)} />;
+  }
 
   return (
     <div className="min-h-screen bg-background">
+      <ConfettiOverlay particles={particles} />
       <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between gap-2">
           <h1 className="text-base sm:text-xl font-bold text-foreground whitespace-nowrap">🎯 מערכת המעקב שלך</h1>
@@ -104,6 +116,7 @@ const AppContent = () => {
 
         {activeTab === 'dashboard' && (
           <div className="space-y-6">
+            <DailySpinWheel />
             <DailyQuote />
             <DisciplineScore />
             <DashboardTab />
@@ -122,6 +135,7 @@ const AppContent = () => {
         {activeTab === 'weekly' && <WeeklyTab />}
         {activeTab === 'analytics' && (
           <div className="space-y-6">
+            <DisciplineDNA />
             <DisciplineScore />
             <Heatmap />
             <WeeklyReport />
@@ -131,6 +145,7 @@ const AppContent = () => {
         {activeTab === 'advanced' && <AdvancedTab />}
         {activeTab === 'growth' && (
           <div className="space-y-6">
+            <DuelSystem />
             <ChallengesAndPunishments />
             <FriendsSystem />
             <ProgressPhotos />

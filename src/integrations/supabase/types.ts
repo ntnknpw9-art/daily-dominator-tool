@@ -71,6 +71,72 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_spins: {
+        Row: {
+          created_at: string
+          id: string
+          prize_type: string
+          prize_value: number
+          spin_date: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          prize_type: string
+          prize_value?: number
+          spin_date: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          prize_type?: string
+          prize_value?: number
+          spin_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      duels: {
+        Row: {
+          challenger_id: string
+          challenger_score: number
+          created_at: string
+          end_date: string
+          id: string
+          opponent_id: string
+          opponent_score: number
+          start_date: string
+          status: string
+          winner_id: string | null
+        }
+        Insert: {
+          challenger_id: string
+          challenger_score?: number
+          created_at?: string
+          end_date?: string
+          id?: string
+          opponent_id: string
+          opponent_score?: number
+          start_date?: string
+          status?: string
+          winner_id?: string | null
+        }
+        Update: {
+          challenger_id?: string
+          challenger_score?: number
+          created_at?: string
+          end_date?: string
+          id?: string
+          opponent_id?: string
+          opponent_score?: number
+          start_date?: string
+          status?: string
+          winner_id?: string | null
+        }
+        Relationships: []
+      }
       friendships: {
         Row: {
           created_at: string

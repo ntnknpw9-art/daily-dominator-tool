@@ -104,6 +104,22 @@ export default {
           "10%, 30%, 50%, 70%, 90%": { transform: "translateX(-4px)" },
           "20%, 40%, 60%, 80%": { transform: "translateX(4px)" },
         },
+        "confetti-fall": {
+          "0%": { transform: "translateY(0) rotate(0deg)", opacity: "1" },
+          "100%": { transform: "translateY(100vh) rotate(720deg)", opacity: "0" },
+        },
+        "fire-pulse": {
+          "0%, 100%": { transform: "scale(1)", filter: "brightness(1)" },
+          "50%": { transform: "scale(1.2)", filter: "brightness(1.3)" },
+        },
+        "flash": {
+          "0%": { opacity: "0.8" },
+          "100%": { opacity: "0" },
+        },
+        "float-particle": {
+          "0%, 100%": { transform: "translateY(0) translateX(0)", opacity: "0.3" },
+          "50%": { transform: "translateY(-20px) translateX(10px)", opacity: "0.6" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -113,6 +129,10 @@ export default {
         "scale-in": "scale-in 0.3s ease-out",
         "slide-in-right": "slide-in-right 0.3s ease-out",
         "shake": "shake 0.5s ease-in-out",
+        "confetti-fall": "confetti-fall 2.5s ease-in forwards",
+        "fire-pulse": "fire-pulse 1s ease-in-out infinite",
+        "flash": "flash 0.5s ease-out forwards",
+        "float-particle": "float-particle 4s ease-in-out infinite",
       },
     },
   },
