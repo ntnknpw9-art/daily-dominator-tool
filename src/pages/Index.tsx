@@ -22,7 +22,8 @@ import DisciplineScore from '@/components/DisciplineScore';
 import AiCoach from '@/components/AiCoach';
 import Leaderboard from '@/components/Leaderboard';
 import CalorieTracker from '@/components/CalorieTracker';
-import { LayoutDashboard, ListTodo, CalendarDays, Calendar, Zap, BarChart3, BookOpen, LogOut, Users, Timer, Apple } from 'lucide-react';
+import SettingsTab from '@/components/SettingsTab';
+import { LayoutDashboard, ListTodo, CalendarDays, Calendar, Zap, BarChart3, BookOpen, LogOut, Users, Timer, Apple, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const tabs = [
@@ -35,6 +36,7 @@ const tabs = [
   { id: 'growth', label: 'צמיחה', icon: BookOpen },
   { id: 'focus', label: 'פוקוס', icon: Timer },
   { id: 'nutrition', label: 'תזונה', icon: Apple },
+  { id: 'settings', label: 'הגדרות', icon: Settings },
 ];
 
 const AppContent = () => {
@@ -136,6 +138,7 @@ const AppContent = () => {
             <CalorieTracker />
           </div>
         )}
+        {activeTab === 'settings' && <SettingsTab />}
       </main>
 
       {/* Floating AI Coach */}
