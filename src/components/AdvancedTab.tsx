@@ -3,8 +3,9 @@ import { useTaskContext } from '@/context/TaskContext';
 import { getNowInIsrael, getTodayStr, isNowBetween, getNowMinutes, timeToMinutes } from '@/lib/dateUtils';
 import { LEVELS, ACHIEVEMENTS, DayOfWeek } from '@/types/task';
 import { Button } from '@/components/ui/button';
-import { Check, Play, Square } from 'lucide-react';
+import { Check, Play, Square, Volume2, VolumeX } from 'lucide-react';
 import { getHebrewDayFromDate } from '@/lib/dateUtils';
+import { isSoundEnabled, setSoundEnabled } from '@/lib/sounds';
 
 const AdvancedTab = () => {
   const ctx = useTaskContext();
@@ -241,6 +242,28 @@ const AdvancedTab = () => {
               <span className="text-muted-foreground">{d.name}</span>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Sound toggle */}
+      <div className="glass-card p-5">
+        <h3 className="text-lg font-bold mb-3">⚙️ הגדרות</h3>
+        <div className="flex items-center justify-between">
+          <span className="text-sm">אפקטי סאונד</span>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2"
+            onClick={() => {
+              const newVal = !isSoundEnabled();
+              setSoundEnabled(newVal);
+              // Force re-render
+              setTimerTaskId(timerTaskId);
+            }}
+          >
+            {isSoundEnabled() ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+            {isSoundEnabled() ? 'מופעל' : 'מושבת'}
+          </Button>
         </div>
       </div>
     </div>
