@@ -16,7 +16,7 @@ import WeeklyReport from '@/components/WeeklyReport';
 import ProductiveHours from '@/components/ProductiveHours';
 import ChallengesAndPunishments from '@/components/ChallengesAndPunishments';
 import NightSummary from '@/components/NightSummary';
-import { LayoutDashboard, ListTodo, CalendarDays, Calendar, Zap, BarChart3, BookOpen, LogOut } from 'lucide-react';
+import { LayoutDashboard, ListTodo, CalendarDays, Calendar, Zap, BarChart3, BookOpen, LogOut, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const tabs = [
