@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
-import { useTasks } from '@/context/TaskContext';
+import { useTaskContext } from '@/context/TaskContext';
 import { ChevronLeft } from 'lucide-react';
 
 const QUOTES = [
