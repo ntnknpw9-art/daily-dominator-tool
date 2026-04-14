@@ -39,9 +39,10 @@ const AppContent = () => {
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <h1 className="text-xl font-bold text-foreground">🎯 מערכת המעקב שלך</h1>
           <div className="flex gap-2">
-            <Button variant="ghost" size="icon" asChild title="קהילה">
+            <Button variant="ghost" size="sm" asChild title="קהילה">
               <a href="https://chat.whatsapp.com/EJcWCuUd50U4t4KSu7pmrf" target="_blank" rel="noopener noreferrer">
-                <Users className="w-4 h-4" />
+                <Users className="w-4 h-4 ml-1" />
+                קהילה
               </a>
             </Button>
             <NewTaskDialog />
