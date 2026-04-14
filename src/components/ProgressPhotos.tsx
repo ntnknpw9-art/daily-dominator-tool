@@ -156,12 +156,12 @@ const ProgressPhotos = () => {
   return (
     <Card className="glass-card border-border/30">
       <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="space-y-2">
           <CardTitle className="text-xl flex items-center gap-2">
             <Camera className="w-5 h-5 text-primary" />
             תמונות התקדמות
           </CardTitle>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button
               size="sm"
               variant={viewMode === 'mine' ? 'default' : 'outline'}
@@ -172,20 +172,20 @@ const ProgressPhotos = () => {
             </Button>
             <Button
               size="sm"
+              variant={viewMode === 'community' ? 'default' : 'outline'}
+              onClick={() => setViewMode('community')}
+            >
+              <Users className="w-3 h-3 ml-1" />
+              קהילה
+            </Button>
+            <Button
+              size="sm"
               variant={viewMode === 'compare' ? 'default' : 'outline'}
               onClick={() => setViewMode('compare')}
               disabled={myBefore.length === 0 || myAfter.length === 0}
             >
               <SlidersHorizontal className="w-3 h-3 ml-1" />
               השוואה
-            </Button>
-            <Button
-              size="sm"
-              variant={viewMode === 'community' ? 'default' : 'outline'}
-              onClick={() => setViewMode('community')}
-            >
-              <Users className="w-3 h-3 ml-1" />
-              קהילה
             </Button>
           </div>
         </div>
