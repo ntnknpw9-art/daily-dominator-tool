@@ -507,4 +507,134 @@ const BeforeAfterSlider = ({ before, after }: { before: string; after: string })
   );
 };
 
+interface CommentData {
+  id: string;
+  user_id: string;
+  content: string;
+  created_at: string;
+}
+
+const CommunityCard = ({ before, after, photos, userId }: {
+  before?: ProgressPhoto;
+  after?: ProgressPhoto;
+  photos: ProgressPhoto[];
+  userId?: string;
+}) => {
+  const [likes, setLikes] = useState<string[]>([]);
+  const [comments, setComments] = useState<CommentData[]>([]);
+  const [showComments, setShowComments] = useState(false);
+  const [newComment, setNewComment] = useState('');
+  const photoIds = photos.map(p => p.id);
+  const liked = userId ? likes.includes(userId) : false;
+
+  useEffect(() => {
+    fetchLikes();
+    fetchComments();
+  }, []);
+
+  const fetchLikes = async () => {
+    const { data } = await supabase
+      .from('photo_likes')
+      .select('user_id')
+      .in('photo_id', photoIds);
+    if (data) setLikes(data.map((d: any) => d.user_id));
+  };
+
+  const fetchComments = async () => {
+    const { data } = await supabase
+      .from('photo_comments')
+      .select('*')
+      .in('photo_id', photoIds)
+      .order('created_at', { ascending: true });
+    if (data) setComments(data as CommentData[]);
+  };
+
+  const toggleLike = async () => {
+    if (!userId || photoIds.length === 0) return;
+    const targetId = photoIds[0];
+    if (liked) {
+      await supabase.from('photo_likes').delete().eq('user_id', userId).eq('photo_id', targetId);
+    } else {
+      await supabase.from('photo_likes').insert({ user_id: userId, photo_id: targetId });
+    }
+    fetchLikes();
+  };
+
+  const addComment = async () => {
+    if (!userId || !newComment.trim() || photoIds.length === 0) return;
+    await supabase.from('photo_comments').insert({
+      user_id: userId,
+      photo_id: photoIds[0],
+      content: newComment.trim(),
+    });
+    setNewComment('');
+    fetchComments();
+  };
+
+  return (
+    <div className="rounded-xl border border-border/30 overflow-hidden bg-card/50">
+      <div className="grid grid-cols-2 gap-0.5">
+        <div className="relative">
+          {before ? (
+            <img src={before.image_url} alt="לפני" className="w-full aspect-square object-cover" loading="lazy" />
+          ) : (
+            <div className="w-full aspect-square bg-muted/30 flex items-center justify-center text-muted-foreground text-sm">אין תמונת לפני</div>
+          )}
+          <span className="absolute top-1 right-1 text-[10px] bg-background/60 text-foreground px-1.5 py-0.5 rounded">לפני</span>
+        </div>
+        <div className="relative">
+          {after ? (
+            <img src={after.image_url} alt="אחרי" className="w-full aspect-square object-cover" loading="lazy" />
+          ) : (
+            <div className="w-full aspect-square bg-muted/30 flex items-center justify-center text-muted-foreground text-sm">אין תמונת אחרי</div>
+          )}
+          <span className="absolute top-1 right-1 text-[10px] bg-primary/80 text-primary-foreground px-1.5 py-0.5 rounded">אחרי</span>
+        </div>
+      </div>
+
+      <div className="p-2 space-y-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <button onClick={toggleLike} className="flex items-center gap-1 text-sm transition-colors">
+              <Heart className={`w-4 h-4 ${liked ? 'fill-red-500 text-red-500' : 'text-muted-foreground'}`} />
+              <span className="text-xs text-muted-foreground">{likes.length}</span>
+            </button>
+            <button onClick={() => setShowComments(!showComments)} className="flex items-center gap-1 text-sm">
+              <MessageCircle className="w-4 h-4 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">{comments.length}</span>
+            </button>
+          </div>
+          <span className="text-[10px] text-muted-foreground">{(before || after)?.photo_date}</span>
+        </div>
+
+        {(before?.caption || after?.caption) && (
+          <p className="text-xs text-muted-foreground">{before?.caption || after?.caption}</p>
+        )}
+
+        {showComments && (
+          <div className="space-y-2 border-t border-border/20 pt-2">
+            {comments.map(c => (
+              <div key={c.id} className="text-xs text-foreground/80 bg-muted/20 rounded px-2 py-1">
+                {c.content}
+              </div>
+            ))}
+            <div className="flex gap-1">
+              <Input
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                placeholder="הוסף תגובה..."
+                className="h-7 text-xs"
+                onKeyDown={(e) => e.key === 'Enter' && addComment()}
+              />
+              <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={addComment}>
+                <Send className="w-3 h-3" />
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 export default ProgressPhotos;
