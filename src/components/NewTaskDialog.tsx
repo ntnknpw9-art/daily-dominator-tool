@@ -18,6 +18,7 @@ const NewTaskDialog = () => {
   const [meaning, setMeaning] = useState('');
   const [startTime, setStartTime] = useState('08:00');
   const [endTime, setEndTime] = useState('09:00');
+  const [isForever, setIsForever] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [category, setCategory] = useState<Category>('אישי');
