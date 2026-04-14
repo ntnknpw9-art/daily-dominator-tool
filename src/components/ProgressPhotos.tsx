@@ -6,7 +6,7 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
-import { Camera, Upload, Trash2, Eye, EyeOff, ImagePlus, Users, Lock } from 'lucide-react';
+import { Camera, Upload, Trash2, Eye, EyeOff, ImagePlus, Users, Lock, SlidersHorizontal, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ProgressPhoto {
@@ -28,9 +28,11 @@ const ProgressPhotos = () => {
   const [uploadType, setUploadType] = useState<'before' | 'after'>('after');
   const [isPublic, setIsPublic] = useState(false);
   const [caption, setCaption] = useState('');
-  const [viewMode, setViewMode] = useState<'mine' | 'community'>('mine');
+  const [viewMode, setViewMode] = useState<'mine' | 'community' | 'compare'>('mine');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
+  const [compareBefore, setCompareBefore] = useState<ProgressPhoto | null>(null);
+  const [compareAfter, setCompareAfter] = useState<ProgressPhoto | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -169,6 +171,15 @@ const ProgressPhotos = () => {
             </Button>
             <Button
               size="sm"
+              variant={viewMode === 'compare' ? 'default' : 'outline'}
+              onClick={() => setViewMode('compare')}
+              disabled={myBefore.length === 0 || myAfter.length === 0}
+            >
+              <SlidersHorizontal className="w-3 h-3 ml-1" />
+              השוואה
+            </Button>
+            <Button
+              size="sm"
               variant={viewMode === 'community' ? 'default' : 'outline'}
               onClick={() => setViewMode('community')}
             >
@@ -301,6 +312,60 @@ const ProgressPhotos = () => {
           </>
         )}
 
+        {viewMode === 'compare' && (
+          <div className="space-y-4">
+            {/* Photo selection */}
+            {(!compareBefore || !compareAfter) && (
+              <div className="space-y-3">
+                {!compareBefore && (
+                  <div>
+                    <h4 className="text-sm font-semibold text-muted-foreground mb-2">📷 בחר תמונת לפני:</h4>
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                      {myBefore.map(p => (
+                        <button key={p.id} onClick={() => setCompareBefore(p)} className="rounded-lg overflow-hidden border-2 border-border/30 hover:border-primary transition-colors">
+                          <img src={p.image_url} alt="" className="w-full aspect-square object-cover" />
+                          <span className="text-[10px] text-muted-foreground block py-0.5">{p.photo_date}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {compareBefore && !compareAfter && (
+                  <div>
+                    <h4 className="text-sm font-semibold text-muted-foreground mb-2">💪 בחר תמונת אחרי:</h4>
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                      {myAfter.map(p => (
+                        <button key={p.id} onClick={() => setCompareAfter(p)} className="rounded-lg overflow-hidden border-2 border-border/30 hover:border-primary transition-colors">
+                          <img src={p.image_url} alt="" className="w-full aspect-square object-cover" />
+                          <span className="text-[10px] text-muted-foreground block py-0.5">{p.photo_date}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Slider comparison */}
+            {compareBefore && compareAfter && (
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">גרור את הסליידר להשוואה</span>
+                  <Button size="sm" variant="ghost" onClick={() => { setCompareBefore(null); setCompareAfter(null); }}>
+                    <X className="w-4 h-4 ml-1" />
+                    בחר מחדש
+                  </Button>
+                </div>
+                <BeforeAfterSlider before={compareBefore.image_url} after={compareAfter.image_url} />
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>📷 לפני — {compareBefore.photo_date}</span>
+                  <span>💪 אחרי — {compareAfter.photo_date}</span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {viewMode === 'community' && (
           <div>
             {communityPhotos.length === 0 ? (
@@ -414,5 +479,56 @@ const PhotoCard = ({
     )}
   </div>
 );
+
+const BeforeAfterSlider = ({ before, after }: { before: string; after: string }) => {
+  const [sliderPos, setSliderPos] = useState(50);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+
+  const handleMove = (clientX: number) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const pct = Math.max(0, Math.min(100, (x / rect.width) * 100));
+    setSliderPos(pct);
+  };
+
+  const onPointerDown = () => { isDragging.current = true; };
+  const onPointerUp = () => { isDragging.current = false; };
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (isDragging.current) handleMove(e.clientX);
+  };
+
+  return (
+    <div
+      ref={containerRef}
+      className="relative w-full aspect-square rounded-xl overflow-hidden cursor-col-resize select-none border border-border/30"
+      onPointerDown={onPointerDown}
+      onPointerUp={onPointerUp}
+      onPointerLeave={onPointerUp}
+      onPointerMove={onPointerMove}
+      onClick={(e) => handleMove(e.clientX)}
+    >
+      {/* After (full background) */}
+      <img src={after} alt="אחרי" className="absolute inset-0 w-full h-full object-cover" />
+
+      {/* Before (clipped) */}
+      <div className="absolute inset-0 overflow-hidden" style={{ width: `${sliderPos}%` }}>
+        <img src={before} alt="לפני" className="absolute inset-0 w-full h-full object-cover" style={{ width: containerRef.current?.offsetWidth || '100%' }} />
+      </div>
+
+      {/* Slider line */}
+      <div className="absolute top-0 bottom-0 w-0.5 bg-white shadow-lg" style={{ left: `${sliderPos}%`, transform: 'translateX(-50%)' }}>
+        <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center">
+          <SlidersHorizontal className="w-4 h-4 text-foreground" />
+        </div>
+      </div>
+
+      {/* Labels */}
+      <span className="absolute top-2 right-2 text-xs bg-black/60 text-white px-2 py-0.5 rounded">לפני</span>
+      <span className="absolute top-2 left-2 text-xs bg-primary/80 text-white px-2 py-0.5 rounded">אחרי</span>
+    </div>
+  );
+};
 
 export default ProgressPhotos;
