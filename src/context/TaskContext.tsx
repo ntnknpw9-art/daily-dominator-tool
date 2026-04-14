@@ -130,14 +130,14 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
   }, [tasks]);
 
   const getTasksForDate = useCallback((date: Date) => {
-    const day = getHebrewDay(date);
+    const day = getHebrewDayFromDate(date) as DayOfWeek;
     const dateStr = formatDate(date);
     return tasks.filter(t => {
       return t.days.includes(day) && dateStr >= t.startDate && dateStr <= t.endDate;
     });
   }, [tasks]);
 
-  const getTodayTasks = useCallback(() => getTasksForDate(new Date()), [getTasksForDate]);
+  const getTodayTasks = useCallback(() => getTasksForDate(getNowInIsrael()), [getTasksForDate]);
 
   const getDailyCompletionPercent = useCallback((date: Date) => {
     const dayTasks = getTasksForDate(date);
@@ -152,13 +152,13 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
   }, [tasks]);
 
   const getPlannedTotal = useCallback(() => {
-    const today = new Date();
+    const today = getNowInIsrael();
     let total = 0;
     for (const task of tasks) {
       const start = new Date(task.startDate);
       const end = new Date(task.endDate) > today ? today : new Date(task.endDate);
       for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-        if (task.days.includes(getHebrewDay(d))) total++;
+        if (task.days.includes(getHebrewDayFromDate(d) as DayOfWeek)) total++;
       }
     }
     return total;
