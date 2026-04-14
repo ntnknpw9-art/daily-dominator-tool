@@ -3,6 +3,7 @@ import { useTaskContext } from '@/context/TaskContext';
 import { getNowInIsrael } from '@/lib/dateUtils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Shield, TrendingUp, TrendingDown, Minus, Flame, Target, Swords } from 'lucide-react';
+import { DayOfWeek } from '@/types/task';
 
 const DisciplineScore = () => {
   const { getDailyCompletionPercent, stats, tasks } = useTaskContext();
@@ -15,13 +16,13 @@ const DisciplineScore = () => {
     // Hard tasks bonus: count tasks scheduled before 7am or in "אימון" category completed today
     const todayStr = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
     const dayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
-    const todayDay = dayNames[now.getDay()];
+    const todayDay = dayNames[now.getDay()] as DayOfWeek;
     
     let hardTotal = 0;
     let hardDone = 0;
     tasks.forEach(t => {
       if (!t.days.includes(todayDay)) return;
-      const isHard = t.category === 'אימון' || t.startTime < '07:00' || t.category === 'בריאות';
+      const isHard = t.category === 'כושר' || t.startTime < '07:00' || t.category === 'משמעת';
       if (isHard) {
         hardTotal++;
         if (t.completions[todayStr]) hardDone++;
