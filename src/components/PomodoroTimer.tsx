@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Play, Pause, RotateCcw, Coffee } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { playTimerStartSound } from '@/lib/sounds';
 
 type Phase = 'work' | 'break' | 'longBreak';
 
@@ -103,7 +104,10 @@ const PomodoroTimer = () => {
           {/* Controls */}
           <div className="flex gap-3 mb-4">
             <Button
-              onClick={() => setRunning(!running)}
+              onClick={() => {
+                if (!running) playTimerStartSound();
+                setRunning(!running);
+              }}
               variant={running ? 'destructive' : 'default'}
               size="lg"
               className="gap-2"

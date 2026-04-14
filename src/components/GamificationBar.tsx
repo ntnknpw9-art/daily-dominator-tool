@@ -4,6 +4,7 @@ import { useTaskContext } from '@/context/TaskContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Flame, Star, Trophy, Zap } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
+import { playAchievementSound } from '@/lib/sounds';
 
 const LEVEL_XP = [0, 100, 250, 500, 1000, 2000, 3500, 5500, 8000, 12000, 20000];
 
@@ -70,6 +71,7 @@ const GamificationBar = () => {
         }, { onConflict: 'user_id,achievement_id' }).then(() => {
           setUnlockedAchievements(prev => [...prev, a.id]);
           setNewAchievement(a.label);
+          playAchievementSound();
           setTimeout(() => setNewAchievement(null), 3000);
         });
       }
@@ -93,8 +95,8 @@ const GamificationBar = () => {
       {/* Achievement popup */}
       {newAchievement && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] animate-bounce">
-          <div className="bg-accent text-accent-foreground px-6 py-3 rounded-full font-bold text-lg shadow-lg">
-            הישג חדש! {newAchievement}
+          <div className="bg-accent text-accent-foreground px-6 py-3 rounded-full font-bold text-lg shadow-lg animate-scale-in border-2 border-accent/50">
+            🏆 הישג חדש! {newAchievement}
           </div>
         </div>
       )}
