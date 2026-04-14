@@ -71,6 +71,30 @@ export type Database = {
         }
         Relationships: []
       }
+      friendships: {
+        Row: {
+          created_at: string
+          id: string
+          receiver_id: string
+          sender_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          receiver_id: string
+          sender_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          receiver_id?: string
+          sender_id?: string
+          status?: string
+        }
+        Relationships: []
+      }
       habits: {
         Row: {
           completed: boolean
@@ -354,6 +378,42 @@ export type Database = {
           achievement_id?: string
           id?: string
           unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_seasons: {
+        Row: {
+          created_at: string
+          id: string
+          league: string
+          season_end: string
+          season_number: number
+          season_rank: number | null
+          season_start: string
+          season_xp: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          league?: string
+          season_end?: string
+          season_number?: number
+          season_rank?: number | null
+          season_start?: string
+          season_xp?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          league?: string
+          season_end?: string
+          season_number?: number
+          season_rank?: number | null
+          season_start?: string
+          season_xp?: number
           user_id?: string
         }
         Relationships: []

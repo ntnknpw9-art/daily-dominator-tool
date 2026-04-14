@@ -24,6 +24,8 @@ import Leaderboard from '@/components/Leaderboard';
 import CalorieTracker from '@/components/CalorieTracker';
 import SmartNotifications from '@/components/SmartNotifications';
 import SettingsTab from '@/components/SettingsTab';
+import FriendsSystem from '@/components/FriendsSystem';
+import LeaguesAndSeasons from '@/components/LeaguesAndSeasons';
 import { LayoutDashboard, ListTodo, CalendarDays, Calendar, Zap, BarChart3, BookOpen, LogOut, Users, Timer, Apple, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -94,7 +96,6 @@ const AppContent = () => {
       </nav>
 
       <main className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
-        {/* Gamification bar on all tabs */}
         <div className="mb-6">
           <GamificationBar />
         </div>
@@ -105,6 +106,7 @@ const AppContent = () => {
             <DisciplineScore />
             <DashboardTab />
             <Leaderboard />
+            <LeaguesAndSeasons />
             <NightSummary />
           </div>
         )}
@@ -128,6 +130,7 @@ const AppContent = () => {
         {activeTab === 'growth' && (
           <div className="space-y-6">
             <ChallengesAndPunishments />
+            <FriendsSystem />
             <ReflectionJournal />
           </div>
         )}
@@ -144,7 +147,6 @@ const AppContent = () => {
         {activeTab === 'settings' && <SettingsTab />}
       </main>
 
-      {/* Floating AI Coach */}
       <AiCoach />
       <SmartNotifications />
     </div>

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
-import { Trophy, Flame, Star, Medal, Crown, TrendingUp, TrendingDown } from 'lucide-react';
+import { Trophy, Flame, Star, Medal, Crown, TrendingUp, TrendingDown, Users, Calendar } from 'lucide-react';
 
 interface LeaderboardEntry {
   user_id: string;
@@ -23,7 +23,6 @@ const getRankIcon = (index: number) => {
   return null;
 };
 
-// Simple confetti canvas effect
 const ConfettiCanvas = ({ active }: { active: boolean }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -96,10 +95,12 @@ const Leaderboard = () => {
   const { user } = useAuth();
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
   const [sortBy, setSortBy] = useState<'xp' | 'streak' | 'tasks'>('xp');
+  const [timeFilter, setTimeFilter] = useState<'all' | 'friends'>('all');
   const [loading, setLoading] = useState(true);
   const [prevRanks, setPrevRanks] = useState<Record<string, number>>({});
   const [showConfetti, setShowConfetti] = useState(false);
   const [animatedRows, setAnimatedRows] = useState<Set<string>>(new Set());
+  const [friendIds, setFriendIds] = useState<string[]>([]);
 
   useEffect(() => {
     try {
@@ -107,6 +108,24 @@ const Leaderboard = () => {
       if (stored) setPrevRanks(JSON.parse(stored));
     } catch {}
   }, []);
+
+  // Load friends
+  useEffect(() => {
+    if (!user) return;
+    const loadFriends = async () => {
+      const { data } = await supabase
+        .from('friendships')
+        .select('sender_id, receiver_id')
+        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+        .eq('status', 'accepted');
+
+      if (data) {
+        const ids = data.map(f => f.sender_id === user.id ? f.receiver_id : f.sender_id);
+        setFriendIds(ids);
+      }
+    };
+    loadFriends();
+  }, [user]);
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
@@ -132,7 +151,13 @@ const Leaderboard = () => {
     fetchLeaderboard();
   }, []);
 
-  const sorted = [...entries].sort((a, b) => {
+  let filtered = entries;
+  if (timeFilter === 'friends' && user) {
+    const friendSet = new Set([...friendIds, user.id]);
+    filtered = entries.filter(e => friendSet.has(e.user_id));
+  }
+
+  const sorted = [...filtered].sort((a, b) => {
     if (sortBy === 'xp') return b.xp - a.xp;
     if (sortBy === 'streak') return b.current_streak - a.current_streak;
     return b.total_tasks_completed - a.total_tasks_completed;
@@ -140,7 +165,6 @@ const Leaderboard = () => {
 
   const myRank = sorted.findIndex(e => e.user_id === user?.id) + 1;
 
-  // Save current ranks & detect rank-up for confetti
   const saveRanks = useCallback(() => {
     const newRanks: Record<string, number> = {};
     sorted.forEach((e, i) => { newRanks[e.user_id] = i + 1; });
@@ -155,18 +179,16 @@ const Leaderboard = () => {
 
   useEffect(() => {
     if (sorted.length > 0) saveRanks();
-  }, [sorted.length, sortBy]);
+  }, [sorted.length, sortBy, timeFilter]);
 
-  // Stagger animation on mount
   useEffect(() => {
     if (sorted.length === 0) return;
-    const ids = new Set<string>();
     sorted.slice(0, 20).forEach((entry, i) => {
       setTimeout(() => {
         setAnimatedRows(prev => new Set([...prev, entry.user_id]));
       }, i * 80);
     });
-  }, [sorted.length, sortBy]);
+  }, [sorted.length, sortBy, timeFilter]);
 
   const getRankChange = (userId: string, currentRank: number) => {
     const prev = prevRanks[userId];
@@ -185,6 +207,30 @@ const Leaderboard = () => {
           <Trophy className="w-5 h-5 text-yellow-400" />
           לוח מובילים
         </CardTitle>
+
+        {/* Time filter */}
+        <div className="flex gap-2 mt-2">
+          <button
+            onClick={() => { setTimeFilter('all'); setAnimatedRows(new Set()); }}
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+              timeFilter === 'all' ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Calendar className="w-3 h-3" />
+            גלובלי
+          </button>
+          <button
+            onClick={() => { setTimeFilter('friends'); setAnimatedRows(new Set()); }}
+            className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+              timeFilter === 'friends' ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <Users className="w-3 h-3" />
+            חברים
+          </button>
+        </div>
+
+        {/* Sort filter */}
         <div className="flex gap-2 mt-2">
           {[
             { key: 'xp' as const, label: 'XP', icon: Star },
@@ -213,7 +259,9 @@ const Leaderboard = () => {
             <p className="text-muted-foreground text-sm">טוען דירוגים...</p>
           </div>
         ) : sorted.length === 0 ? (
-          <p className="text-center text-muted-foreground py-8">אין נתונים עדיין</p>
+          <p className="text-center text-muted-foreground py-8">
+            {timeFilter === 'friends' ? 'הוסף חברים כדי לראות את הדירוג שלהם' : 'אין נתונים עדיין'}
+          </p>
         ) : (
           <>
             {myRank > 0 && (
@@ -241,7 +289,6 @@ const Leaderboard = () => {
                       transition: `opacity 0.4s ease-out, transform 0.4s ease-out`,
                     }}
                   >
-                    {/* Rank */}
                     <div className="w-8 text-center font-bold text-sm relative">
                       {getRankIcon(i) || <span className="text-muted-foreground">#{i + 1}</span>}
                       {i === 0 && (
@@ -249,7 +296,6 @@ const Leaderboard = () => {
                       )}
                     </div>
 
-                    {/* Info */}
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-sm truncate">
                         {entry.display_name} {isMe && <span className="text-primary">(אתה)</span>}
@@ -259,7 +305,6 @@ const Leaderboard = () => {
                       </p>
                     </div>
 
-                    {/* Rank change indicator */}
                     {rankChange && (
                       <div className={`flex items-center gap-0.5 text-xs font-medium ${
                         rankChange.direction === 'up' ? 'text-green-400' : 'text-red-400'
@@ -271,7 +316,6 @@ const Leaderboard = () => {
                       </div>
                     )}
 
-                    {/* Score */}
                     <div className="text-left font-bold text-sm text-primary">
                       {sortBy === 'xp' && `${entry.xp} XP`}
                       {sortBy === 'streak' && `${entry.current_streak} ימים`}
