@@ -8,6 +8,8 @@ import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { Apple, Plus, Trash2, Calculator, Loader2, UtensilsCrossed, Target, TrendingUp, Calendar, Camera, X, ScanLine, ChefHat, Barcode, Search } from 'lucide-react';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ReferenceLine, BarChart, Bar } from 'recharts';
 import { toast } from 'sonner';
 
 interface DailyNeeds {
@@ -132,16 +134,16 @@ const CalorieTracker = () => {
         })));
       }
 
-      // Load history (last 7 days)
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      const weekAgoStr = weekAgo.toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
+      // Load history (last 30 days)
+      const monthAgo = new Date();
+      monthAgo.setDate(monthAgo.getDate() - 30);
+      const monthAgoStr = monthAgo.toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
 
       const { data: historyLogs } = await supabase
         .from('nutrition_logs')
         .select('*')
         .eq('user_id', user.id)
-        .gte('log_date', weekAgoStr)
+        .gte('log_date', monthAgoStr)
         .lt('log_date', today)
         .order('log_date', { ascending: true });
 
@@ -650,34 +652,101 @@ const CalorieTracker = () => {
 
       {/* History */}
       {showHistory && history.length > 0 && (
-        <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-primary" />
-              היסטוריה - 7 ימים אחרונים
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {history.map(day => (
-                <div key={day.date} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
-                  <span className="text-sm font-medium">{formatDate(day.date)}</span>
-                  <div className="flex gap-3 text-xs">
-                    <span className="text-primary font-medium">{day.calories} קל׳</span>
-                    <span className="text-blue-400">{Math.round(day.protein)}g ח׳</span>
-                    <span className="text-yellow-400">{Math.round(day.fat)}g ש׳</span>
-                    <span className="text-green-400">{Math.round(day.carbs)}g פ׳</span>
-                  </div>
+        <>
+          {/* Trends Chart */}
+          <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-primary" />
+                מגמת קלוריות - {history.length} ימים
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ChartContainer config={{
+                calories: { label: 'קלוריות', color: 'hsl(var(--primary))' },
+                protein: { label: 'חלבון', color: 'hsl(210, 80%, 60%)' },
+                fat: { label: 'שומן', color: 'hsl(45, 90%, 55%)' },
+                carbs: { label: 'פחמימות', color: 'hsl(140, 70%, 50%)' },
+              }} className="h-[220px] w-full">
+                <AreaChart data={history.map(d => ({
+                  ...d,
+                  label: new Date(d.date + 'T12:00:00').toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric', timeZone: 'Asia/Jerusalem' }),
+                }))}>
+                  <defs>
+                    <linearGradient id="calGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
+                      <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                  <XAxis dataKey="label" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                  <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
                   {dailyNeeds && (
-                    <div className="w-16">
-                      <Progress value={getProgress(day.calories, dailyNeeds.calories)} className="h-1.5" />
-                    </div>
+                    <ReferenceLine y={dailyNeeds.calories} stroke="hsl(var(--destructive))" strokeDasharray="5 5" label={{ value: 'יעד', position: 'insideTopLeft', fill: 'hsl(var(--destructive))', fontSize: 11 }} />
                   )}
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <Area type="monotone" dataKey="calories" stroke="hsl(var(--primary))" fill="url(#calGrad)" strokeWidth={2} name="calories" />
+                </AreaChart>
+              </ChartContainer>
+
+              {/* Macros bar chart */}
+              <div className="mt-4">
+                <p className="text-xs text-muted-foreground mb-2 text-right">פירוט מאקרו (גרם)</p>
+                <ChartContainer config={{
+                  protein: { label: 'חלבון', color: 'hsl(210, 80%, 60%)' },
+                  fat: { label: 'שומן', color: 'hsl(45, 90%, 55%)' },
+                  carbs: { label: 'פחמימות', color: 'hsl(140, 70%, 50%)' },
+                }} className="h-[160px] w-full">
+                  <BarChart data={history.map(d => ({
+                    ...d,
+                    label: new Date(d.date + 'T12:00:00').toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric', timeZone: 'Asia/Jerusalem' }),
+                    protein: Math.round(d.protein),
+                    fat: Math.round(d.fat),
+                    carbs: Math.round(d.carbs),
+                  }))}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+                    <XAxis dataKey="label" tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
+                    <YAxis tick={{ fontSize: 10 }} stroke="hsl(var(--muted-foreground))" />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Bar dataKey="protein" fill="hsl(210, 80%, 60%)" radius={[2, 2, 0, 0]} name="protein" />
+                    <Bar dataKey="fat" fill="hsl(45, 90%, 55%)" radius={[2, 2, 0, 0]} name="fat" />
+                    <Bar dataKey="carbs" fill="hsl(140, 70%, 50%)" radius={[2, 2, 0, 0]} name="carbs" />
+                  </BarChart>
+                </ChartContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* History list */}
+          <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-primary" />
+                היסטוריה - {history.length} ימים אחרונים
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                {history.slice().reverse().map(day => (
+                  <div key={day.date} className="flex items-center justify-between p-3 rounded-lg bg-muted/30">
+                    <span className="text-sm font-medium">{formatDate(day.date)}</span>
+                    <div className="flex gap-3 text-xs">
+                      <span className="text-primary font-medium">{day.calories} קל׳</span>
+                      <span className="text-blue-400">{Math.round(day.protein)}g ח׳</span>
+                      <span className="text-yellow-400">{Math.round(day.fat)}g ש׳</span>
+                      <span className="text-green-400">{Math.round(day.carbs)}g פ׳</span>
+                    </div>
+                    {dailyNeeds && (
+                      <div className="w-16">
+                        <Progress value={getProgress(day.calories, dailyNeeds.calories)} className="h-1.5" />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </>
       )}
 
       {showHistory && history.length === 0 && (
