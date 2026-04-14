@@ -95,8 +95,8 @@ const GamificationBar = () => {
       {/* Achievement popup */}
       {newAchievement && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] animate-bounce">
-          <div className="bg-accent text-accent-foreground px-6 py-3 rounded-full font-bold text-lg shadow-lg">
-            הישג חדש! {newAchievement}
+          <div className="bg-accent text-accent-foreground px-6 py-3 rounded-full font-bold text-lg shadow-lg animate-scale-in border-2 border-accent/50">
+            🏆 הישג חדש! {newAchievement}
           </div>
         </div>
       )}
