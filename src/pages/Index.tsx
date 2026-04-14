@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
 import { TaskProvider } from '@/context/TaskContext';
+import AuthPage from '@/pages/AuthPage';
 import DashboardTab from '@/components/DashboardTab';
 import TasksTab from '@/components/TasksTab';
 import TodayTab from '@/components/TodayTab';
@@ -14,7 +16,8 @@ import WeeklyReport from '@/components/WeeklyReport';
 import ProductiveHours from '@/components/ProductiveHours';
 import ChallengesAndPunishments from '@/components/ChallengesAndPunishments';
 import NightSummary from '@/components/NightSummary';
-import { LayoutDashboard, ListTodo, CalendarDays, Calendar, Zap, BarChart3, BookOpen } from 'lucide-react';
+import { LayoutDashboard, ListTodo, CalendarDays, Calendar, Zap, BarChart3, BookOpen, LogOut } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const tabs = [
   { id: 'dashboard', label: 'ראשי', icon: LayoutDashboard },
@@ -27,6 +30,7 @@ const tabs = [
 ];
 
 const AppContent = () => {
+  const { signOut } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
 
   return (
@@ -34,7 +38,12 @@ const AppContent = () => {
       <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <h1 className="text-xl font-bold text-foreground">🎯 מערכת המעקב שלך</h1>
-          <NewTaskDialog />
+          <div className="flex gap-2">
+            <NewTaskDialog />
+            <Button variant="ghost" size="icon" onClick={signOut} title="התנתק">
+              <LogOut className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -95,10 +104,27 @@ const AppContent = () => {
   );
 };
 
-const Index = () => (
-  <TaskProvider>
-    <AppContent />
-  </TaskProvider>
-);
+const Index = () => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center animate-pulse-glow">
+          <div className="text-4xl mb-4">🎯</div>
+          <p className="text-muted-foreground">טוען...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) return <AuthPage />;
+
+  return (
+    <TaskProvider>
+      <AppContent />
+    </TaskProvider>
+  );
+};
 
 export default Index;
