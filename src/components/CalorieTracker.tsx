@@ -250,7 +250,133 @@ const CalorieTracker = () => {
     }
   };
 
-  const totals = foods.reduce(
+  // Camera functions
+  const startCamera = async () => {
+    setShowCamera(true);
+    setCapturedImage(null);
+    setScanResult(null);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (err) {
+      toast.error('לא ניתן לגשת למצלמה. נסה להעלות תמונה במקום.');
+      setShowCamera(false);
+    }
+  };
+
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    setShowCamera(false);
+  };
+
+  const capturePhoto = () => {
+    if (!videoRef.current) return;
+    const canvas = document.createElement('canvas');
+    canvas.width = videoRef.current.videoWidth;
+    canvas.height = videoRef.current.videoHeight;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.drawImage(videoRef.current, 0, 0);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+    setCapturedImage(dataUrl);
+    stopCamera();
+    scanFoodImage(dataUrl);
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast.error('אנא בחר קובץ תמונה');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      setCapturedImage(dataUrl);
+      setScanResult(null);
+      scanFoodImage(dataUrl);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const scanFoodImage = async (dataUrl: string) => {
+    setScanningFood(true);
+    setScanResult(null);
+    try {
+      const base64 = dataUrl.split(',')[1];
+      const mimeMatch = dataUrl.match(/data:(.*?);/);
+      const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+
+      const { data, error } = await supabase.functions.invoke('calorie-tracker', {
+        body: { type: 'scan_food', data: { imageBase64: base64, mimeType } },
+      });
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+
+      setScanResult(data);
+      toast.success('הסריקה הושלמה!');
+    } catch (e: any) {
+      toast.error(e.message || 'שגיאה בסריקת התמונה');
+    } finally {
+      setScanningFood(false);
+    }
+  };
+
+  const addScannedFood = async () => {
+    if (!scanResult) return;
+    if (user) {
+      const { data: inserted, error: insertErr } = await supabase.from('nutrition_logs').insert({
+        user_id: user.id,
+        log_date: today,
+        food_name: scanResult.name || 'מאכל סרוק',
+        calories: scanResult.calories || 0,
+        protein: scanResult.protein || 0,
+        fat: scanResult.fat || 0,
+        carbs: scanResult.carbs || 0,
+        portion: scanResult.portion || '',
+      }).select().single();
+
+      if (insertErr) {
+        toast.error('שגיאה בשמירה');
+        return;
+      }
+
+      setFoods(prev => [...prev, {
+        id: inserted.id,
+        name: inserted.food_name,
+        calories: inserted.calories,
+        protein: Number(inserted.protein),
+        fat: Number(inserted.fat),
+        carbs: Number(inserted.carbs),
+        portion: inserted.portion || '',
+      }]);
+    } else {
+      setFoods(prev => [...prev, {
+        id: crypto.randomUUID(),
+        name: scanResult.name,
+        calories: scanResult.calories,
+        protein: scanResult.protein,
+        fat: scanResult.fat,
+        carbs: scanResult.carbs,
+        portion: scanResult.portion || '',
+      }]);
+    }
+    toast.success(`${scanResult.name} נוסף!`);
+    setCapturedImage(null);
+    setScanResult(null);
+  };
+
+
     (acc, f) => ({
       calories: acc.calories + f.calories,
       protein: acc.protein + f.protein,
