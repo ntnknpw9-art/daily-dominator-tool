@@ -123,6 +123,8 @@ const AppContent = () => {
             <DailyQuote />
             <DisciplineScore />
             <DashboardTab />
+            <ProgressMap />
+            <AchievementShowcase />
             <Leaderboard />
             <LeaguesAndSeasons />
             <NightSummary />
@@ -138,6 +140,7 @@ const AppContent = () => {
         {activeTab === 'weekly' && <WeeklyTab />}
         {activeTab === 'analytics' && (
           <div className="space-y-6">
+            <AdvancedAnalytics />
             <DisciplineDNA />
             <DisciplineScore />
             <Heatmap />
