@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useTaskContext } from '@/context/TaskContext';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { getNowInIsrael, getTodayStr, getDailyCompletionPercent as _unused } from '@/lib/dateUtils';
+import { getNowInIsrael, getTodayStr } from '@/lib/dateUtils';
 import { Swords, Skull, Trophy, Crown, Zap } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
