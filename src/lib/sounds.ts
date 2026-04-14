@@ -1,7 +1,22 @@
 // Audio & haptic feedback utilities using Web Audio API (no external files needed)
 
+const SOUND_KEY = 'app_sound_enabled';
+
+/** Check if sound is enabled */
+export const isSoundEnabled = (): boolean => {
+  if (typeof window === 'undefined') return true;
+  const val = localStorage.getItem(SOUND_KEY);
+  return val === null ? true : val === 'true';
+};
+
+/** Toggle sound on/off */
+export const setSoundEnabled = (enabled: boolean) => {
+  localStorage.setItem(SOUND_KEY, String(enabled));
+};
+
 const audioCtx = () => {
   if (typeof window === 'undefined') return null;
+  if (!isSoundEnabled()) return null;
   // @ts-ignore
   if (!window.__appAudioCtx) {
     // @ts-ignore
