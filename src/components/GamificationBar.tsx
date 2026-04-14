@@ -145,26 +145,26 @@ const GamificationBar = () => {
         </div>
       )}
 
-      <div className="bg-card border border-border/50 rounded-xl p-4">
+      <div className="bg-card border border-border/50 rounded-xl p-3 sm:p-4">
         {/* Top stats row */}
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1.5">
-              <Star className="w-5 h-5 text-accent" />
-              <span className="font-bold text-foreground">רמה {dbStats.level}</span>
+        <div className="flex items-center justify-between mb-2 sm:mb-3">
+          <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
+            <div className="flex items-center gap-1">
+              <Star className="w-4 h-4 sm:w-5 sm:h-5 text-accent" />
+              <span className="font-bold text-sm sm:text-base text-foreground">רמה {dbStats.level}</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <Zap className="w-5 h-5 text-primary" />
-              <span className="text-sm text-muted-foreground">{dbStats.xp} XP</span>
+            <div className="flex items-center gap-1">
+              <Zap className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+              <span className="text-xs sm:text-sm text-muted-foreground">{dbStats.xp} XP</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <Flame className="w-5 h-5 text-destructive" />
-              <span className="font-bold text-destructive">{dbStats.streak} 🔥</span>
+            <div className="flex items-center gap-1">
+              <Flame className="w-4 h-4 sm:w-5 sm:h-5 text-destructive" />
+              <span className="font-bold text-sm sm:text-base text-destructive">{dbStats.streak} 🔥</span>
             </div>
           </div>
           <button
             onClick={() => setShowAchievements(!showAchievements)}
-            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            className="flex items-center gap-1 text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <Trophy className="w-4 h-4" />
             {unlockedAchievements.length}/{ADVANCED_ACHIEVEMENTS.length}
@@ -173,8 +173,8 @@ const GamificationBar = () => {
 
         {/* XP Progress bar */}
         <div className="space-y-1">
-          <Progress value={progressPercent} className="h-3" />
-          <div className="flex justify-between text-xs text-muted-foreground">
+          <Progress value={progressPercent} className="h-2.5 sm:h-3" />
+          <div className="flex justify-between text-[10px] sm:text-xs text-muted-foreground">
             <span>רמה {dbStats.level}</span>
             <span>{dbStats.xp - currentLevelXp} / {nextLevelXp - currentLevelXp} XP</span>
             <span>רמה {dbStats.level + 1}</span>

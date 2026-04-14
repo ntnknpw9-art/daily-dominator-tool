@@ -106,30 +106,30 @@ const DisciplineScore = () => {
 
   return (
     <Card className={`bg-card border-border/50 shadow-lg ${getGlowColor(score)}`}>
-      <CardContent className="pt-5 pb-4">
+      <CardContent className="pt-4 pb-3 sm:pt-5 sm:pb-4 px-3 sm:px-6">
         {/* Header with rank */}
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-2 sm:mb-3">
           <div className="flex items-center gap-2">
-            <Shield className="w-5 h-5 text-primary" />
-            <span className="text-xs font-bold tracking-[0.2em] text-muted-foreground">
+            <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+            <span className="text-[10px] sm:text-xs font-bold tracking-[0.2em] text-muted-foreground">
               ציון משמעת
             </span>
           </div>
-          <div className="flex items-center gap-1 text-xs">
+          <div className="flex items-center gap-1 text-[10px] sm:text-xs">
             {trend > 5 ? (
-              <><TrendingUp className="w-3.5 h-3.5 text-green-400" /><span className="text-green-400">עולה</span></>
+              <><TrendingUp className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-green-400" /><span className="text-green-400">עולה</span></>
             ) : trend < -5 ? (
-              <><TrendingDown className="w-3.5 h-3.5 text-destructive" /><span className="text-destructive">יורד</span></>
+              <><TrendingDown className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-destructive" /><span className="text-destructive">יורד</span></>
             ) : (
-              <><Minus className="w-3.5 h-3.5 text-muted-foreground" /><span className="text-muted-foreground">יציב</span></>
+              <><Minus className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-muted-foreground" /><span className="text-muted-foreground">יציב</span></>
             )}
           </div>
         </div>
 
         {/* Big score */}
-        <div className="text-center mb-4">
+        <div className="text-center mb-3 sm:mb-4">
           <div
-            className={`text-7xl font-black tracking-tight transition-all duration-500 ${getScoreColor(score)}`}
+            className={`text-6xl sm:text-7xl font-black tracking-tight transition-all duration-500 ${getScoreColor(score)}`}
             style={score >= 80 ? {
               textShadow: '0 0 20px hsl(142 70% 45% / 0.6), 0 0 40px hsl(142 70% 45% / 0.3), 0 0 60px hsl(142 70% 45% / 0.15)',
               filter: 'brightness(1.15)',
@@ -137,27 +137,27 @@ const DisciplineScore = () => {
           >
             {animatedScore}
           </div>
-          <div className="text-xs font-bold tracking-[0.3em] text-muted-foreground mt-1 uppercase">
+          <div className="text-[10px] sm:text-xs font-bold tracking-[0.3em] text-muted-foreground mt-1 uppercase">
             {getRank(score)}
           </div>
         </div>
 
         {/* Breakdown */}
-        <div className="grid grid-cols-3 gap-2 mb-4">
+        <div className="grid grid-cols-3 gap-1.5 sm:gap-2 mb-3 sm:mb-4">
           <div className="bg-muted/30 rounded-lg p-2 text-center">
-            <Target className="w-4 h-4 mx-auto mb-1 text-primary" />
-            <div className="text-lg font-bold">{animatedCompletion}%</div>
-            <div className="text-[10px] text-muted-foreground">השלמה</div>
+            <Target className="w-3.5 h-3.5 sm:w-4 sm:h-4 mx-auto mb-0.5 sm:mb-1 text-primary" />
+            <div className="text-base sm:text-lg font-bold">{animatedCompletion}%</div>
+            <div className="text-[9px] sm:text-[10px] text-muted-foreground">השלמה</div>
           </div>
           <div className="bg-muted/30 rounded-lg p-2 text-center">
-            <Flame className="w-4 h-4 mx-auto mb-1 text-orange-400" />
-            <div className="text-lg font-bold">{streak}</div>
-            <div className="text-[10px] text-muted-foreground">סטריק</div>
+            <Flame className="w-3.5 h-3.5 sm:w-4 sm:h-4 mx-auto mb-0.5 sm:mb-1 text-orange-400" />
+            <div className="text-base sm:text-lg font-bold">{streak}</div>
+            <div className="text-[9px] sm:text-[10px] text-muted-foreground">סטריק</div>
           </div>
           <div className="bg-muted/30 rounded-lg p-2 text-center">
-            <Swords className="w-4 h-4 mx-auto mb-1 text-accent" />
-            <div className="text-lg font-bold">{animatedHard}%</div>
-            <div className="text-[10px] text-muted-foreground">משימות קשות</div>
+            <Swords className="w-3.5 h-3.5 sm:w-4 sm:h-4 mx-auto mb-0.5 sm:mb-1 text-accent" />
+            <div className="text-base sm:text-lg font-bold">{animatedHard}%</div>
+            <div className="text-[9px] sm:text-[10px] text-muted-foreground">משימות קשות</div>
           </div>
         </div>
 

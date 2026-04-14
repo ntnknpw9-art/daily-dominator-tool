@@ -53,35 +53,35 @@ const DashboardTab = () => {
   const goalY = chartHeight - (smartGoal / maxP) * (chartHeight - 8) - 4;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Smart Goal Banner */}
-      <div className={`glass-card p-4 text-center ${todayPercent >= smartGoal ? 'border-green-500/50' : 'border-accent/30'}`}>
-        <div className="text-sm text-muted-foreground mb-1">🧠 יעד חכם להיום ({todayCount} משימות)</div>
-        <div className="text-3xl font-black">
+      <div className={`glass-card p-3 sm:p-4 text-center ${todayPercent >= smartGoal ? 'border-green-500/50' : 'border-accent/30'}`}>
+        <div className="text-xs sm:text-sm text-muted-foreground mb-1">🧠 יעד חכם להיום ({todayCount} משימות)</div>
+        <div className="text-2xl sm:text-3xl font-black">
           <span className={todayPercent >= smartGoal ? 'text-green-400' : 'text-foreground'}>{todayPercent}%</span>
-          <span className="text-muted-foreground text-lg"> / {smartGoal}%</span>
+          <span className="text-muted-foreground text-base sm:text-lg"> / {smartGoal}%</span>
         </div>
-        <p className="text-xs text-muted-foreground mt-1">
+        <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
           {todayCount <= 3 ? 'יום קל — יעד מלא!' : todayCount <= 6 ? 'עומס בינוני — תעשה לפחות 85%' : 'יום עמוס — 75% זה ניצחון'}
         </p>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
         {stats.map((s) => (
-          <div key={s.label} className={`glass-card p-5 text-center bg-gradient-to-b ${s.gradient} hover:scale-[1.02] transition-transform`}>
-            <div className="text-2xl mb-2">{s.icon}</div>
-            <div className="text-3xl font-extrabold text-foreground">{s.value}</div>
-            <div className="text-xs text-muted-foreground mt-1 font-medium">{s.label}</div>
+          <div key={s.label} className={`glass-card p-3 sm:p-5 text-center bg-gradient-to-b ${s.gradient} hover:scale-[1.02] transition-transform`}>
+            <div className="text-xl sm:text-2xl mb-1 sm:mb-2">{s.icon}</div>
+            <div className="text-2xl sm:text-3xl font-extrabold text-foreground">{s.value}</div>
+            <div className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1 font-medium">{s.label}</div>
           </div>
         ))}
       </div>
 
       {/* Progress Chart */}
-      <div className="glass-card p-6">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-lg font-bold">📊 גרף התקדמות</h3>
-          <span className="text-xs text-muted-foreground">14 ימים אחרונים</span>
+      <div className="glass-card p-4 sm:p-6">
+        <div className="flex items-center justify-between mb-4 sm:mb-6">
+          <h3 className="text-base sm:text-lg font-bold">📊 גרף התקדמות</h3>
+          <span className="text-[10px] sm:text-xs text-muted-foreground">14 ימים אחרונים</span>
         </div>
 
         <div className="relative mb-2">
