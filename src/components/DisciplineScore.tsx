@@ -1,9 +1,35 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { useTaskContext } from '@/context/TaskContext';
 import { getNowInIsrael } from '@/lib/dateUtils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Shield, TrendingUp, TrendingDown, Minus, Flame, Target, Swords } from 'lucide-react';
 import { DayOfWeek } from '@/types/task';
+
+const useCountUp = (target: number, duration = 1200) => {
+  const [current, setCurrent] = useState(0);
+  const prevTarget = useRef(target);
+
+  useEffect(() => {
+    const start = prevTarget.current !== target ? 0 : current;
+    prevTarget.current = target;
+    if (target === 0) { setCurrent(0); return; }
+
+    const startTime = performance.now();
+    let raf: number;
+    const step = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // ease-out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setCurrent(Math.round(start + (target - start) * eased));
+      if (progress < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [target, duration]);
+
+  return current;
+};
 
 const DisciplineScore = () => {
   const { getDailyCompletionPercent, stats, tasks } = useTaskContext();
