@@ -31,7 +31,8 @@ const MotivationalSplash = ({ onDismiss }: { onDismiss: () => void }) => {
   const fetchStats = async () => {
     if (!user) return;
     const today = new Date().toISOString().split('T')[0];
-    const dayName = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'][new Date().getDay()];
+    const dayNames: DayOfWeek[] = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+    const dayName = dayNames[new Date().getDay()];
 
     const [{ data: userStats }, { data: completions }] = await Promise.all([
       supabase.from('user_stats').select('*').eq('user_id', user.id).maybeSingle(),
