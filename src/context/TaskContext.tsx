@@ -1,9 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { Task, UserStats, Category, DayOfWeek, ALL_DAYS } from '@/types/task';
-
-const formatDate = (d: Date) => d.toISOString().split('T')[0];
-
-const getHebrewDay = (d: Date): DayOfWeek => ALL_DAYS[d.getDay()];
+import { Task, UserStats, Category, DayOfWeek } from '@/types/task';
+import { formatDate, getNowInIsrael, getHebrewDayFromDate } from '@/lib/dateUtils';
 
 const defaultTasks: Task[] = [
   {
