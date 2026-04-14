@@ -68,6 +68,12 @@ const CalorieTracker = () => {
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [scanResult, setScanResult] = useState<any>(null);
   const [showCamera, setShowCamera] = useState(false);
+  const [barcodeMode, setBarcodeMode] = useState(false);
+  const [barcodeInput, setBarcodeInput] = useState('');
+  const [barcodeScanning, setBarcodeScanning] = useState(false);
+  const [barcodeResult, setBarcodeResult] = useState<any>(null);
+  const [servingCount, setServingCount] = useState(1);
+  const barcodeIntervalRef = useRef<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
