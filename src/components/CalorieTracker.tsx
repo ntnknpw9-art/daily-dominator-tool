@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
-import { Apple, Plus, Trash2, Calculator, Loader2, UtensilsCrossed, Target, TrendingUp, Calendar } from 'lucide-react';
+import { Apple, Plus, Trash2, Calculator, Loader2, UtensilsCrossed, Target, TrendingUp, Calendar, Camera, X, ScanLine, ChefHat } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface DailyNeeds {
@@ -64,6 +64,13 @@ const CalorieTracker = () => {
   const [analyzingFood, setAnalyzingFood] = useState(false);
   const [history, setHistory] = useState<DayHistory[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [scanningFood, setScanningFood] = useState(false);
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [scanResult, setScanResult] = useState<any>(null);
+  const [showCamera, setShowCamera] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   const today = getTodayDate();
 
@@ -241,6 +248,132 @@ const CalorieTracker = () => {
     if (user) {
       await supabase.from('nutrition_logs').delete().eq('id', id).eq('user_id', user.id);
     }
+  };
+
+  // Camera functions
+  const startCamera = async () => {
+    setShowCamera(true);
+    setCapturedImage(null);
+    setScanResult(null);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+    } catch (err) {
+      toast.error('לא ניתן לגשת למצלמה. נסה להעלות תמונה במקום.');
+      setShowCamera(false);
+    }
+  };
+
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    setShowCamera(false);
+  };
+
+  const capturePhoto = () => {
+    if (!videoRef.current) return;
+    const canvas = document.createElement('canvas');
+    canvas.width = videoRef.current.videoWidth;
+    canvas.height = videoRef.current.videoHeight;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.drawImage(videoRef.current, 0, 0);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+    setCapturedImage(dataUrl);
+    stopCamera();
+    scanFoodImage(dataUrl);
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      toast.error('אנא בחר קובץ תמונה');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      setCapturedImage(dataUrl);
+      setScanResult(null);
+      scanFoodImage(dataUrl);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
+
+  const scanFoodImage = async (dataUrl: string) => {
+    setScanningFood(true);
+    setScanResult(null);
+    try {
+      const base64 = dataUrl.split(',')[1];
+      const mimeMatch = dataUrl.match(/data:(.*?);/);
+      const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
+
+      const { data, error } = await supabase.functions.invoke('calorie-tracker', {
+        body: { type: 'scan_food', data: { imageBase64: base64, mimeType } },
+      });
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+
+      setScanResult(data);
+      toast.success('הסריקה הושלמה!');
+    } catch (e: any) {
+      toast.error(e.message || 'שגיאה בסריקת התמונה');
+    } finally {
+      setScanningFood(false);
+    }
+  };
+
+  const addScannedFood = async () => {
+    if (!scanResult) return;
+    if (user) {
+      const { data: inserted, error: insertErr } = await supabase.from('nutrition_logs').insert({
+        user_id: user.id,
+        log_date: today,
+        food_name: scanResult.name || 'מאכל סרוק',
+        calories: scanResult.calories || 0,
+        protein: scanResult.protein || 0,
+        fat: scanResult.fat || 0,
+        carbs: scanResult.carbs || 0,
+        portion: scanResult.portion || '',
+      }).select().single();
+
+      if (insertErr) {
+        toast.error('שגיאה בשמירה');
+        return;
+      }
+
+      setFoods(prev => [...prev, {
+        id: inserted.id,
+        name: inserted.food_name,
+        calories: inserted.calories,
+        protein: Number(inserted.protein),
+        fat: Number(inserted.fat),
+        carbs: Number(inserted.carbs),
+        portion: inserted.portion || '',
+      }]);
+    } else {
+      setFoods(prev => [...prev, {
+        id: crypto.randomUUID(),
+        name: scanResult.name,
+        calories: scanResult.calories,
+        protein: scanResult.protein,
+        fat: scanResult.fat,
+        carbs: scanResult.carbs,
+        portion: scanResult.portion || '',
+      }]);
+    }
+    toast.success(`${scanResult.name} נוסף!`);
+    setCapturedImage(null);
+    setScanResult(null);
   };
 
   const totals = foods.reduce(
@@ -424,12 +557,167 @@ const CalorieTracker = () => {
         </Card>
       )}
 
+      {/* Camera Food Scanner */}
+      <Card className="border-border/50 bg-card/50 backdrop-blur-sm overflow-hidden">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <ScanLine className="w-5 h-5 text-primary" />
+            סורק אוכל חכם
+          </CardTitle>
+          <p className="text-xs text-muted-foreground">צלם או העלה תמונה של האוכל וה-AI ינתח קלוריות, משקל ושיטת בישול</p>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {!showCamera && !capturedImage && (
+            <div className="flex gap-2">
+              <Button onClick={startCamera} className="flex-1 gap-2" variant="outline">
+                <Camera className="w-4 h-4" />
+                צלם תמונה
+              </Button>
+              <Button onClick={() => fileInputRef.current?.click()} className="flex-1 gap-2" variant="outline">
+                <Apple className="w-4 h-4" />
+                העלה מגלריה
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleFileUpload}
+              />
+            </div>
+          )}
+
+          {showCamera && (
+            <div className="relative rounded-lg overflow-hidden bg-black">
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full aspect-video object-cover"
+              />
+              <div className="absolute inset-0 border-2 border-primary/30 rounded-lg pointer-events-none">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 border-2 border-primary/60 rounded-xl animate-pulse" />
+              </div>
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-3">
+                <Button onClick={capturePhoto} size="lg" className="rounded-full w-14 h-14 bg-primary hover:bg-primary/80">
+                  <Camera className="w-6 h-6" />
+                </Button>
+                <Button onClick={stopCamera} size="icon" variant="destructive" className="rounded-full">
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {capturedImage && (
+            <div className="space-y-3">
+              <div className="relative rounded-lg overflow-hidden">
+                <img src={capturedImage} alt="צילום אוכל" className="w-full aspect-video object-cover rounded-lg" />
+                {scanningFood && (
+                  <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-3">
+                    <Loader2 className="w-10 h-10 text-primary animate-spin" />
+                    <p className="text-sm font-medium text-white">מנתח את האוכל...</p>
+                    <div className="w-32 h-1 bg-white/20 rounded-full overflow-hidden">
+                      <div className="h-full bg-primary rounded-full animate-pulse w-2/3" />
+                    </div>
+                  </div>
+                )}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute top-2 left-2 bg-black/50 hover:bg-black/70 text-white rounded-full h-8 w-8"
+                  onClick={() => { setCapturedImage(null); setScanResult(null); }}
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+
+              {scanResult && (
+                <div className="space-y-3 animate-fade-in">
+                  <div className="p-4 rounded-lg bg-muted/40 border border-border/50 space-y-3">
+                    <div className="flex items-center gap-2">
+                      <ChefHat className="w-5 h-5 text-primary" />
+                      <h4 className="font-bold text-base">{scanResult.name}</h4>
+                    </div>
+                    
+                    {scanResult.cooking_method && (
+                      <p className="text-xs text-muted-foreground">
+                        🍳 שיטת בישול: <span className="text-foreground font-medium">{scanResult.cooking_method}</span>
+                      </p>
+                    )}
+                    {scanResult.estimated_weight_grams && (
+                      <p className="text-xs text-muted-foreground">
+                        ⚖️ משקל משוער: <span className="text-foreground font-medium">{scanResult.estimated_weight_grams} גרם</span>
+                      </p>
+                    )}
+                    {scanResult.confidence && (
+                      <p className="text-xs text-muted-foreground">
+                        🎯 רמת דיוק: <span className={`font-medium ${scanResult.confidence === 'high' ? 'text-green-400' : scanResult.confidence === 'medium' ? 'text-yellow-400' : 'text-red-400'}`}>
+                          {scanResult.confidence === 'high' ? 'גבוהה' : scanResult.confidence === 'medium' ? 'בינונית' : 'נמוכה'}
+                        </span>
+                      </p>
+                    )}
+
+                    <div className="grid grid-cols-4 gap-2 mt-2">
+                      <div className="text-center p-2 rounded-lg bg-primary/10 border border-primary/20">
+                        <p className="text-xs text-muted-foreground">קלוריות</p>
+                        <p className="font-bold text-primary">{scanResult.calories}</p>
+                      </div>
+                      <div className="text-center p-2 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                        <p className="text-xs text-muted-foreground">חלבון</p>
+                        <p className="font-bold text-blue-400">{scanResult.protein}g</p>
+                      </div>
+                      <div className="text-center p-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                        <p className="text-xs text-muted-foreground">שומן</p>
+                        <p className="font-bold text-yellow-400">{scanResult.fat}g</p>
+                      </div>
+                      <div className="text-center p-2 rounded-lg bg-green-500/10 border border-green-500/20">
+                        <p className="text-xs text-muted-foreground">פחמימות</p>
+                        <p className="font-bold text-green-400">{scanResult.carbs}g</p>
+                      </div>
+                    </div>
+
+                    {scanResult.items && scanResult.items.length > 1 && (
+                      <div className="mt-2 space-y-1">
+                        <p className="text-xs text-muted-foreground font-medium">פירוט פריטים:</p>
+                        {scanResult.items.map((item: any, i: number) => (
+                          <div key={i} className="flex justify-between text-xs p-1.5 rounded bg-muted/30">
+                            <span>{item.name}</span>
+                            <span className="text-muted-foreground">{item.calories} קל׳ • {item.weight_grams}g</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {scanResult.portion && (
+                      <p className="text-xs text-muted-foreground mt-1">{scanResult.portion}</p>
+                    )}
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button onClick={addScannedFood} className="flex-1 gap-2">
+                      <Plus className="w-4 h-4" />
+                      הוסף ללוג היומי
+                    </Button>
+                    <Button onClick={() => { setCapturedImage(null); setScanResult(null); }} variant="outline" className="gap-2">
+                      <Camera className="w-4 h-4" />
+                      סרוק שוב
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Add food */}
       <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center gap-2">
             <UtensilsCrossed className="w-5 h-5 text-primary" />
-            הוסף מאכל
+            הוסף מאכל ידנית
           </CardTitle>
           <p className="text-xs text-muted-foreground">תאר את מה שאכלת וה-AI ינתח את הערכים התזונתיים</p>
         </CardHeader>
