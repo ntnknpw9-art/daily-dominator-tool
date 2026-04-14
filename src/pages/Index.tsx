@@ -22,6 +22,7 @@ import DisciplineScore from '@/components/DisciplineScore';
 import AiCoach from '@/components/AiCoach';
 import Leaderboard from '@/components/Leaderboard';
 import CalorieTracker from '@/components/CalorieTracker';
+import SmartNotifications from '@/components/SmartNotifications';
 import SettingsTab from '@/components/SettingsTab';
 import { LayoutDashboard, ListTodo, CalendarDays, Calendar, Zap, BarChart3, BookOpen, LogOut, Users, Timer, Apple, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -145,6 +146,7 @@ const AppContent = () => {
 
       {/* Floating AI Coach */}
       <AiCoach />
+      <SmartNotifications />
     </div>
   );
 };
