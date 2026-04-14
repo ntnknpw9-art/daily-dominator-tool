@@ -29,9 +29,12 @@ const NewTaskDialog = () => {
   };
 
   const handleSubmit = () => {
-    if (!name || !startDate || !endDate || days.length === 0) return;
-    addTask({ name, meaning, startTime, endTime, startDate, endDate, category, days });
-    setName(''); setMeaning(''); setDays([]);
+    if (!name || days.length === 0) return;
+    if (!isForever && (!startDate || !endDate)) return;
+    const finalStart = isForever ? '2020-01-01' : startDate;
+    const finalEnd = isForever ? '2099-12-31' : endDate;
+    addTask({ name, meaning, startTime, endTime, startDate: finalStart, endDate: finalEnd, category, days });
+    setName(''); setMeaning(''); setDays([]); setIsForever(false);
     setOpen(false);
   };
 
@@ -66,15 +69,36 @@ const NewTaskDialog = () => {
               <Input type="time" value={endTime} onChange={e => setEndTime(e.target.value)} />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label>תאריך התחלה</Label>
-              <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
+          <div>
+            <Label className="mb-2 block">תקופת משימה</Label>
+            <div className="flex gap-3 mb-3">
+              <button
+                type="button"
+                onClick={() => setIsForever(false)}
+                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${!isForever ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'}`}
+              >
+                תאריך התחלה וסיום
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsForever(true)}
+                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all ${isForever ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'}`}
+              >
+                תמיד ♾️
+              </button>
             </div>
-            <div>
-              <Label>תאריך סיום</Label>
-              <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
-            </div>
+            {!isForever && (
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label>תאריך התחלה</Label>
+                  <Input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} />
+                </div>
+                <div>
+                  <Label>תאריך סיום</Label>
+                  <Input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
+                </div>
+              </div>
+            )}
           </div>
           <div>
             <Label>קטגוריה</Label>
