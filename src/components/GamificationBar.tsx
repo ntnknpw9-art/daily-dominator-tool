@@ -70,6 +70,7 @@ const GamificationBar = () => {
         }, { onConflict: 'user_id,achievement_id' }).then(() => {
           setUnlockedAchievements(prev => [...prev, a.id]);
           setNewAchievement(a.label);
+          playAchievementSound();
           setTimeout(() => setNewAchievement(null), 3000);
         });
       }

@@ -39,7 +39,18 @@ const TodayTab = () => {
             <Button
               variant={done ? "default" : "outline"}
               className={`w-full ${done ? 'bg-success hover:bg-success/90' : ''}`}
-              onClick={() => toggleCompletion(task.id, todayStr)}
+              onClick={(e) => {
+                const willComplete = !done;
+                toggleCompletion(task.id, todayStr);
+                if (willComplete) {
+                  playSuccessSound();
+                  const rect = (e.target as HTMLElement).getBoundingClientRect();
+                  createParticleBurst(rect.left + rect.width / 2, rect.top);
+                } else {
+                  playWarningSound();
+                  vibrate([50, 30, 50]);
+                }
+              }}
             >
               {done ? <><Check className="w-4 h-4 ml-2" /> הושלם היום ✓</> : 'סמן כהושלם'}
             </Button>
