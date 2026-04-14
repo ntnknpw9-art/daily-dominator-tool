@@ -18,7 +18,7 @@ const QUOTES = [
 
 const MotivationalSplash = ({ onDismiss }: { onDismiss: () => void }) => {
   const { user } = useAuth();
-  const { tasks } = useTasks();
+  const { tasks } = useTaskContext();
   const [stats, setStats] = useState({ streak: 0, xp: 0, level: 1, todayTasks: 0, completedToday: 0 });
   const [quote] = useState(QUOTES[Math.floor(Math.random() * QUOTES.length)]);
   const [visible, setVisible] = useState(true);
