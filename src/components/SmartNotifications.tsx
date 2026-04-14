@@ -12,6 +12,10 @@ const SmartNotifications = () => {
 
   useEffect(() => {
     const check = () => {
+      // Check if notifications are enabled
+      const enabled = localStorage.getItem('app_notifications_enabled');
+      if (enabled === 'false') return;
+
       const now = getNowInIsrael();
       const nowMin = now.getHours() * 60 + now.getMinutes();
       const todayStr = getTodayStr();
