@@ -27,7 +27,7 @@ import SettingsTab from '@/components/SettingsTab';
 import FriendsSystem from '@/components/FriendsSystem';
 import LeaguesAndSeasons from '@/components/LeaguesAndSeasons';
 import ProgressPhotos from '@/components/ProgressPhotos';
-import { LayoutDashboard, ListTodo, CalendarDays, Calendar, Zap, BarChart3, BookOpen, LogOut, Users, Timer, Apple, Settings } from 'lucide-react';
+import { LayoutDashboard, ListTodo, CalendarDays, Calendar, Zap, BarChart3, BookOpen, LogOut, Users, Timer, Apple, Settings, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const tabs = [
@@ -38,6 +38,7 @@ const tabs = [
   { id: 'analytics', label: 'ניתוח', icon: BarChart3 },
   { id: 'advanced', label: 'מצב מתקדם', icon: Zap },
   { id: 'growth', label: 'צמיחה', icon: BookOpen },
+  { id: 'photos', label: 'תמונות', icon: Camera },
   { id: 'focus', label: 'פוקוס', icon: Timer },
   { id: 'nutrition', label: 'תזונה', icon: Apple },
 ];
@@ -144,6 +145,11 @@ const AppContent = () => {
         {activeTab === 'nutrition' && (
           <div className="space-y-6">
             <CalorieTracker />
+          </div>
+        )}
+        {activeTab === 'photos' && (
+          <div className="space-y-6">
+            <ProgressPhotos />
           </div>
         )}
         {activeTab === 'settings' && <SettingsTab />}
