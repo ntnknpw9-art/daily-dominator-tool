@@ -42,13 +42,18 @@ const AppContent = () => {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-xl font-bold text-foreground">🎯 מערכת המעקב שלך</h1>
-          <div className="flex gap-2">
-            <Button variant="ghost" size="sm" asChild title="קהילה">
+        <div className="max-w-4xl mx-auto px-3 sm:px-4 py-3 sm:py-4 flex items-center justify-between gap-2">
+          <h1 className="text-base sm:text-xl font-bold text-foreground whitespace-nowrap">🎯 מערכת המעקב שלך</h1>
+          <div className="flex gap-1 sm:gap-2 shrink-0">
+            <Button variant="ghost" size="sm" asChild title="קהילה" className="hidden sm:inline-flex">
               <a href="https://chat.whatsapp.com/EJcWCuUd50U4t4KSu7pmrf" target="_blank" rel="noopener noreferrer">
                 <Users className="w-4 h-4 ml-1" />
                 קהילה
+              </a>
+            </Button>
+            <Button variant="ghost" size="icon" asChild title="קהילה" className="sm:hidden">
+              <a href="https://chat.whatsapp.com/EJcWCuUd50U4t4KSu7pmrf" target="_blank" rel="noopener noreferrer">
+                <Users className="w-4 h-4" />
               </a>
             </Button>
             <NewTaskDialog />
@@ -59,21 +64,21 @@ const AppContent = () => {
         </div>
       </header>
 
-      <nav className="border-b border-border/50 bg-card/30 sticky top-[65px] z-40 overflow-x-auto">
-        <div className="max-w-4xl mx-auto px-4 flex gap-1">
+      <nav className="border-b border-border/50 bg-card/30 sticky top-[53px] sm:top-[65px] z-40 overflow-x-auto scrollbar-hide">
+        <div className="max-w-4xl mx-auto px-2 sm:px-4 flex gap-0.5 sm:gap-1">
           {tabs.map(tab => {
             const Icon = tab.icon;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-1.5 px-3 py-3 text-sm font-medium whitespace-nowrap transition-colors border-b-2 ${
+                className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2.5 sm:py-3 text-xs sm:text-sm font-medium whitespace-nowrap transition-colors border-b-2 ${
                   activeTab === tab.id
                     ? 'border-primary text-primary'
                     : 'border-transparent text-muted-foreground hover:text-foreground'
                 }`}
               >
-                <Icon className="w-4 h-4" />
+                <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 {tab.label}
               </button>
             );
@@ -81,7 +86,7 @@ const AppContent = () => {
         </div>
       </nav>
 
-      <main className="max-w-4xl mx-auto px-4 py-6">
+      <main className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
         {/* Gamification bar on all tabs */}
         <div className="mb-6">
           <GamificationBar />
