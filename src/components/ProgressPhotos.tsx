@@ -171,6 +171,15 @@ const ProgressPhotos = () => {
             </Button>
             <Button
               size="sm"
+              variant={viewMode === 'compare' ? 'default' : 'outline'}
+              onClick={() => setViewMode('compare')}
+              disabled={myBefore.length === 0 || myAfter.length === 0}
+            >
+              <SlidersHorizontal className="w-3 h-3 ml-1" />
+              השוואה
+            </Button>
+            <Button
+              size="sm"
               variant={viewMode === 'community' ? 'default' : 'outline'}
               onClick={() => setViewMode('community')}
             >
