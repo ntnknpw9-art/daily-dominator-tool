@@ -1,0 +1,13 @@
+import type { CapacitorConfig } from '@capacitor/cli';
+
+const config: CapacitorConfig = {
+  appId: 'app.lovable.dailydominator',
+  appName: 'daily-dominator-tool',
+  webDir: 'dist',
+  server: {
+    url: "https://296df08a-68ba-481e-b169-30e2cb9c50f6.lovableproject.com?forceHideBadge=true",
+    cleartext: true
+  }
+};
+
+export default config;
