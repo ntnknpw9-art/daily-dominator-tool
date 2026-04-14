@@ -278,6 +278,39 @@ export type Database = {
         }
         Relationships: []
       }
+      progress_photos: {
+        Row: {
+          caption: string | null
+          created_at: string
+          id: string
+          image_url: string
+          is_public: boolean
+          photo_date: string
+          photo_type: string
+          user_id: string
+        }
+        Insert: {
+          caption?: string | null
+          created_at?: string
+          id?: string
+          image_url: string
+          is_public?: boolean
+          photo_date: string
+          photo_type?: string
+          user_id: string
+        }
+        Update: {
+          caption?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string
+          is_public?: boolean
+          photo_date?: string
+          photo_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       task_completions: {
         Row: {
           completed: boolean
