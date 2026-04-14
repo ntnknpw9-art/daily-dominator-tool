@@ -1,6 +1,6 @@
 import { useTaskContext } from '@/context/TaskContext';
-import { Task, ALL_DAYS, DayOfWeek } from '@/types/task';
-import { formatDate, getDatesBetween } from '@/lib/dateUtils';
+import { Task, DayOfWeek } from '@/types/task';
+import { formatDate, getDatesBetween, getNowInIsrael, getHebrewDayFromDate } from '@/lib/dateUtils';
 import { Trash2, Timer, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
@@ -18,12 +18,12 @@ const getCategoryColor = (cat: string) => {
 const TaskCard = ({ task }: { task: Task }) => {
   const { toggleCompletion, deleteTask, setTimerTaskId } = useTaskContext();
   
-  const today = new Date();
+  const today = getNowInIsrael();
   const endDate = new Date(task.endDate) > today ? today : new Date(task.endDate);
   const allDates = getDatesBetween(task.startDate, formatDate(endDate))
     .filter(dateStr => {
-      const d = new Date(dateStr);
-      const hebrewDay = ALL_DAYS[d.getDay()] as DayOfWeek;
+      const d = new Date(dateStr + 'T12:00:00');
+      const hebrewDay = getHebrewDayFromDate(d) as DayOfWeek;
       return task.days.includes(hebrewDay);
     });
 

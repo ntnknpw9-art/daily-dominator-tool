@@ -1,22 +1,23 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useTaskContext } from '@/context/TaskContext';
-import { formatDate, isNowBetween, timeToMinutes } from '@/lib/dateUtils';
-import { LEVELS, ACHIEVEMENTS, ALL_DAYS, DayOfWeek } from '@/types/task';
+import { getNowInIsrael, getTodayStr, isNowBetween, getNowMinutes, timeToMinutes } from '@/lib/dateUtils';
+import { LEVELS, ACHIEVEMENTS, DayOfWeek } from '@/types/task';
 import { Button } from '@/components/ui/button';
 import { Check, Play, Square } from 'lucide-react';
+import { getHebrewDayFromDate } from '@/lib/dateUtils';
 
 const AdvancedTab = () => {
   const ctx = useTaskContext();
   const { tasks, stats, getTodayTasks, toggleCompletion, getDailyCompletionPercent, getCategoryStats, getFailureAnalysis, timerTaskId, setTimerTaskId } = ctx;
 
-  const today = new Date();
-  const todayStr = formatDate(today);
+  const today = getNowInIsrael();
+  const todayStr = getTodayStr();
   const todayTasks = getTodayTasks().sort((a, b) => a.startTime.localeCompare(b.startTime));
   const dailyPercent = getDailyCompletionPercent(today);
 
   // War mode
   const nowTask = todayTasks.find(t => isNowBetween(t.startTime, t.endTime));
-  const nowMin = today.getHours() * 60 + today.getMinutes();
+  const nowMin = getNowMinutes();
   const nextTask = todayTasks.find(t => timeToMinutes(t.startTime) > nowMin);
 
   // Level
@@ -57,7 +58,7 @@ const AdvancedTab = () => {
   }));
 
   // Live timeline
-  const hebrewDay = ALL_DAYS[today.getDay()] as DayOfWeek;
+  const hebrewDay = getHebrewDayFromDate(today) as DayOfWeek;
   const timeline = todayTasks.map(t => {
     const done = t.completions[todayStr];
     const isNow = isNowBetween(t.startTime, t.endTime);
