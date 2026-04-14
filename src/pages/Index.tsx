@@ -92,6 +92,7 @@ const AppContent = () => {
             <DailyQuote />
             <DisciplineScore />
             <DashboardTab />
+            <Leaderboard />
             <NightSummary />
           </div>
         )}
