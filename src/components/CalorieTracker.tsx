@@ -134,16 +134,16 @@ const CalorieTracker = () => {
         })));
       }
 
-      // Load history (last 7 days)
-      const weekAgo = new Date();
-      weekAgo.setDate(weekAgo.getDate() - 7);
-      const weekAgoStr = weekAgo.toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
+      // Load history (last 30 days)
+      const monthAgo = new Date();
+      monthAgo.setDate(monthAgo.getDate() - 30);
+      const monthAgoStr = monthAgo.toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
 
       const { data: historyLogs } = await supabase
         .from('nutrition_logs')
         .select('*')
         .eq('user_id', user.id)
-        .gte('log_date', weekAgoStr)
+        .gte('log_date', monthAgoStr)
         .lt('log_date', today)
         .order('log_date', { ascending: true });
 
