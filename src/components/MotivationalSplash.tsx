@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { useTaskContext } from '@/context/TaskContext';
+import { DayOfWeek } from '@/types/task';
 import { ChevronLeft } from 'lucide-react';
 
 const QUOTES = [
