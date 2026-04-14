@@ -16,7 +16,7 @@ import WeeklyReport from '@/components/WeeklyReport';
 import ProductiveHours from '@/components/ProductiveHours';
 import ChallengesAndPunishments from '@/components/ChallengesAndPunishments';
 import NightSummary from '@/components/NightSummary';
-import { LayoutDashboard, ListTodo, CalendarDays, Calendar, Zap, BarChart3, BookOpen, LogOut } from 'lucide-react';
+import { LayoutDashboard, ListTodo, CalendarDays, Calendar, Zap, BarChart3, BookOpen, LogOut, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const tabs = [
@@ -39,6 +39,11 @@ const AppContent = () => {
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <h1 className="text-xl font-bold text-foreground">🎯 מערכת המעקב שלך</h1>
           <div className="flex gap-2">
+            <Button variant="ghost" size="icon" asChild title="קהילה">
+              <a href="https://chat.whatsapp.com/EJcWCuUd50U4t4KSu7pmrf" target="_blank" rel="noopener noreferrer">
+                <Users className="w-4 h-4" />
+              </a>
+            </Button>
             <NewTaskDialog />
             <Button variant="ghost" size="icon" onClick={signOut} title="התנתק">
               <LogOut className="w-4 h-4" />
