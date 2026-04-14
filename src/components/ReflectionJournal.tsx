@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { getTodayStr, formatFullHebrew, getNowInIsrael } from '@/lib/dateUtils';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Save } from 'lucide-react';
@@ -13,24 +15,47 @@ interface JournalEntry {
 }
 
 const ReflectionJournal = () => {
+  const { user } = useAuth();
   const todayStr = getTodayStr();
-
-  const [entries, setEntries] = useState<Record<string, JournalEntry>>(() => {
-    const saved = localStorage.getItem('tracker-journal');
-    return saved ? JSON.parse(saved) : {};
-  });
-
-  const [current, setCurrent] = useState<JournalEntry>(
-    entries[todayStr] || { learned: '', hard: '', improve: '', grateful: '', score: 5 }
-  );
+  const [current, setCurrent] = useState<JournalEntry>({ learned: '', hard: '', improve: '', grateful: '', score: 5 });
   const [saved, setSaved] = useState(false);
+  const [pastEntries, setPastEntries] = useState<{ date: string; entry: JournalEntry }[]>([]);
 
   useEffect(() => {
-    localStorage.setItem('tracker-journal', JSON.stringify(entries));
-  }, [entries]);
+    if (!user) return;
+    const fetchEntries = async () => {
+      const { data } = await supabase
+        .from('journal_entries')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('entry_date', { ascending: false })
+        .limit(10);
 
-  const handleSave = () => {
-    setEntries(prev => ({ ...prev, [todayStr]: current }));
+      if (data) {
+        const today = data.find(e => e.entry_date === todayStr);
+        if (today) {
+          setCurrent({ learned: today.learned || '', hard: today.hard || '', improve: today.improve || '', grateful: today.grateful || '', score: today.score || 5 });
+        }
+        setPastEntries(data.filter(e => e.entry_date !== todayStr).map(e => ({
+          date: e.entry_date,
+          entry: { learned: e.learned || '', hard: e.hard || '', improve: e.improve || '', grateful: e.grateful || '', score: e.score || 5 },
+        })));
+      }
+    };
+    fetchEntries();
+  }, [user, todayStr]);
+
+  const handleSave = async () => {
+    if (!user) return;
+    await supabase.from('journal_entries').upsert({
+      user_id: user.id,
+      entry_date: todayStr,
+      learned: current.learned,
+      hard: current.hard,
+      improve: current.improve,
+      grateful: current.grateful,
+      score: current.score,
+    }, { onConflict: 'user_id,entry_date' });
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
   };
@@ -88,24 +113,19 @@ const ReflectionJournal = () => {
         </Button>
       </div>
 
-      {/* Previous entries */}
-      {Object.keys(entries).filter(d => d !== todayStr).length > 0 && (
+      {pastEntries.length > 0 && (
         <div className="mt-6 border-t border-border/30 pt-4">
           <h4 className="text-sm font-bold text-muted-foreground mb-3">רפלקציות קודמות</h4>
           <div className="space-y-3 max-h-60 overflow-y-auto">
-            {Object.entries(entries)
-              .filter(([d]) => d !== todayStr)
-              .sort(([a], [b]) => b.localeCompare(a))
-              .slice(0, 5)
-              .map(([date, entry]) => (
-                <div key={date} className="bg-secondary/20 rounded-lg p-3 text-sm">
-                  <div className="flex justify-between items-center mb-1">
-                    <span className="text-muted-foreground">{date}</span>
-                    <span className="text-accent font-bold">⭐ {entry.score}/10</span>
-                  </div>
-                  {entry.learned && <p className="text-muted-foreground text-xs">📚 {entry.learned}</p>}
+            {pastEntries.slice(0, 5).map(({ date, entry }) => (
+              <div key={date} className="bg-secondary/20 rounded-lg p-3 text-sm">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-muted-foreground">{date}</span>
+                  <span className="text-accent font-bold">⭐ {entry.score}/10</span>
                 </div>
-              ))}
+                {entry.learned && <p className="text-muted-foreground text-xs">📚 {entry.learned}</p>}
+              </div>
+            ))}
           </div>
         </div>
       )}

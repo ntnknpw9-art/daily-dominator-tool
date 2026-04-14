@@ -1,79 +1,13 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { Task, UserStats, Category, DayOfWeek } from '@/types/task';
 import { formatDate, getNowInIsrael, getHebrewDayFromDate } from '@/lib/dateUtils';
-
-const defaultTasks: Task[] = [
-  {
-    id: '1',
-    name: 'אימון כוח',
-    meaning: 'בניית שרירים וכוח פיזי',
-    startTime: '14:00',
-    endTime: '16:00',
-    startDate: '2026-04-01',
-    endDate: '2026-12-31',
-    category: 'כושר',
-    days: ['ראשון', 'שני', 'שלישי', 'חמישי'],
-    completions: {},
-    workoutDetails: [
-      { day: 'ראשון', description: 'Push' },
-      { day: 'שני', description: 'Pull' },
-      { day: 'שלישי', description: 'רגליים' },
-      { day: 'חמישי', description: 'פוקוס אישי + בטן' },
-    ],
-  },
-  {
-    id: '2',
-    name: 'איגרוף',
-    meaning: 'אימון לחימה ועמידות',
-    startTime: '16:00',
-    endTime: '18:00',
-    startDate: '2026-04-01',
-    endDate: '2026-12-31',
-    category: 'כושר',
-    days: ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי'],
-    completions: {},
-  },
-  {
-    id: '3',
-    name: 'ריצה',
-    meaning: 'סיבולת לב ריאה',
-    startTime: '18:00',
-    endTime: '18:30',
-    startDate: '2026-04-01',
-    endDate: '2026-12-31',
-    category: 'כושר',
-    days: ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי'],
-    completions: {},
-  },
-  {
-    id: '4',
-    name: 'לימוד תאוריה',
-    meaning: 'רישיון נהיגה',
-    startTime: '19:00',
-    endTime: '20:00',
-    startDate: '2026-04-01',
-    endDate: '2026-12-31',
-    category: 'לימודים',
-    days: ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי'],
-    completions: {},
-  },
-  {
-    id: '5',
-    name: 'לימוד ספרות',
-    meaning: 'השכלה כללית — שעתיים',
-    startTime: '20:00',
-    endTime: '22:00',
-    startDate: '2026-04-01',
-    endDate: '2026-12-31',
-    category: 'לימודים',
-    days: ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי'],
-    completions: {},
-  },
-];
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
 
 interface TaskContextType {
   tasks: Task[];
   stats: UserStats;
+  loading: boolean;
   addTask: (task: Omit<Task, 'id' | 'completions'>) => void;
   deleteTask: (id: string) => void;
   toggleCompletion: (taskId: string, date: string) => void;
@@ -98,32 +32,125 @@ export const useTaskContext = () => {
 };
 
 export const TaskProvider = ({ children }: { children: ReactNode }) => {
-  const [tasks, setTasks] = useState<Task[]>(() => {
-    const saved = localStorage.getItem('tracker-tasks');
-    return saved ? JSON.parse(saved) : defaultTasks;
-  });
+  const { user } = useAuth();
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
   const [timerTaskId, setTimerTaskId] = useState<string | null>(null);
 
+  // Fetch tasks + completions from Supabase
   useEffect(() => {
-    localStorage.setItem('tracker-tasks', JSON.stringify(tasks));
-  }, [tasks]);
+    if (!user) { setTasks([]); setLoading(false); return; }
 
-  const addTask = useCallback((task: Omit<Task, 'id' | 'completions'>) => {
-    setTasks(prev => [...prev, { ...task, id: crypto.randomUUID(), completions: {} }]);
-  }, []);
+    const fetchData = async () => {
+      setLoading(true);
+      const { data: dbTasks } = await supabase
+        .from('tasks')
+        .select('*')
+        .eq('user_id', user.id);
 
-  const deleteTask = useCallback((id: string) => {
+      const { data: dbCompletions } = await supabase
+        .from('task_completions')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (dbTasks) {
+        const completionMap: Record<string, Record<string, boolean>> = {};
+        dbCompletions?.forEach(c => {
+          if (!completionMap[c.task_id]) completionMap[c.task_id] = {};
+          completionMap[c.task_id][c.completion_date] = c.completed;
+        });
+
+        const mappedTasks: Task[] = dbTasks.map(t => ({
+          id: t.id,
+          name: t.name,
+          meaning: t.meaning || '',
+          startTime: t.start_time,
+          endTime: t.end_time,
+          startDate: t.start_date,
+          endDate: t.end_date,
+          category: t.category as Category,
+          days: (t.days || []) as DayOfWeek[],
+          completions: completionMap[t.id] || {},
+          workoutDetails: t.workout_details as unknown as Task['workoutDetails'],
+        }));
+        setTasks(mappedTasks);
+      }
+      setLoading(false);
+    };
+
+    fetchData();
+  }, [user]);
+
+  const addTask = useCallback(async (task: Omit<Task, 'id' | 'completions'>) => {
+    if (!user) return;
+    const { data } = await supabase.from('tasks').insert({
+      user_id: user.id,
+      name: task.name,
+      meaning: task.meaning,
+      start_time: task.startTime,
+      end_time: task.endTime,
+      start_date: task.startDate,
+      end_date: task.endDate,
+      category: task.category,
+      days: task.days,
+      workout_details: task.workoutDetails as any,
+    }).select().single();
+
+    if (data) {
+      setTasks(prev => [...prev, {
+        id: data.id,
+        name: data.name,
+        meaning: data.meaning || '',
+        startTime: data.start_time,
+        endTime: data.end_time,
+        startDate: data.start_date,
+        endDate: data.end_date,
+        category: data.category as Category,
+        days: (data.days || []) as DayOfWeek[],
+        completions: {},
+        workoutDetails: data.workout_details as unknown as Task['workoutDetails'],
+      }]);
+    }
+  }, [user]);
+
+  const deleteTask = useCallback(async (id: string) => {
+    if (!user) return;
+    await supabase.from('tasks').delete().eq('id', id);
     setTasks(prev => prev.filter(t => t.id !== id));
-  }, []);
+  }, [user]);
 
-  const toggleCompletion = useCallback((taskId: string, date: string) => {
+  const toggleCompletion = useCallback(async (taskId: string, date: string) => {
+    if (!user) return;
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+
+    const currentlyDone = task.completions[date];
+
+    if (currentlyDone) {
+      await supabase.from('task_completions')
+        .delete()
+        .eq('task_id', taskId)
+        .eq('completion_date', date);
+    } else {
+      await supabase.from('task_completions').upsert({
+        user_id: user.id,
+        task_id: taskId,
+        completion_date: date,
+        completed: true,
+      }, { onConflict: 'task_id,completion_date' });
+    }
+
     setTasks(prev => prev.map(t => {
       if (t.id !== taskId) return t;
       const completions = { ...t.completions };
-      completions[date] = !completions[date];
+      if (currentlyDone) {
+        delete completions[date];
+      } else {
+        completions[date] = true;
+      }
       return { ...t, completions };
     }));
-  }, []);
+  }, [user, tasks]);
 
   const getTasksForDay = useCallback((day: DayOfWeek) => {
     return tasks.filter(t => t.days.includes(day));
@@ -132,9 +159,7 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
   const getTasksForDate = useCallback((date: Date) => {
     const day = getHebrewDayFromDate(date) as DayOfWeek;
     const dateStr = formatDate(date);
-    return tasks.filter(t => {
-      return t.days.includes(day) && dateStr >= t.startDate && dateStr <= t.endDate;
-    });
+    return tasks.filter(t => t.days.includes(day) && dateStr >= t.startDate && dateStr <= t.endDate);
   }, [tasks]);
 
   const getTodayTasks = useCallback(() => getTasksForDate(getNowInIsrael()), [getTasksForDate]);
@@ -155,8 +180,8 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     const today = getNowInIsrael();
     let total = 0;
     for (const task of tasks) {
-      const start = new Date(task.startDate);
-      const end = new Date(task.endDate) > today ? today : new Date(task.endDate);
+      const start = new Date(task.startDate + 'T12:00:00');
+      const end = new Date(task.endDate + 'T12:00:00') > today ? today : new Date(task.endDate + 'T12:00:00');
       for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
         if (task.days.includes(getHebrewDayFromDate(d) as DayOfWeek)) total++;
       }
@@ -187,7 +212,7 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
   const totalCompletions = getTotalCompletions();
   const streak = (() => {
     let s = 0;
-    const d = new Date();
+    const d = getNowInIsrael();
     while (true) {
       const pct = getDailyCompletionPercent(d);
       if (pct >= 80) { s++; d.setDate(d.getDate() - 1); }
@@ -204,7 +229,7 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <TaskContext.Provider value={{
-      tasks, stats, addTask, deleteTask, toggleCompletion,
+      tasks, stats, loading, addTask, deleteTask, toggleCompletion,
       getTasksForDay, getTasksForDate, getTodayTasks,
       getDailyCompletionPercent, getTotalCompletions, getPlannedTotal,
       getCategoryStats, getFailureAnalysis, timerTaskId, setTimerTaskId,
