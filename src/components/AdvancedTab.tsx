@@ -58,7 +58,7 @@ const AdvancedTab = () => {
   }));
 
   // Live timeline
-  const hebrewDay = ALL_DAYS[today.getDay()] as DayOfWeek;
+  const hebrewDay = getHebrewDayFromDate(today) as DayOfWeek;
   const timeline = todayTasks.map(t => {
     const done = t.completions[todayStr];
     const isNow = isNowBetween(t.startTime, t.endTime);
