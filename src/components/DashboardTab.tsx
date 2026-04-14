@@ -3,13 +3,19 @@ import { getNowInIsrael } from '@/lib/dateUtils';
 import { useMemo, useState } from 'react';
 
 const DashboardTab = () => {
-  const { tasks, getTotalCompletions, getPlannedTotal, getDailyCompletionPercent } = useTaskContext();
+  const { tasks, getTotalCompletions, getPlannedTotal, getDailyCompletionPercent, getTodayTasks } = useTaskContext();
   const [hoveredBar, setHoveredBar] = useState<number | null>(null);
 
   const activeTasks = tasks.length;
   const totalCompletions = getTotalCompletions();
   const plannedTotal = getPlannedTotal();
   const overallPercent = plannedTotal > 0 ? Math.round((totalCompletions / plannedTotal) * 100) : 0;
+
+  // Smart daily goal
+  const todayTasks = getTodayTasks();
+  const todayCount = todayTasks.length;
+  const smartGoal = Math.max(60, Math.min(100, todayCount <= 3 ? 100 : todayCount <= 6 ? 85 : todayCount <= 9 ? 75 : 70));
+  const todayPercent = getDailyCompletionPercent(getNowInIsrael());
 
   const chartData = useMemo(() => {
     const data: { date: string; dayName: string; percent: number }[] = [];
@@ -27,9 +33,9 @@ const DashboardTab = () => {
 
   const stats = [
     { label: 'משימות פעילות', value: activeTasks, icon: '🎯', gradient: 'from-primary/20 to-primary/5' },
-    { label: 'סימוני וי', value: totalCompletions, icon: '✅', gradient: 'from-success/20 to-success/5' },
-    { label: 'פעולות מתוכננות', value: plannedTotal, icon: '📋', gradient: 'from-accent/20 to-accent/5' },
-    { label: 'אחוז עמידה כללי', value: `${overallPercent}%`, icon: '📈', gradient: 'from-primary/20 to-accent/5' },
+    { label: 'סימוני וי', value: totalCompletions, icon: '✅', gradient: 'from-green-500/20 to-green-500/5' },
+    { label: 'יעד חכם היום', value: `${smartGoal}%`, icon: '🧠', gradient: 'from-accent/20 to-accent/5' },
+    { label: 'עמידה כללית', value: `${overallPercent}%`, icon: '📈', gradient: 'from-primary/20 to-accent/5' },
   ];
 
   // SVG line chart points
@@ -43,11 +49,23 @@ const DashboardTab = () => {
   const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
   const areaPath = `${linePath} L ${chartWidth} ${chartHeight} L 0 ${chartHeight} Z`;
 
-  // Y axis labels
-  const yLabels = [0, 25, 50, 75, 100].filter(v => v <= Math.max(maxP, 100));
+  // Smart goal line position
+  const goalY = chartHeight - (smartGoal / maxP) * (chartHeight - 8) - 4;
 
   return (
     <div className="space-y-6">
+      {/* Smart Goal Banner */}
+      <div className={`glass-card p-4 text-center ${todayPercent >= smartGoal ? 'border-green-500/50' : 'border-accent/30'}`}>
+        <div className="text-sm text-muted-foreground mb-1">🧠 יעד חכם להיום ({todayCount} משימות)</div>
+        <div className="text-3xl font-black">
+          <span className={todayPercent >= smartGoal ? 'text-green-400' : 'text-foreground'}>{todayPercent}%</span>
+          <span className="text-muted-foreground text-lg"> / {smartGoal}%</span>
+        </div>
+        <p className="text-xs text-muted-foreground mt-1">
+          {todayCount <= 3 ? 'יום קל — יעד מלא!' : todayCount <= 6 ? 'עומס בינוני — תעשה לפחות 85%' : 'יום עמוס — 75% זה ניצחון'}
+        </p>
+      </div>
+
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((s) => (
@@ -66,10 +84,8 @@ const DashboardTab = () => {
           <span className="text-xs text-muted-foreground">14 ימים אחרונים</span>
         </div>
 
-        {/* SVG Area Chart */}
         <div className="relative mb-2">
           <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="w-full h-56" preserveAspectRatio="none">
-            {/* Grid lines */}
             {[0.25, 0.5, 0.75, 1].map(ratio => (
               <line
                 key={ratio}
@@ -80,7 +96,10 @@ const DashboardTab = () => {
               />
             ))}
 
-            {/* Gradient fill */}
+            {/* Smart goal line */}
+            <line x1="0" x2={chartWidth} y1={goalY} y2={goalY}
+              stroke="hsl(38 92% 50%)" strokeWidth="0.4" strokeDasharray="1.5 1.5" opacity="0.7" />
+
             <defs>
               <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="hsl(0, 72%, 51%)" stopOpacity="0.4" />
@@ -92,37 +111,28 @@ const DashboardTab = () => {
               </linearGradient>
             </defs>
 
-            {/* Area */}
             <path d={areaPath} fill="url(#chartGrad)" />
-
-            {/* Line */}
             <path d={linePath} fill="none" stroke="url(#lineGrad)" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round" />
 
-            {/* Data points */}
             {points.map((p, i) => (
               <g key={i}>
                 <circle
                   cx={p.x} cy={p.y} r={hoveredBar === i ? 1.8 : 1}
-                  fill={chartData[i].percent >= 80 ? 'hsl(142, 71%, 45%)' : 'hsl(0, 72%, 51%)'}
+                  fill={chartData[i].percent >= smartGoal ? 'hsl(142, 71%, 45%)' : 'hsl(0, 72%, 51%)'}
                   className="transition-all duration-200"
                   onMouseEnter={() => setHoveredBar(i)}
                   onMouseLeave={() => setHoveredBar(null)}
                   style={{ cursor: 'pointer' }}
                 />
                 {hoveredBar === i && (
-                  <circle
-                    cx={p.x} cy={p.y} r="3"
-                    fill="none"
-                    stroke={chartData[i].percent >= 80 ? 'hsl(142, 71%, 45%)' : 'hsl(0, 72%, 51%)'}
-                    strokeWidth="0.3"
-                    opacity="0.5"
-                  />
+                  <circle cx={p.x} cy={p.y} r="3" fill="none"
+                    stroke={chartData[i].percent >= smartGoal ? 'hsl(142, 71%, 45%)' : 'hsl(0, 72%, 51%)'}
+                    strokeWidth="0.3" opacity="0.5" />
                 )}
               </g>
             ))}
           </svg>
 
-          {/* Hover tooltip */}
           {hoveredBar !== null && (
             <div
               className="absolute top-2 bg-card border border-border rounded-lg px-3 py-1.5 text-xs shadow-lg pointer-events-none z-10"
@@ -134,7 +144,6 @@ const DashboardTab = () => {
           )}
         </div>
 
-        {/* X-axis labels */}
         <div className="flex justify-between px-1">
           {chartData.map((d, i) => (
             <div key={i} className="text-center" style={{ width: `${100 / chartData.length}%` }}>
@@ -145,15 +154,18 @@ const DashboardTab = () => {
           ))}
         </div>
 
-        {/* Legend */}
         <div className="flex items-center justify-center gap-6 mt-4 text-xs text-muted-foreground">
           <span className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-success inline-block" />
-            80%+ — הושג
+            <span className="w-2 h-2 rounded-full bg-green-500 inline-block" />
+            יעד הושג
           </span>
           <span className="flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-primary inline-block" />
-            מתחת ל-80%
+            מתחת ליעד
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-4 border-t border-dashed border-accent inline-block" />
+            יעד חכם
           </span>
         </div>
       </div>
