@@ -382,7 +382,132 @@ const CalorieTracker = () => {
     setScanResult(null);
   };
 
-  const totals = foods.reduce(
+  // Barcode scanner functions
+  const startBarcodeScanner = async () => {
+    setBarcodeMode(true);
+    setBarcodeResult(null);
+    setServingCount(1);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
+      });
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+      }
+      // Start scanning loop using BarcodeDetector API
+      if ('BarcodeDetector' in window) {
+        const detector = new (window as any).BarcodeDetector({
+          formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39'],
+        });
+        const scanLoop = async () => {
+          if (!videoRef.current || videoRef.current.readyState < 2) return;
+          try {
+            const barcodes = await detector.detect(videoRef.current);
+            if (barcodes.length > 0) {
+              const code = barcodes[0].rawValue;
+              stopBarcodeScanner();
+              lookupBarcode(code);
+            }
+          } catch {}
+        };
+        barcodeIntervalRef.current = window.setInterval(scanLoop, 500);
+      } else {
+        toast.error('הדפדפן לא תומך בסריקת ברקוד. הזן ברקוד ידנית.');
+      }
+    } catch (err) {
+      toast.error('לא ניתן לגשת למצלמה');
+      setBarcodeMode(false);
+    }
+  };
+
+  const stopBarcodeScanner = () => {
+    if (barcodeIntervalRef.current) {
+      clearInterval(barcodeIntervalRef.current);
+      barcodeIntervalRef.current = null;
+    }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    setBarcodeMode(false);
+  };
+
+  const lookupBarcode = async (code: string) => {
+    setBarcodeScanning(true);
+    setBarcodeResult(null);
+    setBarcodeInput(code);
+    try {
+      const { data, error } = await supabase.functions.invoke('barcode-lookup', {
+        body: { barcode: code },
+      });
+      if (error) throw error;
+      if (data.error && !data.found) {
+        toast.error(data.error);
+        setBarcodeResult(null);
+      } else if (data.found) {
+        setBarcodeResult(data);
+        toast.success(`נמצא: ${data.name}`);
+      } else {
+        toast.error('המוצר לא נמצא במאגר');
+      }
+    } catch (e: any) {
+      toast.error(e.message || 'שגיאה בחיפוש ברקוד');
+    } finally {
+      setBarcodeScanning(false);
+    }
+  };
+
+  const addBarcodeFood = async () => {
+    if (!barcodeResult) return;
+    const multiplier = servingCount;
+    const vals = barcodeResult.per_serving;
+    const foodName = barcodeResult.brand
+      ? `${barcodeResult.name} (${barcodeResult.brand})`
+      : barcodeResult.name;
+    const portion = `${multiplier} × ${barcodeResult.serving_size}`;
+
+    if (user) {
+      const { data: inserted, error: insertErr } = await supabase.from('nutrition_logs').insert({
+        user_id: user.id,
+        log_date: today,
+        food_name: foodName,
+        calories: Math.round(vals.calories * multiplier),
+        protein: Math.round(vals.protein * multiplier),
+        fat: Math.round(vals.fat * multiplier),
+        carbs: Math.round(vals.carbs * multiplier),
+        portion,
+      }).select().single();
+
+      if (insertErr) { toast.error('שגיאה בשמירה'); return; }
+
+      setFoods(prev => [...prev, {
+        id: inserted.id,
+        name: inserted.food_name,
+        calories: inserted.calories,
+        protein: Number(inserted.protein),
+        fat: Number(inserted.fat),
+        carbs: Number(inserted.carbs),
+        portion: inserted.portion || '',
+      }]);
+    } else {
+      setFoods(prev => [...prev, {
+        id: crypto.randomUUID(),
+        name: foodName,
+        calories: Math.round(vals.calories * multiplier),
+        protein: Math.round(vals.protein * multiplier),
+        fat: Math.round(vals.fat * multiplier),
+        carbs: Math.round(vals.carbs * multiplier),
+        portion,
+      }]);
+    }
+    toast.success(`${foodName} נוסף!`);
+    setBarcodeResult(null);
+    setBarcodeInput('');
+    setServingCount(1);
+  };
+
+
     (acc, f) => ({
       calories: acc.calories + f.calories,
       protein: acc.protein + f.protein,
