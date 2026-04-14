@@ -21,7 +21,8 @@ import PomodoroTimer from '@/components/PomodoroTimer';
 import DisciplineScore from '@/components/DisciplineScore';
 import AiCoach from '@/components/AiCoach';
 import Leaderboard from '@/components/Leaderboard';
-import { LayoutDashboard, ListTodo, CalendarDays, Calendar, Zap, BarChart3, BookOpen, LogOut, Users, Timer } from 'lucide-react';
+import CalorieTracker from '@/components/CalorieTracker';
+import { LayoutDashboard, ListTodo, CalendarDays, Calendar, Zap, BarChart3, BookOpen, LogOut, Users, Timer, Apple } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const tabs = [
