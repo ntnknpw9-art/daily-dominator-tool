@@ -14,7 +14,212 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      challenges: {
+        Row: {
+          challenge_id: string
+          created_at: string
+          id: string
+          progress: number | null
+          start_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          challenge_id: string
+          created_at?: string
+          id?: string
+          progress?: number | null
+          start_date: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          challenge_id?: string
+          created_at?: string
+          id?: string
+          progress?: number | null
+          start_date?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      habits: {
+        Row: {
+          completed: boolean
+          created_at: string
+          habit_date: string
+          habit_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          created_at?: string
+          habit_date: string
+          habit_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          created_at?: string
+          habit_date?: string
+          habit_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      journal_entries: {
+        Row: {
+          created_at: string
+          entry_date: string
+          grateful: string | null
+          hard: string | null
+          id: string
+          improve: string | null
+          learned: string | null
+          score: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          entry_date: string
+          grateful?: string | null
+          hard?: string | null
+          id?: string
+          improve?: string | null
+          learned?: string | null
+          score?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          entry_date?: string
+          grateful?: string | null
+          hard?: string | null
+          id?: string
+          improve?: string | null
+          learned?: string | null
+          score?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      task_completions: {
+        Row: {
+          completed: boolean
+          completion_date: string
+          created_at: string
+          id: string
+          task_id: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          completion_date: string
+          created_at?: string
+          id?: string
+          task_id: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          completion_date?: string
+          created_at?: string
+          id?: string
+          task_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_completions_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tasks: {
+        Row: {
+          category: string
+          created_at: string
+          days: string[]
+          end_date: string
+          end_time: string
+          id: string
+          meaning: string | null
+          name: string
+          start_date: string
+          start_time: string
+          updated_at: string
+          user_id: string
+          workout_details: Json | null
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          days?: string[]
+          end_date: string
+          end_time?: string
+          id?: string
+          meaning?: string | null
+          name: string
+          start_date: string
+          start_time?: string
+          updated_at?: string
+          user_id: string
+          workout_details?: Json | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          days?: string[]
+          end_date?: string
+          end_time?: string
+          id?: string
+          meaning?: string | null
+          name?: string
+          start_date?: string
+          start_time?: string
+          updated_at?: string
+          user_id?: string
+          workout_details?: Json | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
