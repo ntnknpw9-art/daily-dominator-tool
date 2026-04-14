@@ -127,13 +127,13 @@ const AppContent = () => {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-1 px-2.5 py-2.5 text-[11px] font-medium whitespace-nowrap transition-all border-b-2 touch-target ${
+                className={`flex items-center gap-1.5 px-3 py-3 text-[13px] font-medium whitespace-nowrap transition-all border-b-2 touch-target ${
                   activeTab === tab.id
                     ? 'border-primary text-primary'
                     : 'border-transparent text-muted-foreground active:text-foreground'
                 }`}
               >
-                <Icon className="w-3.5 h-3.5" />
+                <Icon className="w-4 h-4" />
                 {tab.label}
               </button>
             );
