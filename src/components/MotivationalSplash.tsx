@@ -64,9 +64,9 @@ const MotivationalSplash = ({ onDismiss }: { onDismiss: () => void }) => {
   const greeting = hour < 12 ? 'בוקר טוב' : hour < 17 ? 'צהריים טובים' : hour < 21 ? 'ערב טוב' : 'לילה טוב';
   const emoji = hour < 12 ? '🌅' : hour < 17 ? '☀️' : hour < 21 ? '🌆' : '🌙';
 
+  const dayNames2: DayOfWeek[] = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
   const nextTask = tasks.find(t => {
-    const dayName = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'][new Date().getDay()];
-    return t.days.includes(dayName);
+    return t.days.includes(dayNames2[new Date().getDay()]);
   });
 
   return (
