@@ -42,14 +42,17 @@ const tabs = [
   { id: 'dashboard', label: 'ראשי', icon: LayoutDashboard },
   { id: 'tasks', label: 'משימות', icon: ListTodo },
   { id: 'today', label: 'היום', icon: CalendarDays },
-  { id: 'weekly', label: 'לו״ז שבועי', icon: Calendar },
+  { id: 'weekly', label: 'שבועי', icon: Calendar },
   { id: 'analytics', label: 'ניתוח', icon: BarChart3 },
-  { id: 'advanced', label: 'מצב מתקדם', icon: Zap },
+  { id: 'advanced', label: 'מתקדם', icon: Zap },
   { id: 'growth', label: 'צמיחה', icon: BookOpen },
   { id: 'photos', label: 'תמונות', icon: Camera },
   { id: 'focus', label: 'פוקוס', icon: Timer },
   { id: 'nutrition', label: 'תזונה', icon: Apple },
 ];
+
+// Bottom nav shows fewer tabs on mobile
+const mobileBottomTabs = ['dashboard', 'tasks', 'today', 'analytics', 'growth'];
 
 const AppContent = () => {
   const { signOut } = useAuth();
