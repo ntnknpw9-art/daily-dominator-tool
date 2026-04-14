@@ -64,6 +64,13 @@ const CalorieTracker = () => {
   const [analyzingFood, setAnalyzingFood] = useState(false);
   const [history, setHistory] = useState<DayHistory[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [scanningFood, setScanningFood] = useState(false);
+  const [capturedImage, setCapturedImage] = useState<string | null>(null);
+  const [scanResult, setScanResult] = useState<any>(null);
+  const [showCamera, setShowCamera] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   const today = getTodayDate();
 
