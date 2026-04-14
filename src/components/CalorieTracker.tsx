@@ -376,7 +376,7 @@ const CalorieTracker = () => {
     setScanResult(null);
   };
 
-
+  const totals = foods.reduce(
     (acc, f) => ({
       calories: acc.calories + f.calories,
       protein: acc.protein + f.protein,
