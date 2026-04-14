@@ -128,8 +128,8 @@ const DisciplineScore = () => {
 
         {/* Big score */}
         <div className="text-center mb-4">
-          <div className={`text-7xl font-black tracking-tight ${getScoreColor(score)}`}>
-            {score}
+          <div className={`text-7xl font-black tracking-tight transition-colors duration-500 ${getScoreColor(score)}`}>
+            {animatedScore}
           </div>
           <div className="text-xs font-bold tracking-[0.3em] text-muted-foreground mt-1 uppercase">
             {getRank(score)}
@@ -140,7 +140,7 @@ const DisciplineScore = () => {
         <div className="grid grid-cols-3 gap-2 mb-4">
           <div className="bg-muted/30 rounded-lg p-2 text-center">
             <Target className="w-4 h-4 mx-auto mb-1 text-primary" />
-            <div className="text-lg font-bold">{completionPct}%</div>
+            <div className="text-lg font-bold">{animatedCompletion}%</div>
             <div className="text-[10px] text-muted-foreground">השלמה</div>
           </div>
           <div className="bg-muted/30 rounded-lg p-2 text-center">
@@ -150,7 +150,7 @@ const DisciplineScore = () => {
           </div>
           <div className="bg-muted/30 rounded-lg p-2 text-center">
             <Swords className="w-4 h-4 mx-auto mb-1 text-accent" />
-            <div className="text-lg font-bold">{hardTaskBonus}%</div>
+            <div className="text-lg font-bold">{animatedHard}%</div>
             <div className="text-[10px] text-muted-foreground">משימות קשות</div>
           </div>
         </div>
