@@ -116,6 +116,7 @@ const AppContent = () => {
 
         {activeTab === 'dashboard' && (
           <div className="space-y-6">
+            <DailySpinWheel />
             <DailyQuote />
             <DisciplineScore />
             <DashboardTab />
@@ -134,6 +135,7 @@ const AppContent = () => {
         {activeTab === 'weekly' && <WeeklyTab />}
         {activeTab === 'analytics' && (
           <div className="space-y-6">
+            <DisciplineDNA />
             <DisciplineScore />
             <Heatmap />
             <WeeklyReport />
@@ -143,6 +145,7 @@ const AppContent = () => {
         {activeTab === 'advanced' && <AdvancedTab />}
         {activeTab === 'growth' && (
           <div className="space-y-6">
+            <DuelSystem />
             <ChallengesAndPunishments />
             <FriendsSystem />
             <ProgressPhotos />
