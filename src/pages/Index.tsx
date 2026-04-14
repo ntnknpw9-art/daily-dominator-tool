@@ -65,13 +65,13 @@ const AppContent = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-16 sm:pb-0">
+    <div className="min-h-screen bg-background pb-20 sm:pb-0">
       <ConfettiOverlay particles={particles} />
       
       {/* Header */}
       <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-50 safe-top">
-        <div className="max-w-4xl mx-auto px-3 sm:px-4 py-2.5 sm:py-4 flex items-center justify-between gap-2">
-          <h1 className="text-sm sm:text-xl font-bold text-foreground whitespace-nowrap">🎯 מערכת המעקב שלך</h1>
+        <div className="max-w-4xl mx-auto px-3 sm:px-4 py-2 sm:py-4 flex items-center justify-between gap-2">
+          <h1 className="text-base sm:text-xl font-bold text-foreground whitespace-nowrap">🎯 מערכת המעקב שלך</h1>
           <div className="flex gap-0.5 sm:gap-2 shrink-0">
             <Button variant="ghost" size="sm" asChild title="קהילה" className="hidden sm:inline-flex">
               <a href="https://chat.whatsapp.com/EJcWCuUd50U4t4KSu7pmrf" target="_blank" rel="noopener noreferrer">
@@ -119,17 +119,17 @@ const AppContent = () => {
       </nav>
 
       {/* Mobile horizontal scroll nav (all tabs) */}
-      <nav className="sm:hidden border-b border-border/50 bg-card/30 sticky top-[45px] z-40 overflow-x-auto scrollbar-hide">
-        <div className="flex gap-1 px-2">
+      <nav className="sm:hidden border-b border-border/50 bg-card/30 sticky top-[49px] z-40 overflow-x-auto scrollbar-hide">
+        <div className="flex gap-1.5 px-2 py-0.5">
           {tabs.map(tab => {
             const Icon = tab.icon;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-3 py-3 text-[14px] font-medium whitespace-nowrap transition-all border-b-2 touch-target ${
+                className={`flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-semibold whitespace-nowrap transition-all border-b-2 rounded-t-md ${
                   activeTab === tab.id
-                    ? 'border-primary text-primary'
+                    ? 'border-primary text-primary bg-primary/5'
                     : 'border-transparent text-muted-foreground active:text-foreground'
                 }`}
               >
@@ -209,23 +209,23 @@ const AppContent = () => {
 
       {/* Mobile bottom nav */}
       <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-t border-border/50 safe-bottom">
-        <div className="flex justify-around items-center px-1 py-1">
+        <div className="flex justify-around items-center px-1 py-1.5">
           {tabs.filter(t => mobileBottomTabs.includes(t.id)).map(tab => {
             const Icon = tab.icon;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg transition-all touch-target ${
+                className={`relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg transition-all ${
                   activeTab === tab.id
                     ? 'text-primary'
                     : 'text-muted-foreground active:text-foreground'
                 }`}
               >
                 <Icon className={`w-5 h-5 transition-transform ${activeTab === tab.id ? 'scale-110' : ''}`} />
-                <span className="text-[10px] font-medium">{tab.label}</span>
+                <span className="text-[11px] font-semibold">{tab.label}</span>
                 {activeTab === tab.id && (
-                  <div className="absolute -top-0.5 w-8 h-0.5 bg-primary rounded-full" />
+                  <div className="absolute -top-1 w-8 h-0.5 bg-primary rounded-full" />
                 )}
               </button>
             );

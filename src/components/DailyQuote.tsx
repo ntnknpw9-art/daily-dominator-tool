@@ -42,10 +42,10 @@ const DailyQuote = () => {
   }, []);
 
   return (
-    <div className="glass-card p-5 text-center glow-red animate-fade-in">
-      <div className="text-2xl mb-3">🔥</div>
-      <p className="text-lg font-bold text-foreground leading-relaxed">"{quote}"</p>
-      <p className="text-xs text-muted-foreground mt-2">ציטוט יומי</p>
+    <div className="glass-card p-4 sm:p-5 text-center glow-red animate-fade-in">
+      <div className="text-xl sm:text-2xl mb-2 sm:mb-3">🔥</div>
+      <p className="text-base sm:text-lg font-bold text-foreground leading-relaxed">"{quote}"</p>
+      <p className="text-[10px] sm:text-xs text-muted-foreground mt-1.5 sm:mt-2">ציטוט יומי</p>
     </div>
   );
 };
