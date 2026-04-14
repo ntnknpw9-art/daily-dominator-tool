@@ -16,7 +16,11 @@ import WeeklyReport from '@/components/WeeklyReport';
 import ProductiveHours from '@/components/ProductiveHours';
 import ChallengesAndPunishments from '@/components/ChallengesAndPunishments';
 import NightSummary from '@/components/NightSummary';
-import { LayoutDashboard, ListTodo, CalendarDays, Calendar, Zap, BarChart3, BookOpen, LogOut, Users } from 'lucide-react';
+import GamificationBar from '@/components/GamificationBar';
+import PomodoroTimer from '@/components/PomodoroTimer';
+import DisciplineScore from '@/components/DisciplineScore';
+import AiCoach from '@/components/AiCoach';
+import { LayoutDashboard, ListTodo, CalendarDays, Calendar, Zap, BarChart3, BookOpen, LogOut, Users, Timer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const tabs = [
@@ -27,6 +31,7 @@ const tabs = [
   { id: 'analytics', label: 'ניתוח', icon: BarChart3 },
   { id: 'advanced', label: 'מצב מתקדם', icon: Zap },
   { id: 'growth', label: 'צמיחה', icon: BookOpen },
+  { id: 'focus', label: 'פוקוס', icon: Timer },
 ];
 
 const AppContent = () => {
@@ -76,9 +81,15 @@ const AppContent = () => {
       </nav>
 
       <main className="max-w-4xl mx-auto px-4 py-6">
+        {/* Gamification bar on all tabs */}
+        <div className="mb-6">
+          <GamificationBar />
+        </div>
+
         {activeTab === 'dashboard' && (
           <div className="space-y-6">
             <DailyQuote />
+            <DisciplineScore />
             <DashboardTab />
             <NightSummary />
           </div>
@@ -93,6 +104,7 @@ const AppContent = () => {
         {activeTab === 'weekly' && <WeeklyTab />}
         {activeTab === 'analytics' && (
           <div className="space-y-6">
+            <DisciplineScore />
             <Heatmap />
             <WeeklyReport />
             <ProductiveHours />
@@ -105,7 +117,15 @@ const AppContent = () => {
             <ReflectionJournal />
           </div>
         )}
+        {activeTab === 'focus' && (
+          <div className="space-y-6">
+            <PomodoroTimer />
+          </div>
+        )}
       </main>
+
+      {/* Floating AI Coach */}
+      <AiCoach />
     </div>
   );
 };
