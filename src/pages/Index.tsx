@@ -27,7 +27,7 @@ import SettingsTab from '@/components/SettingsTab';
 import FriendsSystem from '@/components/FriendsSystem';
 import LeaguesAndSeasons from '@/components/LeaguesAndSeasons';
 import ProgressPhotos from '@/components/ProgressPhotos';
-import DailySpinWheel from '@/components/DailySpinWheel';
+
 import DisciplineDNA from '@/components/DisciplineDNA';
 import DuelSystem from '@/components/DuelSystem';
 import ProgressMap from '@/components/ProgressMap';
@@ -119,7 +119,6 @@ const AppContent = () => {
 
         {activeTab === 'dashboard' && (
           <div className="space-y-6">
-            <DailySpinWheel />
             <DailyQuote />
             <DisciplineScore />
             <DashboardTab />
