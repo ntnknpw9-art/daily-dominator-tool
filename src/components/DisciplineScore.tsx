@@ -64,11 +64,11 @@ const DisciplineScore = () => {
   };
 
   const getRank = (s: number) => {
-    if (s >= 95) return 'LEGENDARY';
-    if (s >= 85) return 'ELITE';
-    if (s >= 70) return 'SOLID';
-    if (s >= 50) return 'RISING';
-    return 'ROOKIE';
+    if (s >= 95) return 'אגדי';
+    if (s >= 85) return 'עילית';
+    if (s >= 70) return 'יציב';
+    if (s >= 50) return 'עולה';
+    return 'טירון';
   };
 
   const days = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
