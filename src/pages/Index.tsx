@@ -36,7 +36,6 @@ const tabs = [
   { id: 'growth', label: 'צמיחה', icon: BookOpen },
   { id: 'focus', label: 'פוקוס', icon: Timer },
   { id: 'nutrition', label: 'תזונה', icon: Apple },
-  { id: 'settings', label: 'הגדרות', icon: Settings },
 ];
 
 const AppContent = () => {
@@ -61,6 +60,9 @@ const AppContent = () => {
               </a>
             </Button>
             <NewTaskDialog />
+            <Button variant="ghost" size="icon" onClick={() => setActiveTab('settings')} title="הגדרות">
+              <Settings className="w-4 h-4" />
+            </Button>
             <Button variant="ghost" size="icon" onClick={signOut} title="התנתק">
               <LogOut className="w-4 h-4" />
             </Button>
