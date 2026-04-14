@@ -479,4 +479,55 @@ const PhotoCard = ({
   </div>
 );
 
+const BeforeAfterSlider = ({ before, after }: { before: string; after: string }) => {
+  const [sliderPos, setSliderPos] = useState(50);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+
+  const handleMove = (clientX: number) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    const x = clientX - rect.left;
+    const pct = Math.max(0, Math.min(100, (x / rect.width) * 100));
+    setSliderPos(pct);
+  };
+
+  const onPointerDown = () => { isDragging.current = true; };
+  const onPointerUp = () => { isDragging.current = false; };
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (isDragging.current) handleMove(e.clientX);
+  };
+
+  return (
+    <div
+      ref={containerRef}
+      className="relative w-full aspect-square rounded-xl overflow-hidden cursor-col-resize select-none border border-border/30"
+      onPointerDown={onPointerDown}
+      onPointerUp={onPointerUp}
+      onPointerLeave={onPointerUp}
+      onPointerMove={onPointerMove}
+      onClick={(e) => handleMove(e.clientX)}
+    >
+      {/* After (full background) */}
+      <img src={after} alt="אחרי" className="absolute inset-0 w-full h-full object-cover" />
+
+      {/* Before (clipped) */}
+      <div className="absolute inset-0 overflow-hidden" style={{ width: `${sliderPos}%` }}>
+        <img src={before} alt="לפני" className="absolute inset-0 w-full h-full object-cover" style={{ width: containerRef.current?.offsetWidth || '100%' }} />
+      </div>
+
+      {/* Slider line */}
+      <div className="absolute top-0 bottom-0 w-0.5 bg-white shadow-lg" style={{ left: `${sliderPos}%`, transform: 'translateX(-50%)' }}>
+        <div className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center">
+          <SlidersHorizontal className="w-4 h-4 text-foreground" />
+        </div>
+      </div>
+
+      {/* Labels */}
+      <span className="absolute top-2 right-2 text-xs bg-black/60 text-white px-2 py-0.5 rounded">לפני</span>
+      <span className="absolute top-2 left-2 text-xs bg-primary/80 text-white px-2 py-0.5 rounded">אחרי</span>
+    </div>
+  );
+};
+
 export default ProgressPhotos;
