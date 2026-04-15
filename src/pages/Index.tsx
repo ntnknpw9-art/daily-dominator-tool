@@ -49,10 +49,11 @@ const tabs = [
   { id: 'photos', label: 'תמונות', icon: Camera },
   { id: 'focus', label: 'פוקוס', icon: Timer },
   { id: 'nutrition', label: 'תזונה', icon: Apple },
+  { id: 'settings', label: 'הגדרות', icon: Settings },
 ];
 
 // Bottom nav shows fewer tabs on mobile
-const mobileBottomTabs = ['dashboard', 'tasks', 'today', 'analytics', 'growth'];
+const mobileBottomTabs = ['dashboard', 'tasks', 'today', 'analytics', 'settings'];
 
 const AppContent = () => {
   const { signOut } = useAuth();
@@ -72,20 +73,15 @@ const AppContent = () => {
       <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-50 safe-top">
         <div className="max-w-4xl mx-auto px-3 sm:px-4 py-2 sm:py-4 flex items-center justify-between gap-1">
           <h1 className="text-sm sm:text-xl font-bold text-foreground whitespace-nowrap truncate">🎯 מערכת המעקב שלך</h1>
-          <div className="flex gap-0 sm:gap-2 shrink-0">
-            <Button variant="ghost" size="sm" asChild title="קהילה" className="hidden sm:inline-flex">
+          <div className="flex gap-0 sm:gap-2 shrink-0 items-center">
+            <Button variant="ghost" size="sm" asChild title="קהילה" className="gap-1 h-8 text-xs sm:text-sm">
               <a href="https://chat.whatsapp.com/EJcWCuUd50U4t4KSu7pmrf" target="_blank" rel="noopener noreferrer">
-                <Users className="w-4 h-4 ml-1" />
+                <Users className="w-4 h-4" />
                 קהילה
               </a>
             </Button>
-            <Button variant="ghost" size="icon" asChild title="קהילה" className="sm:hidden h-8 w-8">
-              <a href="https://chat.whatsapp.com/EJcWCuUd50U4t4KSu7pmrf" target="_blank" rel="noopener noreferrer">
-                <Users className="w-4 h-4" />
-              </a>
-            </Button>
             <NewTaskDialog />
-            <Button variant="ghost" size="icon" onClick={() => setActiveTab('settings')} title="הגדרות" className="h-8 w-8 sm:h-9 sm:w-9">
+            <Button variant="ghost" size="icon" onClick={() => setActiveTab('settings')} title="הגדרות" className="hidden sm:inline-flex h-9 w-9">
               <Settings className="w-4 h-4" />
             </Button>
             <Button variant="ghost" size="icon" onClick={signOut} title="התנתק" className="h-8 w-8 sm:h-9 sm:w-9">
