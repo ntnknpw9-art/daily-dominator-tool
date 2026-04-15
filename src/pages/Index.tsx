@@ -72,7 +72,7 @@ const AppContent = () => {
       {/* Header */}
       <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-50 safe-top">
         <div className="max-w-4xl mx-auto px-3 sm:px-4 py-2 sm:py-4 flex items-center justify-between gap-1">
-          <h1 className="text-sm sm:text-xl font-bold text-foreground whitespace-nowrap truncate">🎯 מערכת המעקב שלך</h1>
+          <h1 className="text-sm sm:text-xl font-bold text-foreground whitespace-nowrap truncate">🎯 <span className="hidden sm:inline">מערכת </span>המעקב שלך</h1>
           <div className="flex gap-0 sm:gap-2 shrink-0 items-center">
             <Button variant="ghost" size="sm" asChild title="קהילה" className="gap-1 h-8 text-xs sm:text-sm">
               <a href="https://chat.whatsapp.com/EJcWCuUd50U4t4KSu7pmrf" target="_blank" rel="noopener noreferrer">
