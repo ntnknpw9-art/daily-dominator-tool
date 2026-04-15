@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.dailydominator',
+  appId: 'app.lovable.296df08a68ba481eb16930e2cb9c50f6',
   appName: 'daily-dominator-tool',
   webDir: 'dist',
   server: {
