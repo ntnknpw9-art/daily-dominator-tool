@@ -49,6 +49,7 @@ const tabs = [
   { id: 'photos', label: 'תמונות', icon: Camera },
   { id: 'focus', label: 'פוקוס', icon: Timer },
   { id: 'nutrition', label: 'תזונה', icon: Apple },
+  { id: 'settings', label: 'הגדרות', icon: Settings },
 ];
 
 // Bottom nav shows fewer tabs on mobile
