@@ -52,7 +52,7 @@ const tabs = [
 ];
 
 // Bottom nav shows fewer tabs on mobile
-const mobileBottomTabs = ['dashboard', 'tasks', 'today', 'analytics', 'growth'];
+const mobileBottomTabs = ['dashboard', 'tasks', 'today', 'analytics', 'settings'];
 
 const AppContent = () => {
   const { signOut } = useAuth();
