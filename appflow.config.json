@@ -1,0 +1,9 @@
+{
+  "apps": [
+    {
+      "appId": "65078427",
+      "root": ".",
+      "iosPath": "ios/App"
+    }
+  ]
+}
