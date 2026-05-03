@@ -5,7 +5,7 @@
     <key>CAPACITOR_DEBUG</key>
 	<string>$(CAPACITOR_DEBUG)</string>
 	<key>CFBundleDevelopmentRegion</key>
-	<string>en</string>
+	<string>he</string>
 	<key>CFBundleDisplayName</key>
 	<string>Daily Dominator</string>
 	<key>CFBundleLocalizations</key>
@@ -13,8 +13,6 @@
 		<string>he</string>
 		<string>en</string>
 	</array>
-	<key>CFBundleDevelopmentRegion</key>
-	<string>he</string>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
 	<key>CFBundleExecutable</key>
