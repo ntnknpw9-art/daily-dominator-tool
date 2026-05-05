@@ -157,6 +157,7 @@ const AuthPage = () => {
           </div>
         </div>
 
+        {!Capacitor.isNativePlatform() && (
         <Button
           variant="outline"
           className="w-full gap-2"
@@ -181,6 +182,7 @@ const AuthPage = () => {
           </svg>
           התחבר עם Google
         </Button>
+        )}
 
         <Button
           variant="outline"
