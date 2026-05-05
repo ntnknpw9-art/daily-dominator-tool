@@ -9,6 +9,7 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
+    "postinstall": "node scripts/patch-apple-sign-in-spm.cjs",
     "test": "vitest run",
     "test:watch": "vitest"
   },
