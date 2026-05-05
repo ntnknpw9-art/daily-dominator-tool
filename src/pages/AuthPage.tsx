@@ -7,6 +7,21 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Capacitor } from '@capacitor/core';
 import { SignInWithApple, SignInWithAppleOptions } from '@capacitor-community/apple-sign-in';
+import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
+import { useEffect } from 'react';
+
+// אתחול Google Auth באפליקציה הנייטיבית
+if (Capacitor.isNativePlatform()) {
+  try {
+    GoogleAuth.initialize({
+      clientId: '', // ה-iOS Client ID נטען מה-Info.plist
+      scopes: ['profile', 'email'],
+      grantOfflineAccess: false,
+    });
+  } catch (e) {
+    console.warn('GoogleAuth init failed', e);
+  }
+}
 
 const AuthPage = () => {
   const { signIn, signUp } = useAuth();
