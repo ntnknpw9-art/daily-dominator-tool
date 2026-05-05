@@ -156,17 +156,7 @@ const AuthPage = () => {
         <Button
           variant="outline"
           className="w-full gap-2 mt-2"
-          onClick={async () => {
-            setError('');
-            setLoading(true);
-            const result = await lovable.auth.signInWithOAuth("apple", {
-              redirect_uri: window.location.origin,
-            });
-            if (result.error) {
-              setError(result.error.message || 'שגיאה בהתחברות עם Apple');
-            }
-            setLoading(false);
-          }}
+          onClick={handleAppleSignIn}
           disabled={loading}
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
@@ -174,6 +164,22 @@ const AuthPage = () => {
           </svg>
           התחבר עם Apple
         </Button>
+
+        {appleError && (
+          <div className="mt-3 rounded-lg border border-destructive/30 bg-destructive/10 p-3 space-y-2">
+            <p className="text-destructive text-sm font-medium">{appleError}</p>
+            <Button
+              type="button"
+              size="sm"
+              variant="destructive"
+              className="w-full"
+              onClick={handleAppleSignIn}
+              disabled={loading}
+            >
+              {loading ? 'מנסה שוב...' : 'נסה שוב'}
+            </Button>
+          </div>
+        )}
 
         <div className="mt-4 text-center">
           <button
