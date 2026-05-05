@@ -9,7 +9,6 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "postinstall": "patch-package",
     "test": "vitest run",
     "test:watch": "vitest"
   },
