@@ -12,8 +12,41 @@ const AuthPage = () => {
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [error, setError] = useState('');
+  const [appleError, setAppleError] = useState('');
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
+
+  const friendlyAppleError = (msg?: string) => {
+    const m = (msg || '').toLowerCase();
+    if (!msg) return 'ההתחברות עם Apple נכשלה. נסה שוב.';
+    if (m.includes('cancel') || m.includes('closed') || m.includes('popup') || m.includes('denied') || m.includes('access_denied'))
+      return 'ביטלת את ההתחברות עם Apple. אפשר לנסות שוב.';
+    if (m.includes('network') || m.includes('fetch') || m.includes('timeout'))
+      return 'בעיית רשת בהתחברות עם Apple. בדוק את החיבור ונסה שוב.';
+    if (m.includes('not enabled') || m.includes('provider') || m.includes('disabled'))
+      return 'התחברות עם Apple אינה מוגדרת כרגע. פנה לתמיכה.';
+    if (m.includes('email') && m.includes('exist'))
+      return 'כבר קיים חשבון עם המייל הזה. התחבר עם המייל/Google ושייך את Apple מההגדרות.';
+    return `שגיאה בהתחברות עם Apple: ${msg}`;
+  };
+
+  const handleAppleSignIn = async () => {
+    setError('');
+    setAppleError('');
+    setLoading(true);
+    try {
+      const result = await lovable.auth.signInWithOAuth('apple', {
+        redirect_uri: window.location.origin,
+      });
+      if (result?.error) {
+        setAppleError(friendlyAppleError(result.error.message));
+      }
+    } catch (e: any) {
+      setAppleError(friendlyAppleError(e?.message));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
