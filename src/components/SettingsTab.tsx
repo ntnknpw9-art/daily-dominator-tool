@@ -38,6 +38,8 @@ export const isNoMercyMode = () => {
 };
 
 const SettingsTab = () => {
+  const { signOut } = useAuth();
+  const [deleting, setDeleting] = useState(false);
   const [soundOn, setSoundOn] = useState(isSoundEnabled);
   const [theme, setTheme] = useState<'dark' | 'light'>(getTheme);
   const [notificationsOn, setNotificationsOn] = useState(() => {
@@ -49,6 +51,20 @@ const SettingsTab = () => {
     if (typeof window === 'undefined') return false;
     return localStorage.getItem(NO_MERCY_KEY) === 'true';
   });
+
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
+    try {
+      const { error } = await supabase.functions.invoke('delete-account');
+      if (error) throw error;
+      try { localStorage.clear(); } catch {}
+      toast.success('החשבון נמחק');
+      await signOut();
+    } catch (e: any) {
+      toast.error('שגיאה במחיקת החשבון: ' + (e?.message || ''));
+      setDeleting(false);
+    }
+  };
 
   const toggleTheme = () => {
     const newTheme = theme === 'dark' ? 'light' : 'dark';
