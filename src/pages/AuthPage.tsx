@@ -12,8 +12,41 @@ const AuthPage = () => {
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [error, setError] = useState('');
+  const [appleError, setAppleError] = useState('');
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
+
+  const friendlyAppleError = (msg?: string) => {
+    const m = (msg || '').toLowerCase();
+    if (!msg) return 'ההתחברות עם Apple נכשלה. נסה שוב.';
+    if (m.includes('cancel') || m.includes('closed') || m.includes('popup') || m.includes('denied') || m.includes('access_denied'))
+      return 'ביטלת את ההתחברות עם Apple. אפשר לנסות שוב.';
+    if (m.includes('network') || m.includes('fetch') || m.includes('timeout'))
+      return 'בעיית רשת בהתחברות עם Apple. בדוק את החיבור ונסה שוב.';
+    if (m.includes('not enabled') || m.includes('provider') || m.includes('disabled'))
+      return 'התחברות עם Apple אינה מוגדרת כרגע. פנה לתמיכה.';
+    if (m.includes('email') && m.includes('exist'))
+      return 'כבר קיים חשבון עם המייל הזה. התחבר עם המייל/Google ושייך את Apple מההגדרות.';
+    return `שגיאה בהתחברות עם Apple: ${msg}`;
+  };
+
+  const handleAppleSignIn = async () => {
+    setError('');
+    setAppleError('');
+    setLoading(true);
+    try {
+      const result = await lovable.auth.signInWithOAuth('apple', {
+        redirect_uri: window.location.origin,
+      });
+      if (result?.error) {
+        setAppleError(friendlyAppleError(result.error.message));
+      }
+    } catch (e: any) {
+      setAppleError(friendlyAppleError(e?.message));
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,17 +156,7 @@ const AuthPage = () => {
         <Button
           variant="outline"
           className="w-full gap-2 mt-2"
-          onClick={async () => {
-            setError('');
-            setLoading(true);
-            const result = await lovable.auth.signInWithOAuth("apple", {
-              redirect_uri: window.location.origin,
-            });
-            if (result.error) {
-              setError(result.error.message || 'שגיאה בהתחברות עם Apple');
-            }
-            setLoading(false);
-          }}
+          onClick={handleAppleSignIn}
           disabled={loading}
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
@@ -141,6 +164,22 @@ const AuthPage = () => {
           </svg>
           התחבר עם Apple
         </Button>
+
+        {appleError && (
+          <div className="mt-3 rounded-lg border border-destructive/30 bg-destructive/10 p-3 space-y-2">
+            <p className="text-destructive text-sm font-medium">{appleError}</p>
+            <Button
+              type="button"
+              size="sm"
+              variant="destructive"
+              className="w-full"
+              onClick={handleAppleSignIn}
+              disabled={loading}
+            >
+              {loading ? 'מנסה שוב...' : 'נסה שוב'}
+            </Button>
+          </div>
+        )}
 
         <div className="mt-4 text-center">
           <button
