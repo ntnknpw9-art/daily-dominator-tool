@@ -1,7 +1,16 @@
 {
-	"appId": "app.lovable.dailydominator",
+	"appId": "com.natanknafo.dailydominator",
 	"appName": "Daily Dominator",
 	"webDir": "dist",
+	"plugins": {
+		"GoogleSignIn": {
+			"clientId": "309108409035-3sl22316bkmuom32e1c2jtjjbmgava6i.apps.googleusercontent.com",
+			"scopes": [
+				"profile",
+				"email"
+			]
+		}
+	},
 	"packageClassList": [
 		"SignInWithApple",
 		"GoogleSignInPlugin"
