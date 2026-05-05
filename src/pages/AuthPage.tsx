@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { lovable } from '@/integrations/lovable/index';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Capacitor } from '@capacitor/core';
+import { SignInWithApple, SignInWithAppleOptions } from '@capacitor-community/apple-sign-in';
 
 const AuthPage = () => {
   const { signIn, signUp } = useAuth();
@@ -35,6 +38,32 @@ const AuthPage = () => {
     setAppleError('');
     setLoading(true);
     try {
+      // באפליקציית iOS - שימוש ב-Sign in with Apple נייטיבי
+      if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios') {
+        const options: SignInWithAppleOptions = {
+          clientId: 'app.lovable.dailydominator',
+          redirectURI: 'https://daily-dominator-tool.lovable.app',
+          scopes: 'email name',
+          state: Math.random().toString(36).substring(7),
+          nonce: Math.random().toString(36).substring(7),
+        };
+        const res = await SignInWithApple.authorize(options);
+        const idToken = res.response?.identityToken;
+        if (!idToken) {
+          setAppleError('לא התקבל token מאפל. נסה שוב.');
+          return;
+        }
+        const { error } = await supabase.auth.signInWithIdToken({
+          provider: 'apple',
+          token: idToken,
+          nonce: options.nonce,
+        });
+        if (error) {
+          setAppleError(friendlyAppleError(error.message));
+        }
+        return;
+      }
+      // בדפדפן - OAuth רגיל
       const result = await lovable.auth.signInWithOAuth('apple', {
         redirect_uri: window.location.origin,
       });
@@ -128,6 +157,7 @@ const AuthPage = () => {
           </div>
         </div>
 
+        {!Capacitor.isNativePlatform() && (
         <Button
           variant="outline"
           className="w-full gap-2"
@@ -152,6 +182,7 @@ const AuthPage = () => {
           </svg>
           התחבר עם Google
         </Button>
+        )}
 
         <Button
           variant="outline"
