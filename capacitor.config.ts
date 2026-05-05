@@ -11,7 +11,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 const isDev = process.env.CAP_ENV === 'development';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.dailydominator',
+  appId: 'com.natanknafo.dailydominator',
   appName: 'Daily Dominator',
   webDir: 'dist',
   ...(isDev && {
