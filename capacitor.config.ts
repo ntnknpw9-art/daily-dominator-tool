@@ -26,6 +26,10 @@ const config: CapacitorConfig = {
   },
   backgroundColor: '#0a0a0a',
   plugins: {
+    GoogleSignIn: {
+      clientId: '309108409035-3sl22316bkmuom32e1c2jtjjbmgava6i.apps.googleusercontent.com',
+      scopes: ['profile', 'email'],
+    },
     StatusBar: {
       style: 'DARK',
       backgroundColor: '#0a0a0a',

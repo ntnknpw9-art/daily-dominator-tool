@@ -1,6 +1,31 @@
 {
-	"appId": "app.lovable.dailydominator",
+	"appId": "com.natanknafo.dailydominator",
 	"appName": "Daily Dominator",
 	"webDir": "dist",
-	"packageClassList": []
+	"ios": {
+		"contentInset": "always",
+		"backgroundColor": "#0a0a0a"
+	},
+	"backgroundColor": "#0a0a0a",
+	"plugins": {
+		"GoogleSignIn": {
+			"clientId": "309108409035-3sl22316bkmuom32e1c2jtjjbmgava6i.apps.googleusercontent.com",
+			"scopes": [
+				"profile",
+				"email"
+			]
+		},
+		"StatusBar": {
+			"style": "DARK",
+			"backgroundColor": "#0a0a0a",
+			"overlaysWebView": false
+		},
+		"SplashScreen": {
+			"backgroundColor": "#0a0a0a"
+		}
+	},
+	"packageClassList": [
+		"SignInWithApple",
+		"GoogleSignInPlugin"
+	]
 }

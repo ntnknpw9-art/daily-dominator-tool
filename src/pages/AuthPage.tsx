@@ -7,20 +7,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Capacitor } from '@capacitor/core';
 import { SignInWithApple, SignInWithAppleOptions } from '@capacitor-community/apple-sign-in';
-import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
+import { GoogleSignIn } from '@capawesome/capacitor-google-sign-in';
 import { useEffect } from 'react';
 
 // אתחול Google Auth באפליקציה הנייטיבית
 if (Capacitor.isNativePlatform()) {
-  try {
-    GoogleAuth.initialize({
-      clientId: '', // ה-iOS Client ID נטען מה-Info.plist
-      scopes: ['profile', 'email'],
-      grantOfflineAccess: false,
-    });
-  } catch (e) {
-    console.warn('GoogleAuth init failed', e);
-  }
+  GoogleSignIn.initialize({
+    clientId: '309108409035-3sl22316bkmuom32e1c2jtjjbmgava6i.apps.googleusercontent.com',
+    scopes: ['profile', 'email'],
+  }).catch((e) => console.warn('GoogleSignIn init failed', e));
 }
 
 const AuthPage = () => {
@@ -181,8 +176,8 @@ const AuthPage = () => {
             try {
               if (Capacitor.isNativePlatform()) {
                 // Google Sign-In נייטיבי באפליקציה
-                const googleUser = await GoogleAuth.signIn();
-                const idToken = googleUser?.authentication?.idToken;
+                const googleUser = await GoogleSignIn.signIn();
+                const idToken = googleUser?.idToken;
                 if (!idToken) {
                   setError('לא התקבל token מ-Google. נסה שוב.');
                   setLoading(false);
