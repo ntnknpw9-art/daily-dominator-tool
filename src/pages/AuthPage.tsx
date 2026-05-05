@@ -56,7 +56,7 @@ const AuthPage = () => {
       // באפליקציית iOS - שימוש ב-Sign in with Apple נייטיבי
       if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios') {
         const options: SignInWithAppleOptions = {
-          clientId: 'app.lovable.dailydominator',
+          clientId: 'com.natanknafo.dailydominator',
           redirectURI: 'https://daily-dominator-tool.lovable.app',
           scopes: 'email name',
           state: Math.random().toString(36).substring(7),
