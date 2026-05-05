@@ -22,6 +22,18 @@ const config: CapacitorConfig = {
   }),
   ios: {
     contentInset: 'always',
+    backgroundColor: '#0a0a0a',
+  },
+  backgroundColor: '#0a0a0a',
+  plugins: {
+    StatusBar: {
+      style: 'DARK',
+      backgroundColor: '#0a0a0a',
+      overlaysWebView: false,
+    },
+    SplashScreen: {
+      backgroundColor: '#0a0a0a',
+    },
   },
 };
 
