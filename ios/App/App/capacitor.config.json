@@ -2,5 +2,8 @@
 	"appId": "app.lovable.dailydominator",
 	"appName": "Daily Dominator",
 	"webDir": "dist",
-	"packageClassList": []
+	"packageClassList": [
+		"SignInWithApple",
+		"GoogleAuth"
+	]
 }
