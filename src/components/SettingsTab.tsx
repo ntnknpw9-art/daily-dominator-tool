@@ -1,8 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Volume2, VolumeX, Sun, Moon, Bell, BellOff, Skull } from 'lucide-react';
+import { Volume2, VolumeX, Sun, Moon, Bell, BellOff, Skull, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { isSoundEnabled, setSoundEnabled } from '@/lib/sounds';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
+import { toast } from 'sonner';
 
 const THEME_KEY = 'app_theme';
 const NO_MERCY_KEY = 'app_no_mercy_mode';
