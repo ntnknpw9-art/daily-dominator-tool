@@ -21,11 +21,29 @@
   <meta name="twitter:title" content="Lovable App">
   <meta property="og:description" content="Lovable Generated Project">
   <meta name="twitter:description" content="Lovable Generated Project">
-  <script type="module" crossorigin src="/assets/index-Bhw6UQ5a.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-DXNqoGhM.css">
+  <meta name="theme-color" content="#0a0a0a" />
+  <style>
+    html, body { background-color: #0a0a0a; color: #f2f2f2; }
+  </style>
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('app_theme');
+        if (t !== 'light') {
+          document.documentElement.classList.remove('light');
+        } else {
+          document.documentElement.classList.add('light');
+          document.documentElement.style.background = '#fafafa';
+          document.body && (document.body.style.background = '#fafafa');
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <script type="module" crossorigin src="/assets/index-B-LVa8wo.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-Dzlp2Uas.css">
 </head>
 
-  <body>
-    <div id="root"></div>
+  <body style="background-color:#0a0a0a;">
+    <div id="root"></div>
   </body>
 </html>
