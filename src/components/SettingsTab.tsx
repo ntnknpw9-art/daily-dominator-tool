@@ -163,6 +163,45 @@ const SettingsTab = () => {
           </div>
         </CardContent>
       </Card>
+
+      <Card className="border-destructive/40 bg-card/50 backdrop-blur-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg text-destructive">⚠️ אזור מסוכן</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <div className="text-sm font-medium">מחיקת חשבון</div>
+              <div className="text-xs text-muted-foreground">מחיקה מלאה של החשבון וכל הנתונים. לא ניתן לשחזר.</div>
+            </div>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm" className="gap-2" disabled={deleting}>
+                  <Trash2 className="w-4 h-4" />
+                  {deleting ? 'מוחק...' : 'מחק חשבון'}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>בטוח שברצונך למחוק את החשבון?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    פעולה זו תמחק לצמיתות את החשבון, ההישגים, המשימות וכל הנתונים מהשרת. לא ניתן לבטל.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>ביטול</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDeleteAccount}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    כן, מחק את החשבון
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
