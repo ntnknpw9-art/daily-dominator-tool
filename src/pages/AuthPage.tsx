@@ -172,18 +172,43 @@ const AuthPage = () => {
           </div>
         </div>
 
-        {!Capacitor.isNativePlatform() && (
         <Button
           variant="outline"
           className="w-full gap-2"
           onClick={async () => {
             setError('');
             setLoading(true);
-            const result = await lovable.auth.signInWithOAuth("google", {
-              redirect_uri: window.location.origin,
-            });
-            if (result.error) {
-              setError(result.error.message || 'שגיאה בהתחברות עם Google');
+            try {
+              if (Capacitor.isNativePlatform()) {
+                // Google Sign-In נייטיבי באפליקציה
+                const googleUser = await GoogleAuth.signIn();
+                const idToken = googleUser?.authentication?.idToken;
+                if (!idToken) {
+                  setError('לא התקבל token מ-Google. נסה שוב.');
+                  setLoading(false);
+                  return;
+                }
+                const { error } = await supabase.auth.signInWithIdToken({
+                  provider: 'google',
+                  token: idToken,
+                });
+                if (error) setError(error.message || 'שגיאה בהתחברות עם Google');
+              } else {
+                // OAuth דפדפן רגיל
+                const result = await lovable.auth.signInWithOAuth("google", {
+                  redirect_uri: window.location.origin,
+                });
+                if (result.error) {
+                  setError(result.error.message || 'שגיאה בהתחברות עם Google');
+                }
+              }
+            } catch (e: any) {
+              const msg = (e?.message || '').toLowerCase();
+              if (msg.includes('cancel') || msg.includes('12501')) {
+                // המשתמש ביטל - אין צורך להציג שגיאה
+              } else {
+                setError(e?.message || 'שגיאה בהתחברות עם Google');
+              }
             }
             setLoading(false);
           }}
@@ -197,7 +222,6 @@ const AuthPage = () => {
           </svg>
           התחבר עם Google
         </Button>
-        )}
 
         <Button
           variant="outline"
