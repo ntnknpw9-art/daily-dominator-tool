@@ -1,8 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Volume2, VolumeX, Sun, Moon, Bell, BellOff, Skull } from 'lucide-react';
+import { Volume2, VolumeX, Sun, Moon, Bell, BellOff, Skull, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { isSoundEnabled, setSoundEnabled } from '@/lib/sounds';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
+import { toast } from 'sonner';
 
 const THEME_KEY = 'app_theme';
 const NO_MERCY_KEY = 'app_no_mercy_mode';
@@ -31,6 +38,8 @@ export const isNoMercyMode = () => {
 };
 
 const SettingsTab = () => {
+  const { signOut } = useAuth();
+  const [deleting, setDeleting] = useState(false);
   const [soundOn, setSoundOn] = useState(isSoundEnabled);
   const [theme, setTheme] = useState<'dark' | 'light'>(getTheme);
   const [notificationsOn, setNotificationsOn] = useState(() => {
@@ -42,6 +51,20 @@ const SettingsTab = () => {
     if (typeof window === 'undefined') return false;
     return localStorage.getItem(NO_MERCY_KEY) === 'true';
   });
+
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
+    try {
+      const { error } = await supabase.functions.invoke('delete-account');
+      if (error) throw error;
+      try { localStorage.clear(); } catch {}
+      toast.success('החשבון נמחק');
+      await signOut();
+    } catch (e: any) {
+      toast.error('שגיאה במחיקת החשבון: ' + (e?.message || ''));
+      setDeleting(false);
+    }
+  };
 
   const toggleTheme = () => {
     const newTheme = theme === 'dark' ? 'light' : 'dark';
@@ -137,6 +160,45 @@ const SettingsTab = () => {
               <Skull className="w-4 h-4" />
               {noMercy ? 'מופעל' : 'מושבת'}
             </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-destructive/40 bg-card/50 backdrop-blur-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg text-destructive">⚠️ אזור מסוכן</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <div className="text-sm font-medium">מחיקת חשבון</div>
+              <div className="text-xs text-muted-foreground">מחיקה מלאה של החשבון וכל הנתונים. לא ניתן לשחזר.</div>
+            </div>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm" className="gap-2" disabled={deleting}>
+                  <Trash2 className="w-4 h-4" />
+                  {deleting ? 'מוחק...' : 'מחק חשבון'}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>בטוח שברצונך למחוק את החשבון?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    פעולה זו תמחק לצמיתות את החשבון, ההישגים, המשימות וכל הנתונים מהשרת. לא ניתן לבטל.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>ביטול</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleDeleteAccount}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    כן, מחק את החשבון
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </CardContent>
       </Card>
