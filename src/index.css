@@ -85,6 +85,17 @@
     @apply bg-background text-foreground font-heebo;
     direction: rtl;
   }
+
+  html,
+  body {
+    transition: background-color 300ms ease, color 300ms ease;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition: background-color 300ms ease, border-color 300ms ease, color 300ms ease, fill 300ms ease, stroke 300ms ease;
+  }
 }
 
 @layer utilities {
