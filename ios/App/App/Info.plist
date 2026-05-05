@@ -19,8 +19,19 @@
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.309108409035-3sl22316bkmuom32e1c2jtjjbmgava6i</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
+	<key>GIDClientID</key>
+	<string>309108409035-3sl22316bkmuom32e1c2jtjjbmgava6i.apps.googleusercontent.com</string>
 	<key>CFBundleName</key>
 	<string>$(PRODUCT_NAME)</string>
 	<key>CFBundlePackageType</key>
