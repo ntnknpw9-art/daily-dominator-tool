@@ -10,27 +10,9 @@ import { isSoundEnabled, setSoundEnabled } from '@/lib/sounds';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
+import { getTheme, applyTheme } from '@/lib/theme';
 
-const THEME_KEY = 'app_theme';
 const NO_MERCY_KEY = 'app_no_mercy_mode';
-
-const getTheme = (): 'dark' | 'light' => {
-  if (typeof window === 'undefined') return 'dark';
-  return (localStorage.getItem(THEME_KEY) as 'dark' | 'light') || 'dark';
-};
-
-const applyTheme = (theme: 'dark' | 'light') => {
-  localStorage.setItem(THEME_KEY, theme);
-  if (theme === 'light') {
-    document.documentElement.classList.add('light');
-  } else {
-    document.documentElement.classList.remove('light');
-  }
-};
-
-if (typeof window !== 'undefined') {
-  applyTheme(getTheme());
-}
 
 export const isNoMercyMode = () => {
   if (typeof window === 'undefined') return false;
