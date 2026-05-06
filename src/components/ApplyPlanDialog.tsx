@@ -33,7 +33,8 @@ interface ExtractedPlan {
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  analysisText: string;
+  analysisText?: string;
+  initialPlan?: ExtractedPlan;
 }
 
 const ApplyPlanDialog = ({ open, onOpenChange, analysisText }: Props) => {
