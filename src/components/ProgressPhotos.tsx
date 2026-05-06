@@ -6,7 +6,7 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
-import { Camera, Upload, Trash2, Eye, EyeOff, ImagePlus, Users, Lock, SlidersHorizontal, X, Heart, MessageCircle, Send } from 'lucide-react';
+import { Camera, Upload, Trash2, Eye, EyeOff, ImagePlus, Users, Lock, SlidersHorizontal, X, Heart, MessageCircle, Send, Sparkles, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 
@@ -34,7 +34,36 @@ const ProgressPhotos = () => {
   const [previews, setPreviews] = useState<string[]>([]);
   const [compareBefore, setCompareBefore] = useState<ProgressPhoto | null>(null);
   const [compareAfter, setCompareAfter] = useState<ProgressPhoto | null>(null);
+  const [aiAnalysis, setAiAnalysis] = useState<string>('');
+  const [analyzing, setAnalyzing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const analyzeProgress = async () => {
+    if (!compareBefore || !compareAfter) return;
+    setAnalyzing(true);
+    setAiAnalysis('');
+    try {
+      const { data, error } = await supabase.functions.invoke('ai-progress-compare', {
+        body: {
+          beforeUrl: compareBefore.image_url,
+          afterUrl: compareAfter.image_url,
+          beforeDate: compareBefore.photo_date,
+          afterDate: compareAfter.photo_date,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) {
+        toast.error(data.error);
+      } else {
+        setAiAnalysis(data?.analysis || '');
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error('שגיאה בניתוח AI');
+    } finally {
+      setAnalyzing(false);
+    }
+  };
 
   useEffect(() => {
     if (user) {
@@ -352,7 +381,7 @@ const ProgressPhotos = () => {
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">גרור את הסליידר להשוואה</span>
-                  <Button size="sm" variant="ghost" onClick={() => { setCompareBefore(null); setCompareAfter(null); }}>
+                  <Button size="sm" variant="ghost" onClick={() => { setCompareBefore(null); setCompareAfter(null); setAiAnalysis(''); }}>
                     <X className="w-4 h-4 ml-1" />
                     בחר מחדש
                   </Button>
@@ -362,6 +391,24 @@ const ProgressPhotos = () => {
                   <span>📷 לפני — {compareBefore.photo_date}</span>
                   <span>💪 אחרי — {compareAfter.photo_date}</span>
                 </div>
+
+                <Button
+                  className="w-full"
+                  onClick={analyzeProgress}
+                  disabled={analyzing}
+                >
+                  {analyzing ? (
+                    <><Loader2 className="w-4 h-4 ml-2 animate-spin" /> מנתח...</>
+                  ) : (
+                    <><Sparkles className="w-4 h-4 ml-2" /> נתח התקדמות עם AI</>
+                  )}
+                </Button>
+
+                {aiAnalysis && (
+                  <div className="bg-muted/30 rounded-lg p-4 border border-border/30 whitespace-pre-wrap text-sm leading-relaxed">
+                    {aiAnalysis}
+                  </div>
+                )}
               </div>
             )}
           </div>
