@@ -38,7 +38,21 @@ const ProgressPhotos = () => {
   const [aiAnalysis, setAiAnalysis] = useState<string>('');
   const [analyzing, setAnalyzing] = useState(false);
   const [goal, setGoal] = useState<'cut' | 'recomp' | 'bulk' | null>(null);
+  const [targetImage, setTargetImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const targetInputRef = useRef<HTMLInputElement>(null);
+
+  const handleTargetSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('התמונה גדולה מדי (מקס 5MB)');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => setTargetImage(reader.result as string);
+    reader.readAsDataURL(file);
+  };
 
   const analyzeProgress = async (selectedGoal: 'cut' | 'recomp' | 'bulk') => {
     if (!compareBefore || !compareAfter) return;
@@ -53,6 +67,7 @@ const ProgressPhotos = () => {
           beforeDate: compareBefore.photo_date,
           afterDate: compareAfter.photo_date,
           goal: selectedGoal,
+          targetUrl: targetImage,
         },
       });
       if (error) throw error;
