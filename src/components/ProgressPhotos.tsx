@@ -6,11 +6,12 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
-import { Camera, Upload, Trash2, Eye, EyeOff, ImagePlus, Users, Lock, SlidersHorizontal, X, Heart, MessageCircle, Send, Sparkles, Loader2, Target, Dumbbell } from 'lucide-react';
+import { Camera, Upload, Trash2, Eye, EyeOff, ImagePlus, Users, Lock, SlidersHorizontal, X, Heart, MessageCircle, Send, Sparkles, Loader2, Target, Dumbbell, History } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
 import ApplyPlanDialog from './ApplyPlanDialog';
+import PlanHistoryDialog from './PlanHistoryDialog';
 
 interface ProgressPhoto {
   id: string;
