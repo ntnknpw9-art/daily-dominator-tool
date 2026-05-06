@@ -122,7 +122,11 @@ ${targetUrl ? `### 🎯 חשוב: קיבלת גם תמונת יעד (תמונה 
               { type: "image_url", image_url: { url: beforeUrl } },
               { type: "text", text: `תמונה 2 — אחרי (${afterDate || ''}):` },
               { type: "image_url", image_url: { url: afterUrl } },
-              { type: "text", text: `נתח את ההתקדמות. מטרה: ${goalText}. תן ניתוח מלא לפי הפורמט.` },
+              ...(targetUrl ? [
+                { type: "text", text: `תמונה 3 — היעד שאני רוצה להגיע אליו:` },
+                { type: "image_url", image_url: { url: targetUrl } },
+              ] : []),
+              { type: "text", text: `נתח את ההתקדמות. מטרה: ${goalText}.${targetUrl ? ' כוון אותי ספציפית לעבר תמונת היעד.' : ''} תן ניתוח מלא לפי הפורמט.` },
             ],
           },
         ],
