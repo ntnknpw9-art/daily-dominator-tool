@@ -440,33 +440,28 @@ const CalorieTracker = () => {
       });
 
       const blob: Blob = await new Promise(res => canvas.toBlob(b => res(b!), 'image/png'));
-      const file = new File([blob], 'food-story.png', { type: 'image/png' });
 
-      // Real share — use native share sheet so user can pick Instagram Stories
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        try {
-          await navigator.share({ files: [file] });
-          toast.success('בחר "Instagram Stories" מתפריט השיתוף');
-          return;
-        } catch (err: any) {
-          if (err?.name === 'AbortError') return;
+      // Copy image to clipboard (so user can paste in Instagram if needed)
+      try {
+        if (navigator.clipboard && (window as any).ClipboardItem) {
+          await navigator.clipboard.write([new (window as any).ClipboardItem({ 'image/png': blob })]);
         }
-      }
+      } catch {}
 
-      // Fallback: try Instagram Stories deep link (works on mobile if Instagram installed)
       const url = URL.createObjectURL(blob);
       const ua = navigator.userAgent.toLowerCase();
       const isMobile = /iphone|ipad|android/.test(ua);
+
+      // Save image to device
+      const a = document.createElement('a');
+      a.href = url; a.download = 'food-story.png'; a.click();
+
       if (isMobile) {
-        // Open Instagram; user may need to manually add the downloaded image
-        const a = document.createElement('a');
-        a.href = url; a.download = 'food-story.png'; a.click();
-        setTimeout(() => { window.location.href = 'instagram-stories://share'; }, 300);
-        toast.success('התמונה נשמרה — נפתח אינסטגרם, בחר את התמונה לסטורי');
+        // Direct deep-link to Instagram Stories camera (skips share sheet)
+        toast.success('פותח אינסטגרם סטורי...');
+        setTimeout(() => { window.location.href = 'instagram-stories://share'; }, 400);
       } else {
-        const a = document.createElement('a');
-        a.href = url; a.download = 'food-story.png'; a.click();
-        toast.success('התמונה הורדה — העלה לסטורי באינסטגרם');
+        toast.success('התמונה הורדה והועתקה — הדבק/העלה לסטורי');
       }
       setTimeout(() => URL.revokeObjectURL(url), 5000);
     } catch (e: any) {
