@@ -12,6 +12,19 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ReferenceLine, BarChart, Bar } from 'recharts';
 import { toast } from 'sonner';
 
+declare global {
+  interface Window {
+    Capacitor?: {
+      Plugins?: {
+        InstagramStories?: {
+          canShare: () => Promise<{ available: boolean }>;
+          share: (options: { backgroundImage: string }) => Promise<{ completed: boolean }>;
+        };
+      };
+    };
+  }
+}
+
 interface DailyNeeds {
   calories: number;
   protein: number;
