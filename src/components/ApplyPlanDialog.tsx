@@ -4,12 +4,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { useTaskContext } from '@/context/TaskContext';
 import { Loader2, Sparkles, Droplets, Moon, Apple, Dumbbell } from 'lucide-react';
 import { toast } from 'sonner';
-import { DayOfWeek, ALL_DAYS } from '@/types/task';
+import { DayOfWeek, ALL_DAYS, WorkoutDetail } from '@/types/task';
 
 interface PlanScheduleItem {
   day: DayOfWeek;
