@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 declare global {
   interface Window {
     Capacitor?: {
+      nativePromise?: (pluginName: string, methodName: string, options?: Record<string, unknown>) => Promise<any>;
       Plugins?: {
         InstagramStories?: {
           canShare: () => Promise<{ available: boolean }>;
@@ -464,15 +465,25 @@ const CalorieTracker = () => {
             r.readAsDataURL(blob);
           });
 
-          const InstagramStories = window.Capacitor?.Plugins?.InstagramStories;
-          if (Capacitor.getPlatform() === 'ios' && InstagramStories) {
-            const { available } = await InstagramStories.canShare();
+          const nativeInstagramStories = window.Capacitor?.Plugins?.InstagramStories;
+          const callInstagramStories = async (methodName: 'canShare' | 'share', options?: Record<string, unknown>) => {
+            if (nativeInstagramStories) {
+              return methodName === 'canShare'
+                ? nativeInstagramStories.canShare()
+                : nativeInstagramStories.share(options as { backgroundImage: string });
+            }
+
+            return window.Capacitor?.nativePromise?.('InstagramStories', methodName, options);
+          };
+
+          if (Capacitor.getPlatform() === 'ios' && window.Capacitor?.nativePromise) {
+            const { available } = await callInstagramStories('canShare');
             if (!available) {
               toast.error('Instagram לא מותקן במכשיר');
               return;
             }
 
-            await InstagramStories.share({ backgroundImage: dataUrl });
+            await callInstagramStories('share', { backgroundImage: dataUrl });
             toast.success('פותח ישר לסטורי באינסטגרם');
             return;
           }
