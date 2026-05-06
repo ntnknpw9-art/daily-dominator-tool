@@ -411,6 +411,35 @@ const ProgressPhotos = () => {
                   <span>💪 אחרי — {compareAfter.photo_date}</span>
                 </div>
 
+                <div className="space-y-2 bg-muted/20 border border-border/30 rounded-lg p-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-semibold">🎯 תמונת יעד <span className="text-muted-foreground text-xs font-normal">(אופציונלי)</span></p>
+                    {targetImage && (
+                      <Button size="sm" variant="ghost" onClick={() => setTargetImage(null)} className="h-6 px-2 text-xs">
+                        <X className="w-3 h-3 ml-1" /> הסר
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">העלה תמונה של גוף שאתה רוצה להגיע אליו — ה-AI ינתח וכוון אותך אליו ספציפית.</p>
+                  <input
+                    type="file"
+                    ref={targetInputRef}
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleTargetSelect}
+                  />
+                  {targetImage ? (
+                    <div className="relative w-24 h-24 rounded-lg overflow-hidden border border-primary/40">
+                      <img src={targetImage} alt="target" className="w-full h-full object-cover" />
+                    </div>
+                  ) : (
+                    <Button size="sm" variant="outline" onClick={() => targetInputRef.current?.click()} className="w-full">
+                      <ImagePlus className="w-4 h-4 ml-1" />
+                      העלה תמונת יעד
+                    </Button>
+                  )}
+                </div>
+
                 <div className="space-y-2">
                   <p className="text-sm font-semibold text-center text-muted-foreground">בחר את המטרה שלך:</p>
                   <div className="grid grid-cols-3 gap-2">
