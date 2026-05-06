@@ -187,6 +187,22 @@ const ApplyPlanDialog = ({ open, onOpenChange, analysisText, initialPlan }: Prop
         }
       }
 
+      // Save to history
+      try {
+        const summary: string[] = [];
+        if (applyTargets && (plan.water_liters || plan.sleep_hours)) summary.push(`💧${plan.water_liters || '-'}L · 😴${plan.sleep_hours || '-'}h`);
+        if (applyNutrition && plan.nutrition?.calories) summary.push(`🍎${plan.nutrition.calories}kcal`);
+        if (applyTraining && plan.training?.schedule?.length) summary.push(`💪${plan.training.schedule.length} ימי אימון`);
+        await supabase.from('applied_plans').insert({
+          user_id: user.id,
+          plan: plan as any,
+          summary: summary.join(' · '),
+          applied_targets: applyTargets,
+          applied_nutrition: applyNutrition,
+          applied_training: applyTraining,
+        });
+      } catch (e) { console.error('history save failed', e); }
+
       toast.success('🔥 התוכנית הוחלה בהצלחה!');
       onOpenChange(false);
     } catch (e) {
