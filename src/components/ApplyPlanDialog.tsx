@@ -37,7 +37,7 @@ interface Props {
   initialPlan?: ExtractedPlan;
 }
 
-const ApplyPlanDialog = ({ open, onOpenChange, analysisText }: Props) => {
+const ApplyPlanDialog = ({ open, onOpenChange, analysisText, initialPlan }: Props) => {
   const { user } = useAuth();
   const { addTask, deleteTask, tasks } = useTaskContext();
   const [loading, setLoading] = useState(false);
@@ -64,7 +64,13 @@ const ApplyPlanDialog = ({ open, onOpenChange, analysisText }: Props) => {
   }, [existingTraining.length]);
 
   useEffect(() => {
-    if (!open || !analysisText) return;
+    if (!open) return;
+    if (initialPlan) {
+      setPlan(initialPlan);
+      setLoading(false);
+      return;
+    }
+    if (!analysisText) return;
     setPlan(null);
     setLoading(true);
     (async () => {
