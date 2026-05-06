@@ -37,10 +37,10 @@ const ProgressPhotos = () => {
   const [compareAfter, setCompareAfter] = useState<ProgressPhoto | null>(null);
   const [aiAnalysis, setAiAnalysis] = useState<string>('');
   const [analyzing, setAnalyzing] = useState(false);
-  const [goal, setGoal] = useState<'cut' | 'recomp' | null>(null);
+  const [goal, setGoal] = useState<'cut' | 'recomp' | 'bulk' | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const analyzeProgress = async (selectedGoal: 'cut' | 'recomp') => {
+  const analyzeProgress = async (selectedGoal: 'cut' | 'recomp' | 'bulk') => {
     if (!compareBefore || !compareAfter) return;
     setGoal(selectedGoal);
     setAnalyzing(true);
