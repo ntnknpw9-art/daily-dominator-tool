@@ -12,6 +12,20 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ReferenceLine, BarChart, Bar } from 'recharts';
 import { toast } from 'sonner';
 
+declare global {
+  interface Window {
+    Capacitor?: {
+      nativePromise?: (pluginName: string, methodName: string, options?: Record<string, unknown>) => Promise<any>;
+      Plugins?: {
+        InstagramStories?: {
+          canShare: () => Promise<{ available: boolean }>;
+          share: (options: { backgroundImage: string }) => Promise<{ completed: boolean }>;
+        };
+      };
+    };
+  }
+}
+
 interface DailyNeeds {
   calories: number;
   protein: number;
@@ -441,7 +455,7 @@ const CalorieTracker = () => {
 
       const blob: Blob = await new Promise(res => canvas.toBlob(b => res(b!), 'image/png'));
 
-      // Native (Capacitor / iOS app) — save to filesystem and share via native sheet
+      // Native iOS app — open Instagram Stories directly with the generated story image.
       const { Capacitor } = await import('@capacitor/core');
       if (Capacitor.isNativePlatform()) {
         try {
@@ -450,6 +464,30 @@ const CalorieTracker = () => {
             r.onloadend = () => res(r.result as string);
             r.readAsDataURL(blob);
           });
+
+          const nativeInstagramStories = window.Capacitor?.Plugins?.InstagramStories;
+          const callInstagramStories = async (methodName: 'canShare' | 'share', options?: Record<string, unknown>) => {
+            if (nativeInstagramStories) {
+              return methodName === 'canShare'
+                ? nativeInstagramStories.canShare()
+                : nativeInstagramStories.share(options as { backgroundImage: string });
+            }
+
+            return window.Capacitor?.nativePromise?.('InstagramStories', methodName, options);
+          };
+
+          if (Capacitor.getPlatform() === 'ios' && window.Capacitor?.nativePromise) {
+            const { available } = await callInstagramStories('canShare');
+            if (!available) {
+              toast.error('Instagram לא מותקן במכשיר');
+              return;
+            }
+
+            await callInstagramStories('share', { backgroundImage: dataUrl });
+            toast.success('פותח ישר לסטורי באינסטגרם');
+            return;
+          }
+
           const base64 = dataUrl.split(',')[1];
           const { Filesystem, Directory } = await import('@capacitor/filesystem');
           const fileName = `food-story-${Date.now()}.png`;

@@ -25,6 +25,7 @@
 		}
 	},
 	"packageClassList": [
+		"InstagramStories",
 		"SignInWithApple",
 		"GoogleSignInPlugin"
 	]
