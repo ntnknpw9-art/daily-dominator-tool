@@ -392,90 +392,83 @@ const CalorieTracker = () => {
       canvas.height = 1920;
       const ctx = canvas.getContext('2d')!;
 
-      // Background gradient
-      const grad = ctx.createLinearGradient(0, 0, 0, 1920);
-      grad.addColorStop(0, '#0a0a0a');
-      grad.addColorStop(1, '#1a0a0a');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, 1080, 1920);
-
-      // Load food image
+      // Transparent background — only the food image, no overlay
       const img = new Image();
       img.crossOrigin = 'anonymous';
       img.src = capturedImage;
       await new Promise((res, rej) => { img.onload = res; img.onerror = rej; });
 
-      // Draw image as background (cover, slightly dimmed)
       const ratio = Math.max(1080 / img.width, 1920 / img.height);
       const w = img.width * ratio;
       const h = img.height * ratio;
       ctx.drawImage(img, (1080 - w) / 2, (1920 - h) / 2, w, h);
 
-      // Dark overlay for text contrast
-      ctx.fillStyle = 'rgba(0,0,0,0.45)';
-      ctx.fillRect(0, 0, 1080, 1920);
-
-      // Center card with values
-      const cardX = 90, cardY = 640, cardW = 900, cardH = 640;
-      ctx.fillStyle = 'rgba(15,15,15,0.85)';
-      ctx.beginPath();
-      (ctx as any).roundRect?.(cardX, cardY, cardW, cardH, 40);
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(220,38,38,0.6)';
-      ctx.lineWidth = 4;
-      ctx.stroke();
-
+      // Centered values — stacked vertically, one below the other
       ctx.textAlign = 'center';
-      ctx.fillStyle = '#fbbf24';
-      ctx.font = 'bold 56px Heebo, sans-serif';
-      ctx.fillText(String(scanResult.name || 'ארוחה').slice(0, 22), 540, cardY + 110);
+      const drawTextWithShadow = (text: string, x: number, y: number, font: string, color: string) => {
+        ctx.font = font;
+        ctx.shadowColor = 'rgba(0,0,0,0.85)';
+        ctx.shadowBlur = 18;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 4;
+        ctx.fillStyle = color;
+        ctx.fillText(text, x, y);
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetY = 0;
+      };
 
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 140px Heebo, sans-serif';
-      ctx.fillText(`${scanResult.calories || 0}`, 540, cardY + 280);
-      ctx.fillStyle = '#9ca3af';
-      ctx.font = '40px Heebo, sans-serif';
-      ctx.fillText('קלוריות', 540, cardY + 340);
+      const cx = 540;
+      let y = 720;
 
-      // Macros row
-      const macros = [
+      drawTextWithShadow(
+        String(scanResult.name || 'ארוחה').slice(0, 22),
+        cx, y, 'bold 64px Heebo, sans-serif', '#fbbf24'
+      );
+      y += 130;
+
+      drawTextWithShadow(`${scanResult.calories || 0} קלוריות`, cx, y, 'bold 96px Heebo, sans-serif', '#ffffff');
+      y += 120;
+
+      const lines = [
         { label: 'חלבון', val: `${scanResult.protein || 0}g`, color: '#60a5fa' },
         { label: 'שומן', val: `${scanResult.fat || 0}g`, color: '#fbbf24' },
         { label: 'פחמימות', val: `${scanResult.carbs || 0}g`, color: '#34d399' },
       ];
-      macros.forEach((m, i) => {
-        const x = 240 + i * 300;
-        ctx.fillStyle = m.color;
-        ctx.font = 'bold 64px Heebo, sans-serif';
-        ctx.fillText(m.val, x, cardY + 480);
-        ctx.fillStyle = '#9ca3af';
-        ctx.font = '32px Heebo, sans-serif';
-        ctx.fillText(m.label, x, cardY + 530);
+      lines.forEach(m => {
+        drawTextWithShadow(`${m.label}: ${m.val}`, cx, y, 'bold 72px Heebo, sans-serif', m.color);
+        y += 100;
       });
 
-      // Footer brand
-      ctx.fillStyle = 'rgba(255,255,255,0.7)';
-      ctx.font = 'bold 36px Heebo, sans-serif';
-      ctx.fillText('Discipline Tracker', 540, 1820);
-
-      // Convert to blob
       const blob: Blob = await new Promise(res => canvas.toBlob(b => res(b!), 'image/png'));
       const file = new File([blob], 'food-story.png', { type: 'image/png' });
 
-      // Try native share (mobile)
+      // Real share — use native share sheet so user can pick Instagram Stories
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        await navigator.share({ files: [file], title: scanResult.name });
-        toast.success('נפתח שיתוף — בחר אינסטגרם');
-      } else {
-        // Fallback: download
-        const url = URL.createObjectURL(blob);
+        try {
+          await navigator.share({ files: [file] });
+          toast.success('בחר "Instagram Stories" מתפריט השיתוף');
+          return;
+        } catch (err: any) {
+          if (err?.name === 'AbortError') return;
+        }
+      }
+
+      // Fallback: try Instagram Stories deep link (works on mobile if Instagram installed)
+      const url = URL.createObjectURL(blob);
+      const ua = navigator.userAgent.toLowerCase();
+      const isMobile = /iphone|ipad|android/.test(ua);
+      if (isMobile) {
+        // Open Instagram; user may need to manually add the downloaded image
         const a = document.createElement('a');
-        a.href = url;
-        a.download = 'food-story.png';
-        a.click();
-        URL.revokeObjectURL(url);
+        a.href = url; a.download = 'food-story.png'; a.click();
+        setTimeout(() => { window.location.href = 'instagram-stories://share'; }, 300);
+        toast.success('התמונה נשמרה — נפתח אינסטגרם, בחר את התמונה לסטורי');
+      } else {
+        const a = document.createElement('a');
+        a.href = url; a.download = 'food-story.png'; a.click();
         toast.success('התמונה הורדה — העלה לסטורי באינסטגרם');
       }
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
     } catch (e: any) {
       toast.error(e.message || 'שגיאה בהכנת הסטורי');
     }
