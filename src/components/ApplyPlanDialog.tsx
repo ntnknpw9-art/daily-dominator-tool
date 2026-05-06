@@ -136,8 +136,12 @@ const ApplyPlanDialog = ({ open, onOpenChange, analysisText, initialPlan }: Prop
 
       // 3. Training task with workout details per day
       if (applyTraining && plan.training?.schedule?.length) {
-        const newDays = plan.training.schedule.map(s => s.day).filter(Boolean) as DayOfWeek[];
-        const newDetails: WorkoutDetail[] = plan.training.schedule.map(s => ({
+        const effectiveSchedule = plan.training.schedule.map((s, i) => ({
+          ...s,
+          day: (dayRemap[i] ?? s.day) as DayOfWeek,
+        }));
+        const newDays = effectiveSchedule.map(s => s.day).filter(Boolean) as DayOfWeek[];
+        const newDetails: WorkoutDetail[] = effectiveSchedule.map(s => ({
           day: s.day,
           description: s.focus ? `${s.focus} — ${s.description}` : s.description,
         }));
