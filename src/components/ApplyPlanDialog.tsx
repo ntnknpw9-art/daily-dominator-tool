@@ -259,15 +259,48 @@ const ApplyPlanDialog = ({ open, onOpenChange, analysisText }: Props) => {
                   <span className="font-semibold">משימת אימון ({plan.training.schedule.length} ימים)</span>
                 </label>
                 {applyTraining && (
-                  <div className="grid grid-cols-2 gap-2 pr-6">
-                    <div>
-                      <Label className="text-xs">שעת התחלה</Label>
-                      <Input type="time" value={trainingTime} onChange={e => setTrainingTime(e.target.value)} />
-                    </div>
-                    <div>
-                      <Label className="text-xs">שעת סיום</Label>
-                      <Input type="time" value={trainingEnd} onChange={e => setTrainingEnd(e.target.value)} />
-                    </div>
+                  <div className="space-y-3 pr-6">
+                    {existingTraining.length > 0 && (
+                      <div className="space-y-2 bg-background/40 rounded p-2 border border-border/30">
+                        <Label className="text-xs font-semibold">נמצאו {existingTraining.length} משימות אימון קיימות</Label>
+                        <RadioGroup value={trainingMode} onValueChange={(v) => setTrainingMode(v as any)} className="gap-1.5">
+                          <label className="flex items-center gap-2 text-xs cursor-pointer">
+                            <RadioGroupItem value="merge" id="tm-merge" />
+                            <span>מיזוג — שמור ימים קיימים, הוסף/עדכן מהתוכנית</span>
+                          </label>
+                          <label className="flex items-center gap-2 text-xs cursor-pointer">
+                            <RadioGroupItem value="replace" id="tm-replace" />
+                            <span>החלפה — מחק את האימון הקיים והחלף בחדש</span>
+                          </label>
+                          <label className="flex items-center gap-2 text-xs cursor-pointer">
+                            <RadioGroupItem value="new" id="tm-new" />
+                            <span>צור משימה חדשה נפרדת</span>
+                          </label>
+                        </RadioGroup>
+                        {(trainingMode === 'merge' || trainingMode === 'replace') && existingTraining.length > 1 && (
+                          <Select value={targetTaskId} onValueChange={setTargetTaskId}>
+                            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {existingTraining.map(t => (
+                                <SelectItem key={t.id} value={t.id} className="text-xs">{t.name}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      </div>
+                    )}
+                    {(trainingMode === 'new' || existingTraining.length === 0) && (
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <Label className="text-xs">שעת התחלה</Label>
+                          <Input type="time" value={trainingTime} onChange={e => setTrainingTime(e.target.value)} />
+                        </div>
+                        <div>
+                          <Label className="text-xs">שעת סיום</Label>
+                          <Input type="time" value={trainingEnd} onChange={e => setTrainingEnd(e.target.value)} />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
                 <div className="space-y-1 pr-6 max-h-48 overflow-y-auto">
