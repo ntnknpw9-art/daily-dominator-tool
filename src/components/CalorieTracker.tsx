@@ -990,10 +990,14 @@ const CalorieTracker = () => {
                     )}
                   </div>
 
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 flex-wrap">
                     <Button onClick={addScannedFood} className="flex-1 gap-2">
                       <Plus className="w-4 h-4" />
                       הוסף ללוג היומי
+                    </Button>
+                    <Button onClick={shareToInstagramStory} variant="outline" className="gap-2 bg-gradient-to-r from-pink-500/20 to-purple-500/20 border-pink-500/40 hover:from-pink-500/30 hover:to-purple-500/30">
+                      <Instagram className="w-4 h-4" />
+                      שתף לסטורי
                     </Button>
                     <Button onClick={() => { setCapturedImage(null); setScanResult(null); }} variant="outline" className="gap-2">
                       <Camera className="w-4 h-4" />
