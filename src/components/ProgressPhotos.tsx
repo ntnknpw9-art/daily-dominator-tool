@@ -381,7 +381,7 @@ const ProgressPhotos = () => {
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">גרור את הסליידר להשוואה</span>
-                  <Button size="sm" variant="ghost" onClick={() => { setCompareBefore(null); setCompareAfter(null); }}>
+                  <Button size="sm" variant="ghost" onClick={() => { setCompareBefore(null); setCompareAfter(null); setAiAnalysis(''); }}>
                     <X className="w-4 h-4 ml-1" />
                     בחר מחדש
                   </Button>
