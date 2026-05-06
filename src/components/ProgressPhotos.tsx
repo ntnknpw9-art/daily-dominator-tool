@@ -494,13 +494,19 @@ const ProgressPhotos = () => {
                         <ReactMarkdown>{aiAnalysis}</ReactMarkdown>
                       </div>
                     </div>
-                    <Button onClick={() => setShowApplyDialog(true)} className="w-full bg-gradient-to-r from-primary to-accent">
-                      <Sparkles className="w-4 h-4 ml-2" />
-                      החל את התוכנית באפליקציה (אימונים, תזונה, מים, שינה)
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button onClick={() => setShowApplyDialog(true)} className="flex-1 bg-gradient-to-r from-primary to-accent">
+                        <Sparkles className="w-4 h-4 ml-2" />
+                        החל את התוכנית באפליקציה
+                      </Button>
+                      <Button variant="outline" onClick={() => setShowHistoryDialog(true)} title="היסטוריה">
+                        <History className="w-4 h-4" />
+                      </Button>
+                    </div>
                     <ApplyPlanDialog open={showApplyDialog} onOpenChange={setShowApplyDialog} analysisText={aiAnalysis} />
                   </div>
                 )}
+                <PlanHistoryDialog open={showHistoryDialog} onOpenChange={setShowHistoryDialog} />
               </div>
             )}
           </div>
