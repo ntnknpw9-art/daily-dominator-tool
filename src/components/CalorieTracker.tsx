@@ -454,7 +454,7 @@ const CalorieTracker = () => {
 
       const blob: Blob = await new Promise(res => canvas.toBlob(b => res(b!), 'image/png'));
 
-      // Native (Capacitor / iOS app) — save to filesystem and share via native sheet
+      // Native iOS app — open Instagram Stories directly with the generated story image.
       const { Capacitor } = await import('@capacitor/core');
       if (Capacitor.isNativePlatform()) {
         try {
@@ -463,6 +463,20 @@ const CalorieTracker = () => {
             r.onloadend = () => res(r.result as string);
             r.readAsDataURL(blob);
           });
+
+          const InstagramStories = window.Capacitor?.Plugins?.InstagramStories;
+          if (Capacitor.getPlatform() === 'ios' && InstagramStories) {
+            const { available } = await InstagramStories.canShare();
+            if (!available) {
+              toast.error('Instagram לא מותקן במכשיר');
+              return;
+            }
+
+            await InstagramStories.share({ backgroundImage: dataUrl });
+            toast.success('פותח ישר לסטורי באינסטגרם');
+            return;
+          }
+
           const base64 = dataUrl.split(',')[1];
           const { Filesystem, Directory } = await import('@capacitor/filesystem');
           const fileName = `food-story-${Date.now()}.png`;
