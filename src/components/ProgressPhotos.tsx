@@ -42,6 +42,7 @@ const ProgressPhotos = () => {
   const [goal, setGoal] = useState<'cut' | 'recomp' | 'bulk' | null>(null);
   const [targetImage, setTargetImage] = useState<string | null>(null);
   const [showApplyDialog, setShowApplyDialog] = useState(false);
+  const [showHistoryDialog, setShowHistoryDialog] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const targetInputRef = useRef<HTMLInputElement>(null);
 
