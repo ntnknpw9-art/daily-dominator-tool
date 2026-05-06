@@ -55,6 +55,10 @@ const ApplyPlanDialog = ({ open, onOpenChange, analysisText, initialPlan }: Prop
   const existingTraining = tasks.filter(t => t.category === 'כושר');
   const [trainingMode, setTrainingMode] = useState<'new' | 'replace' | 'merge'>('new');
   const [targetTaskId, setTargetTaskId] = useState<string>('');
+  const [dayRemap, setDayRemap] = useState<Record<number, DayOfWeek>>({});
+
+  // Reset remap when plan changes
+  useEffect(() => { setDayRemap({}); }, [plan]);
 
   useEffect(() => {
     if (existingTraining.length > 0 && !targetTaskId) {
