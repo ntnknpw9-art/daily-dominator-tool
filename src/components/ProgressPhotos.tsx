@@ -34,7 +34,36 @@ const ProgressPhotos = () => {
   const [previews, setPreviews] = useState<string[]>([]);
   const [compareBefore, setCompareBefore] = useState<ProgressPhoto | null>(null);
   const [compareAfter, setCompareAfter] = useState<ProgressPhoto | null>(null);
+  const [aiAnalysis, setAiAnalysis] = useState<string>('');
+  const [analyzing, setAnalyzing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const analyzeProgress = async () => {
+    if (!compareBefore || !compareAfter) return;
+    setAnalyzing(true);
+    setAiAnalysis('');
+    try {
+      const { data, error } = await supabase.functions.invoke('ai-progress-compare', {
+        body: {
+          beforeUrl: compareBefore.image_url,
+          afterUrl: compareAfter.image_url,
+          beforeDate: compareBefore.photo_date,
+          afterDate: compareAfter.photo_date,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) {
+        toast.error(data.error);
+      } else {
+        setAiAnalysis(data?.analysis || '');
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error('שגיאה בניתוח AI');
+    } finally {
+      setAnalyzing(false);
+    }
+  };
 
   useEffect(() => {
     if (user) {
