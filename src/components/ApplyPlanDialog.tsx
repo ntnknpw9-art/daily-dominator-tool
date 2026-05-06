@@ -125,23 +125,59 @@ const ApplyPlanDialog = ({ open, onOpenChange, analysisText }: Props) => {
 
       // 3. Training task with workout details per day
       if (applyTraining && plan.training?.schedule?.length) {
-        const days = plan.training.schedule.map(s => s.day).filter(Boolean) as DayOfWeek[];
-        const workoutDetails = plan.training.schedule.map(s => ({
+        const newDays = plan.training.schedule.map(s => s.day).filter(Boolean) as DayOfWeek[];
+        const newDetails: WorkoutDetail[] = plan.training.schedule.map(s => ({
           day: s.day,
           description: s.focus ? `${s.focus} — ${s.description}` : s.description,
         }));
         const today = new Date().toISOString().split('T')[0];
-        addTask({
-          name: 'אימון',
-          meaning: plan.training.split_type ? `תוכנית ${plan.training.split_type}` : 'אימון מותאם AI',
-          startTime: trainingTime,
-          endTime: trainingEnd,
-          startDate: today,
-          endDate: '2099-12-31',
-          category: 'כושר',
-          days,
-          workoutDetails,
-        });
+        const existing = existingTraining.find(t => t.id === targetTaskId);
+
+        if (trainingMode === 'replace' && existing) {
+          await deleteTask(existing.id);
+          await addTask({
+            name: existing.name,
+            meaning: plan.training.split_type ? `תוכנית ${plan.training.split_type}` : 'אימון מותאם AI',
+            startTime: trainingTime,
+            endTime: trainingEnd,
+            startDate: today,
+            endDate: '2099-12-31',
+            category: 'כושר',
+            days: newDays,
+            workoutDetails: newDetails,
+          });
+        } else if (trainingMode === 'merge' && existing) {
+          // Merge: combine days, override descriptions for new days
+          const mergedDays = Array.from(new Set([...existing.days, ...newDays])) as DayOfWeek[];
+          const detailMap = new Map<DayOfWeek, string>();
+          (existing.workoutDetails || []).forEach(d => detailMap.set(d.day, d.description));
+          newDetails.forEach(d => detailMap.set(d.day, d.description));
+          const mergedDetails: WorkoutDetail[] = Array.from(detailMap.entries()).map(([day, description]) => ({ day, description }));
+          await deleteTask(existing.id);
+          await addTask({
+            name: existing.name,
+            meaning: existing.meaning || (plan.training.split_type ? `תוכנית ${plan.training.split_type}` : 'אימון מותאם AI'),
+            startTime: existing.startTime,
+            endTime: existing.endTime,
+            startDate: existing.startDate,
+            endDate: existing.endDate,
+            category: 'כושר',
+            days: mergedDays,
+            workoutDetails: mergedDetails,
+          });
+        } else {
+          await addTask({
+            name: 'אימון',
+            meaning: plan.training.split_type ? `תוכנית ${plan.training.split_type}` : 'אימון מותאם AI',
+            startTime: trainingTime,
+            endTime: trainingEnd,
+            startDate: today,
+            endDate: '2099-12-31',
+            category: 'כושר',
+            days: newDays,
+            workoutDetails: newDetails,
+          });
+        }
       }
 
       toast.success('🔥 התוכנית הוחלה בהצלחה!');
