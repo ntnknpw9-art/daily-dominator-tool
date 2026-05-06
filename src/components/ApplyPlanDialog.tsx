@@ -334,13 +334,30 @@ const ApplyPlanDialog = ({ open, onOpenChange, analysisText, initialPlan }: Prop
                     )}
                   </div>
                 )}
-                <div className="space-y-1 pr-6 max-h-48 overflow-y-auto">
-                  {plan.training.schedule.map((s, i) => (
-                    <div key={i} className="text-xs bg-background/50 rounded p-2">
-                      <div className="font-bold text-accent">{s.day} — {s.focus}</div>
-                      <div className="text-muted-foreground mt-0.5">{s.description}</div>
-                    </div>
-                  ))}
+                <div className="space-y-1 pr-6 max-h-64 overflow-y-auto">
+                  <div className="text-xs text-muted-foreground mb-1">ניתן לשנות יום לכל אימון:</div>
+                  {plan.training.schedule.map((s, i) => {
+                    const currentDay = dayRemap[i] ?? s.day;
+                    return (
+                      <div key={i} className="text-xs bg-background/50 rounded p-2 space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-accent flex-1">{s.focus}</span>
+                          <Select
+                            value={currentDay}
+                            onValueChange={(v) => setDayRemap(prev => ({ ...prev, [i]: v as DayOfWeek }))}
+                          >
+                            <SelectTrigger className="h-7 w-24 text-xs"><SelectValue /></SelectTrigger>
+                            <SelectContent>
+                              {ALL_DAYS.map(d => (
+                                <SelectItem key={d} value={d} className="text-xs">{d}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="text-muted-foreground">{s.description}</div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             ) : null}
