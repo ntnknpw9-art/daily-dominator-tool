@@ -37,10 +37,10 @@ const ProgressPhotos = () => {
   const [compareAfter, setCompareAfter] = useState<ProgressPhoto | null>(null);
   const [aiAnalysis, setAiAnalysis] = useState<string>('');
   const [analyzing, setAnalyzing] = useState(false);
-  const [goal, setGoal] = useState<'cut' | 'recomp' | null>(null);
+  const [goal, setGoal] = useState<'cut' | 'recomp' | 'bulk' | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const analyzeProgress = async (selectedGoal: 'cut' | 'recomp') => {
+  const analyzeProgress = async (selectedGoal: 'cut' | 'recomp' | 'bulk') => {
     if (!compareBefore || !compareAfter) return;
     setGoal(selectedGoal);
     setAnalyzing(true);
@@ -398,7 +398,7 @@ const ProgressPhotos = () => {
 
                 <div className="space-y-2">
                   <p className="text-sm font-semibold text-center text-muted-foreground">בחר את המטרה שלך:</p>
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-3 gap-2">
                     <Button
                       variant={goal === 'cut' ? 'default' : 'outline'}
                       onClick={() => analyzeProgress('cut')}
@@ -407,7 +407,7 @@ const ProgressPhotos = () => {
                     >
                       <Target className="w-4 h-4" />
                       <span className="text-sm font-bold">חיטוב</span>
-                      <span className="text-[10px] opacity-80">ירידה בשומן</span>
+                      <span className="text-[10px] opacity-80">ירידה באחוזי שומן</span>
                     </Button>
                     <Button
                       variant={goal === 'recomp' ? 'default' : 'outline'}
@@ -417,7 +417,17 @@ const ProgressPhotos = () => {
                     >
                       <Dumbbell className="w-4 h-4" />
                       <span className="text-sm font-bold">ריקומפוזיציה</span>
-                      <span className="text-[10px] opacity-80">שריר + פחות שומן</span>
+                      <span className="text-[10px] opacity-80">שריר + ירידה בשומן</span>
+                    </Button>
+                    <Button
+                      variant={goal === 'bulk' ? 'default' : 'outline'}
+                      onClick={() => analyzeProgress('bulk')}
+                      disabled={analyzing}
+                      className="h-auto py-3 flex-col gap-1"
+                    >
+                      <Sparkles className="w-4 h-4" />
+                      <span className="text-sm font-bold">העלאת מסה</span>
+                      <span className="text-[10px] opacity-80">בניית שריר</span>
                     </Button>
                   </div>
                 </div>
