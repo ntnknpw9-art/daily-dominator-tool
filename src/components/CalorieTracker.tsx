@@ -441,23 +441,49 @@ const CalorieTracker = () => {
 
       const blob: Blob = await new Promise(res => canvas.toBlob(b => res(b!), 'image/png'));
 
-      // Copy image to clipboard (so user can paste in Instagram if needed)
+      // Native (Capacitor / iOS app) — save to filesystem and share via native sheet
+      const { Capacitor } = await import('@capacitor/core');
+      if (Capacitor.isNativePlatform()) {
+        try {
+          const dataUrl: string = await new Promise((res) => {
+            const r = new FileReader();
+            r.onloadend = () => res(r.result as string);
+            r.readAsDataURL(blob);
+          });
+          const base64 = dataUrl.split(',')[1];
+          const { Filesystem, Directory } = await import('@capacitor/filesystem');
+          const fileName = `food-story-${Date.now()}.png`;
+          const written = await Filesystem.writeFile({
+            path: fileName,
+            data: base64,
+            directory: Directory.Cache,
+          });
+          const { Share } = await import('@capacitor/share');
+          await Share.share({
+            title: scanResult.name || 'ארוחה',
+            url: written.uri,
+            dialogTitle: 'שתף לסטורי',
+          });
+          toast.success('בחר Instagram Stories');
+          return;
+        } catch (err: any) {
+          if (err?.message?.includes('cancel')) return;
+          // fall through to web fallback
+        }
+      }
+
+      // Web fallback
       try {
         if (navigator.clipboard && (window as any).ClipboardItem) {
           await navigator.clipboard.write([new (window as any).ClipboardItem({ 'image/png': blob })]);
         }
       } catch {}
-
       const url = URL.createObjectURL(blob);
       const ua = navigator.userAgent.toLowerCase();
       const isMobile = /iphone|ipad|android/.test(ua);
-
-      // Save image to device
       const a = document.createElement('a');
       a.href = url; a.download = 'food-story.png'; a.click();
-
       if (isMobile) {
-        // Direct deep-link to Instagram Stories camera (skips share sheet)
         toast.success('פותח אינסטגרם סטורי...');
         setTimeout(() => { window.location.href = 'instagram-stories://share'; }, 400);
       } else {

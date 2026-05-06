@@ -65,5 +65,16 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>האפליקציה משתמשת במצלמה כדי לסרוק אוכל ולצלם תמונות התקדמות</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>האפליקציה ניגשת לגלריה כדי לבחור תמונות אוכל ותמונות התקדמות</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>האפליקציה שומרת תמונות סטורי בגלריה לשיתוף לאינסטגרם</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>instagram</string>
+		<string>instagram-stories</string>
+	</array>
 </dict>
 </plist>
