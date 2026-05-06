@@ -391,6 +391,24 @@ const ProgressPhotos = () => {
                   <span>📷 לפני — {compareBefore.photo_date}</span>
                   <span>💪 אחרי — {compareAfter.photo_date}</span>
                 </div>
+
+                <Button
+                  className="w-full"
+                  onClick={analyzeProgress}
+                  disabled={analyzing}
+                >
+                  {analyzing ? (
+                    <><Loader2 className="w-4 h-4 ml-2 animate-spin" /> מנתח...</>
+                  ) : (
+                    <><Sparkles className="w-4 h-4 ml-2" /> נתח התקדמות עם AI</>
+                  )}
+                </Button>
+
+                {aiAnalysis && (
+                  <div className="bg-muted/30 rounded-lg p-4 border border-border/30 whitespace-pre-wrap text-sm leading-relaxed">
+                    {aiAnalysis}
+                  </div>
+                )}
               </div>
             )}
           </div>
