@@ -384,7 +384,102 @@ const CalorieTracker = () => {
     setScanResult(null);
   };
 
-  // Barcode scanner functions
+  const shareToInstagramStory = async () => {
+    if (!capturedImage || !scanResult) return;
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1080;
+      canvas.height = 1920;
+      const ctx = canvas.getContext('2d')!;
+
+      // Background gradient
+      const grad = ctx.createLinearGradient(0, 0, 0, 1920);
+      grad.addColorStop(0, '#0a0a0a');
+      grad.addColorStop(1, '#1a0a0a');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 1080, 1920);
+
+      // Load food image
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.src = capturedImage;
+      await new Promise((res, rej) => { img.onload = res; img.onerror = rej; });
+
+      // Draw image as background (cover, slightly dimmed)
+      const ratio = Math.max(1080 / img.width, 1920 / img.height);
+      const w = img.width * ratio;
+      const h = img.height * ratio;
+      ctx.drawImage(img, (1080 - w) / 2, (1920 - h) / 2, w, h);
+
+      // Dark overlay for text contrast
+      ctx.fillStyle = 'rgba(0,0,0,0.45)';
+      ctx.fillRect(0, 0, 1080, 1920);
+
+      // Center card with values
+      const cardX = 90, cardY = 640, cardW = 900, cardH = 640;
+      ctx.fillStyle = 'rgba(15,15,15,0.85)';
+      ctx.beginPath();
+      (ctx as any).roundRect?.(cardX, cardY, cardW, cardH, 40);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(220,38,38,0.6)';
+      ctx.lineWidth = 4;
+      ctx.stroke();
+
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#fbbf24';
+      ctx.font = 'bold 56px Heebo, sans-serif';
+      ctx.fillText(String(scanResult.name || 'ארוחה').slice(0, 22), 540, cardY + 110);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 140px Heebo, sans-serif';
+      ctx.fillText(`${scanResult.calories || 0}`, 540, cardY + 280);
+      ctx.fillStyle = '#9ca3af';
+      ctx.font = '40px Heebo, sans-serif';
+      ctx.fillText('קלוריות', 540, cardY + 340);
+
+      // Macros row
+      const macros = [
+        { label: 'חלבון', val: `${scanResult.protein || 0}g`, color: '#60a5fa' },
+        { label: 'שומן', val: `${scanResult.fat || 0}g`, color: '#fbbf24' },
+        { label: 'פחמימות', val: `${scanResult.carbs || 0}g`, color: '#34d399' },
+      ];
+      macros.forEach((m, i) => {
+        const x = 240 + i * 300;
+        ctx.fillStyle = m.color;
+        ctx.font = 'bold 64px Heebo, sans-serif';
+        ctx.fillText(m.val, x, cardY + 480);
+        ctx.fillStyle = '#9ca3af';
+        ctx.font = '32px Heebo, sans-serif';
+        ctx.fillText(m.label, x, cardY + 530);
+      });
+
+      // Footer brand
+      ctx.fillStyle = 'rgba(255,255,255,0.7)';
+      ctx.font = 'bold 36px Heebo, sans-serif';
+      ctx.fillText('Discipline Tracker', 540, 1820);
+
+      // Convert to blob
+      const blob: Blob = await new Promise(res => canvas.toBlob(b => res(b!), 'image/png'));
+      const file = new File([blob], 'food-story.png', { type: 'image/png' });
+
+      // Try native share (mobile)
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: scanResult.name });
+        toast.success('נפתח שיתוף — בחר אינסטגרם');
+      } else {
+        // Fallback: download
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'food-story.png';
+        a.click();
+        URL.revokeObjectURL(url);
+        toast.success('התמונה הורדה — העלה לסטורי באינסטגרם');
+      }
+    } catch (e: any) {
+      toast.error(e.message || 'שגיאה בהכנת הסטורי');
+    }
+  };
   const startBarcodeScanner = async () => {
     setBarcodeMode(true);
     setBarcodeResult(null);
