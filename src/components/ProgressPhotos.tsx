@@ -385,7 +385,7 @@ const ProgressPhotos = () => {
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
                   <span className="text-sm text-muted-foreground">גרור את הסליידר להשוואה</span>
-                  <Button size="sm" variant="ghost" onClick={() => { setCompareBefore(null); setCompareAfter(null); setAiAnalysis(''); }}>
+                  <Button size="sm" variant="ghost" onClick={() => { setCompareBefore(null); setCompareAfter(null); setAiAnalysis(''); setGoal(null); }}>
                     <X className="w-4 h-4 ml-1" />
                     בחר מחדש
                   </Button>
@@ -396,21 +396,44 @@ const ProgressPhotos = () => {
                   <span>💪 אחרי — {compareAfter.photo_date}</span>
                 </div>
 
-                <Button
-                  className="w-full"
-                  onClick={analyzeProgress}
-                  disabled={analyzing}
-                >
-                  {analyzing ? (
-                    <><Loader2 className="w-4 h-4 ml-2 animate-spin" /> מנתח...</>
-                  ) : (
-                    <><Sparkles className="w-4 h-4 ml-2" /> נתח התקדמות עם AI</>
-                  )}
-                </Button>
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold text-center text-muted-foreground">בחר את המטרה שלך:</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      variant={goal === 'cut' ? 'default' : 'outline'}
+                      onClick={() => analyzeProgress('cut')}
+                      disabled={analyzing}
+                      className="h-auto py-3 flex-col gap-1"
+                    >
+                      <Target className="w-4 h-4" />
+                      <span className="text-sm font-bold">חיטוב</span>
+                      <span className="text-[10px] opacity-80">ירידה בשומן</span>
+                    </Button>
+                    <Button
+                      variant={goal === 'recomp' ? 'default' : 'outline'}
+                      onClick={() => analyzeProgress('recomp')}
+                      disabled={analyzing}
+                      className="h-auto py-3 flex-col gap-1"
+                    >
+                      <Dumbbell className="w-4 h-4" />
+                      <span className="text-sm font-bold">ריקומפוזיציה</span>
+                      <span className="text-[10px] opacity-80">שריר + פחות שומן</span>
+                    </Button>
+                  </div>
+                </div>
 
-                {aiAnalysis && (
-                  <div className="bg-muted/30 rounded-lg p-4 border border-border/30 whitespace-pre-wrap text-sm leading-relaxed">
-                    {aiAnalysis}
+                {analyzing && (
+                  <div className="flex items-center justify-center gap-2 py-4 text-muted-foreground">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span className="text-sm">מנתח את ההתקדמות והכין תוכנית מותאמת אישית...</span>
+                  </div>
+                )}
+
+                {aiAnalysis && !analyzing && (
+                  <div className="bg-muted/30 rounded-lg p-4 border border-border/30">
+                    <div className="prose prose-sm prose-invert max-w-none text-sm leading-relaxed">
+                      <ReactMarkdown>{aiAnalysis}</ReactMarkdown>
+                    </div>
                   </div>
                 )}
               </div>
