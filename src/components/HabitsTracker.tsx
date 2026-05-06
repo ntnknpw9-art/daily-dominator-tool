@@ -4,13 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { Droplets, Moon, Brain, BookOpen, Dumbbell } from 'lucide-react';
 
-const HABITS = [
-  { id: 'water', name: 'שתייה (2 ליטר)', icon: Droplets },
-  { id: 'sleep', name: 'שינה (7+ שעות)', icon: Moon },
-  { id: 'meditation', name: 'מדיטציה', icon: Brain },
-  { id: 'reading', name: 'קריאה', icon: BookOpen },
-  { id: 'stretching', name: 'מתיחות', icon: Dumbbell },
-];
+
 
 const HabitsTracker = () => {
   const { user } = useAuth();
