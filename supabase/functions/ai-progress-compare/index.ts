@@ -9,7 +9,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { beforeUrl, afterUrl, beforeDate, afterDate, goal } = await req.json();
+    const { beforeUrl, afterUrl, beforeDate, afterDate, goal, targetUrl } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY missing");
 
@@ -93,7 +93,17 @@ serve(async (req) => {
 [X שבועות/חודשים] אם תעקוב אחרי התוכנית במלואה.
 
 ### 🔥 משפט סיום
-[משפט קצר, חד, מוטיבציוני]`;
+[משפט קצר, חד, מוטיבציוני]
+
+${targetUrl ? `### 🎯 חשוב: קיבלת גם תמונת יעד (תמונה שלישית)
+נתח את הפער בין מצב "אחרי" לתמונת היעד. תאר ספציפית מה צריך להשתנות (מסת שריר באזורים מסוימים, אחוז שומן, סימטריה). הוסף סעיף נוסף בתשובה:
+
+### 🎯 ניתוח מול היעד
+- **פער עיקרי:** [תיאור]
+- **מה חסר במסת השריר:** [אזורים ספציפיים]
+- **פער באחוזי שומן:** [הערכה]
+- **התאמת התוכנית ליעד:** [איך התפריט/אימון לעיל מותאמים בדיוק ליעד הזה]
+` : ''}`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -112,7 +122,11 @@ serve(async (req) => {
               { type: "image_url", image_url: { url: beforeUrl } },
               { type: "text", text: `תמונה 2 — אחרי (${afterDate || ''}):` },
               { type: "image_url", image_url: { url: afterUrl } },
-              { type: "text", text: `נתח את ההתקדמות. מטרה: ${goalText}. תן ניתוח מלא לפי הפורמט.` },
+              ...(targetUrl ? [
+                { type: "text", text: `תמונה 3 — היעד שאני רוצה להגיע אליו:` },
+                { type: "image_url", image_url: { url: targetUrl } },
+              ] : []),
+              { type: "text", text: `נתח את ההתקדמות. מטרה: ${goalText}.${targetUrl ? ' כוון אותי ספציפית לעבר תמונת היעד.' : ''} תן ניתוח מלא לפי הפורמט.` },
             ],
           },
         ],

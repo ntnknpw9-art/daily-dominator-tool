@@ -38,7 +38,21 @@ const ProgressPhotos = () => {
   const [aiAnalysis, setAiAnalysis] = useState<string>('');
   const [analyzing, setAnalyzing] = useState(false);
   const [goal, setGoal] = useState<'cut' | 'recomp' | 'bulk' | null>(null);
+  const [targetImage, setTargetImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const targetInputRef = useRef<HTMLInputElement>(null);
+
+  const handleTargetSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('התמונה גדולה מדי (מקס 5MB)');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => setTargetImage(reader.result as string);
+    reader.readAsDataURL(file);
+  };
 
   const analyzeProgress = async (selectedGoal: 'cut' | 'recomp' | 'bulk') => {
     if (!compareBefore || !compareAfter) return;
@@ -53,6 +67,7 @@ const ProgressPhotos = () => {
           beforeDate: compareBefore.photo_date,
           afterDate: compareAfter.photo_date,
           goal: selectedGoal,
+          targetUrl: targetImage,
         },
       });
       if (error) throw error;
@@ -394,6 +409,35 @@ const ProgressPhotos = () => {
                 <div className="flex justify-between text-xs text-muted-foreground">
                   <span>📷 לפני — {compareBefore.photo_date}</span>
                   <span>💪 אחרי — {compareAfter.photo_date}</span>
+                </div>
+
+                <div className="space-y-2 bg-muted/20 border border-border/30 rounded-lg p-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-semibold">🎯 תמונת יעד <span className="text-muted-foreground text-xs font-normal">(אופציונלי)</span></p>
+                    {targetImage && (
+                      <Button size="sm" variant="ghost" onClick={() => setTargetImage(null)} className="h-6 px-2 text-xs">
+                        <X className="w-3 h-3 ml-1" /> הסר
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">העלה תמונה של גוף שאתה רוצה להגיע אליו — ה-AI ינתח וכוון אותך אליו ספציפית.</p>
+                  <input
+                    type="file"
+                    ref={targetInputRef}
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleTargetSelect}
+                  />
+                  {targetImage ? (
+                    <div className="relative w-24 h-24 rounded-lg overflow-hidden border border-primary/40">
+                      <img src={targetImage} alt="target" className="w-full h-full object-cover" />
+                    </div>
+                  ) : (
+                    <Button size="sm" variant="outline" onClick={() => targetInputRef.current?.click()} className="w-full">
+                      <ImagePlus className="w-4 h-4 ml-1" />
+                      העלה תמונת יעד
+                    </Button>
+                  )}
                 </div>
 
                 <div className="space-y-2">
