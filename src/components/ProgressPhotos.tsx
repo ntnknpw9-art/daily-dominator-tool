@@ -10,6 +10,7 @@ import { Camera, Upload, Trash2, Eye, EyeOff, ImagePlus, Users, Lock, SlidersHor
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
+import ApplyPlanDialog from './ApplyPlanDialog';
 
 interface ProgressPhoto {
   id: string;
@@ -39,6 +40,7 @@ const ProgressPhotos = () => {
   const [analyzing, setAnalyzing] = useState(false);
   const [goal, setGoal] = useState<'cut' | 'recomp' | 'bulk' | null>(null);
   const [targetImage, setTargetImage] = useState<string | null>(null);
+  const [showApplyDialog, setShowApplyDialog] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const targetInputRef = useRef<HTMLInputElement>(null);
 
@@ -484,10 +486,17 @@ const ProgressPhotos = () => {
                 )}
 
                 {aiAnalysis && !analyzing && (
-                  <div className="bg-muted/30 rounded-lg p-4 border border-border/30">
-                    <div className="prose prose-sm prose-invert max-w-none text-sm leading-relaxed">
-                      <ReactMarkdown>{aiAnalysis}</ReactMarkdown>
+                  <div className="space-y-3">
+                    <div className="bg-muted/30 rounded-lg p-4 border border-border/30">
+                      <div className="prose prose-sm prose-invert max-w-none text-sm leading-relaxed">
+                        <ReactMarkdown>{aiAnalysis}</ReactMarkdown>
+                      </div>
                     </div>
+                    <Button onClick={() => setShowApplyDialog(true)} className="w-full bg-gradient-to-r from-primary to-accent">
+                      <Sparkles className="w-4 h-4 ml-2" />
+                      החל את התוכנית באפליקציה (אימונים, תזונה, מים, שינה)
+                    </Button>
+                    <ApplyPlanDialog open={showApplyDialog} onOpenChange={setShowApplyDialog} analysisText={aiAnalysis} />
                   </div>
                 )}
               </div>

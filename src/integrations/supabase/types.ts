@@ -617,6 +617,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_targets: {
+        Row: {
+          created_at: string
+          id: string
+          sleep_hours: number
+          training_days_per_week: number
+          updated_at: string
+          user_id: string
+          water_liters: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          sleep_hours?: number
+          training_days_per_week?: number
+          updated_at?: string
+          user_id: string
+          water_liters?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          sleep_hours?: number
+          training_days_per_week?: number
+          updated_at?: string
+          user_id?: string
+          water_liters?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

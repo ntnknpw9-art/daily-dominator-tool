@@ -1,13 +1,12 @@
 import { useState } from 'react';
 import { useTaskContext } from '@/context/TaskContext';
-import { Category, DayOfWeek, ALL_DAYS } from '@/types/task';
+import { Category, DayOfWeek, ALL_DAYS, WorkoutDetail } from '@/types/task';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus } from 'lucide-react';
+import { Plus, ChevronDown, ChevronUp } from 'lucide-react';
 
 const CATEGORIES: Category[] = ['כושר', 'לימודים', 'כסף', 'משמעת', 'אישי'];
 
@@ -23,6 +22,8 @@ const NewTaskDialog = () => {
   const [endDate, setEndDate] = useState('');
   const [category, setCategory] = useState<Category>('אישי');
   const [days, setDays] = useState<DayOfWeek[]>([]);
+  const [showDailyDetails, setShowDailyDetails] = useState(false);
+  const [dailyDetails, setDailyDetails] = useState<Record<DayOfWeek, string>>({} as any);
 
   const toggleDay = (day: DayOfWeek) => {
     setDays(prev => prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]);
@@ -33,8 +34,19 @@ const NewTaskDialog = () => {
     if (!isForever && (!startDate || !endDate)) return;
     const finalStart = isForever ? '2020-01-01' : startDate;
     const finalEnd = isForever ? '2099-12-31' : endDate;
-    addTask({ name, meaning, startTime, endTime, startDate: finalStart, endDate: finalEnd, category, days });
+
+    const workoutDetails: WorkoutDetail[] = days
+      .filter(d => dailyDetails[d]?.trim())
+      .map(d => ({ day: d, description: dailyDetails[d].trim() }));
+
+    addTask({
+      name, meaning, startTime, endTime,
+      startDate: finalStart, endDate: finalEnd,
+      category, days,
+      workoutDetails: workoutDetails.length > 0 ? workoutDetails : undefined,
+    });
     setName(''); setMeaning(''); setDays([]); setIsForever(false);
+    setDailyDetails({} as any); setShowDailyDetails(false);
     setOpen(false);
   };
 
@@ -126,6 +138,37 @@ const NewTaskDialog = () => {
               ))}
             </div>
           </div>
+
+          {/* Daily details — works for any task */}
+          {days.length > 0 && (
+            <div className="border border-border/40 rounded-lg p-3 bg-secondary/20">
+              <button
+                type="button"
+                onClick={() => setShowDailyDetails(!showDailyDetails)}
+                className="w-full flex items-center justify-between text-sm font-semibold"
+              >
+                <span>📋 פירוט יומי לכל יום (אופציונלי)</span>
+                {showDailyDetails ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </button>
+              {showDailyDetails && (
+                <div className="space-y-2 mt-3">
+                  <p className="text-xs text-muted-foreground">לדוגמה: ראשון - חזה, שני - גב. או בלימודים: ראשון - חידוד, שני - גזירות.</p>
+                  {days.map(d => (
+                    <div key={d} className="flex items-center gap-2">
+                      <span className="text-xs font-bold w-12 text-accent">{d}</span>
+                      <Input
+                        value={dailyDetails[d] || ''}
+                        onChange={e => setDailyDetails(prev => ({ ...prev, [d]: e.target.value }))}
+                        placeholder={`מה לעשות ב${d}...`}
+                        className="text-sm"
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
           <Button onClick={handleSubmit} className="w-full">צור משימה</Button>
         </div>
       </DialogContent>
