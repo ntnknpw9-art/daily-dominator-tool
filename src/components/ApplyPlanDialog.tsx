@@ -38,7 +38,7 @@ interface Props {
 
 const ApplyPlanDialog = ({ open, onOpenChange, analysisText }: Props) => {
   const { user } = useAuth();
-  const { addTask } = useTaskContext();
+  const { addTask, deleteTask, tasks } = useTaskContext();
   const [loading, setLoading] = useState(false);
   const [applying, setApplying] = useState(false);
   const [plan, setPlan] = useState<ExtractedPlan | null>(null);
@@ -49,6 +49,18 @@ const ApplyPlanDialog = ({ open, onOpenChange, analysisText }: Props) => {
   const [applyTraining, setApplyTraining] = useState(true);
   const [trainingTime, setTrainingTime] = useState('17:00');
   const [trainingEnd, setTrainingEnd] = useState('18:30');
+
+  // Existing training tasks + mode (new / replace / merge)
+  const existingTraining = tasks.filter(t => t.category === 'כושר');
+  const [trainingMode, setTrainingMode] = useState<'new' | 'replace' | 'merge'>('new');
+  const [targetTaskId, setTargetTaskId] = useState<string>('');
+
+  useEffect(() => {
+    if (existingTraining.length > 0 && !targetTaskId) {
+      setTargetTaskId(existingTraining[0].id);
+      setTrainingMode('merge');
+    }
+  }, [existingTraining.length]);
 
   useEffect(() => {
     if (!open || !analysisText) return;
