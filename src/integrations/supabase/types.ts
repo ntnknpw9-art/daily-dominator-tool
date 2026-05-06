@@ -41,6 +41,39 @@ export type Database = {
         }
         Relationships: []
       }
+      applied_plans: {
+        Row: {
+          applied_nutrition: boolean
+          applied_targets: boolean
+          applied_training: boolean
+          created_at: string
+          id: string
+          plan: Json
+          summary: string | null
+          user_id: string
+        }
+        Insert: {
+          applied_nutrition?: boolean
+          applied_targets?: boolean
+          applied_training?: boolean
+          created_at?: string
+          id?: string
+          plan: Json
+          summary?: string | null
+          user_id: string
+        }
+        Update: {
+          applied_nutrition?: boolean
+          applied_targets?: boolean
+          applied_training?: boolean
+          created_at?: string
+          id?: string
+          plan?: Json
+          summary?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       challenges: {
         Row: {
           challenge_id: string

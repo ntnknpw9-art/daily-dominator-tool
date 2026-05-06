@@ -33,10 +33,11 @@ interface ExtractedPlan {
 interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
-  analysisText: string;
+  analysisText?: string;
+  initialPlan?: ExtractedPlan;
 }
 
-const ApplyPlanDialog = ({ open, onOpenChange, analysisText }: Props) => {
+const ApplyPlanDialog = ({ open, onOpenChange, analysisText, initialPlan }: Props) => {
   const { user } = useAuth();
   const { addTask, deleteTask, tasks } = useTaskContext();
   const [loading, setLoading] = useState(false);
@@ -63,7 +64,13 @@ const ApplyPlanDialog = ({ open, onOpenChange, analysisText }: Props) => {
   }, [existingTraining.length]);
 
   useEffect(() => {
-    if (!open || !analysisText) return;
+    if (!open) return;
+    if (initialPlan) {
+      setPlan(initialPlan);
+      setLoading(false);
+      return;
+    }
+    if (!analysisText) return;
     setPlan(null);
     setLoading(true);
     (async () => {
@@ -179,6 +186,22 @@ const ApplyPlanDialog = ({ open, onOpenChange, analysisText }: Props) => {
           });
         }
       }
+
+      // Save to history
+      try {
+        const summary: string[] = [];
+        if (applyTargets && (plan.water_liters || plan.sleep_hours)) summary.push(`💧${plan.water_liters || '-'}L · 😴${plan.sleep_hours || '-'}h`);
+        if (applyNutrition && plan.nutrition?.calories) summary.push(`🍎${plan.nutrition.calories}kcal`);
+        if (applyTraining && plan.training?.schedule?.length) summary.push(`💪${plan.training.schedule.length} ימי אימון`);
+        await supabase.from('applied_plans').insert({
+          user_id: user.id,
+          plan: plan as any,
+          summary: summary.join(' · '),
+          applied_targets: applyTargets,
+          applied_nutrition: applyNutrition,
+          applied_training: applyTraining,
+        });
+      } catch (e) { console.error('history save failed', e); }
 
       toast.success('🔥 התוכנית הוחלה בהצלחה!');
       onOpenChange(false);

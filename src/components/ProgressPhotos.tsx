@@ -6,11 +6,12 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
-import { Camera, Upload, Trash2, Eye, EyeOff, ImagePlus, Users, Lock, SlidersHorizontal, X, Heart, MessageCircle, Send, Sparkles, Loader2, Target, Dumbbell } from 'lucide-react';
+import { Camera, Upload, Trash2, Eye, EyeOff, ImagePlus, Users, Lock, SlidersHorizontal, X, Heart, MessageCircle, Send, Sparkles, Loader2, Target, Dumbbell, History } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
 import ApplyPlanDialog from './ApplyPlanDialog';
+import PlanHistoryDialog from './PlanHistoryDialog';
 
 interface ProgressPhoto {
   id: string;
@@ -41,6 +42,7 @@ const ProgressPhotos = () => {
   const [goal, setGoal] = useState<'cut' | 'recomp' | 'bulk' | null>(null);
   const [targetImage, setTargetImage] = useState<string | null>(null);
   const [showApplyDialog, setShowApplyDialog] = useState(false);
+  const [showHistoryDialog, setShowHistoryDialog] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const targetInputRef = useRef<HTMLInputElement>(null);
 
@@ -492,13 +494,19 @@ const ProgressPhotos = () => {
                         <ReactMarkdown>{aiAnalysis}</ReactMarkdown>
                       </div>
                     </div>
-                    <Button onClick={() => setShowApplyDialog(true)} className="w-full bg-gradient-to-r from-primary to-accent">
-                      <Sparkles className="w-4 h-4 ml-2" />
-                      החל את התוכנית באפליקציה (אימונים, תזונה, מים, שינה)
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button onClick={() => setShowApplyDialog(true)} className="flex-1 bg-gradient-to-r from-primary to-accent">
+                        <Sparkles className="w-4 h-4 ml-2" />
+                        החל את התוכנית באפליקציה
+                      </Button>
+                      <Button variant="outline" onClick={() => setShowHistoryDialog(true)} title="היסטוריה">
+                        <History className="w-4 h-4" />
+                      </Button>
+                    </div>
                     <ApplyPlanDialog open={showApplyDialog} onOpenChange={setShowApplyDialog} analysisText={aiAnalysis} />
                   </div>
                 )}
+                <PlanHistoryDialog open={showHistoryDialog} onOpenChange={setShowHistoryDialog} />
               </div>
             )}
           </div>
