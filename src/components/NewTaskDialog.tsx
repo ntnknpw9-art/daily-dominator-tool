@@ -101,13 +101,19 @@ const NewTaskDialog = () => {
             )}
           </div>
           <div>
-            <Label>קטגוריה</Label>
-            <Select value={category} onValueChange={(v) => setCategory(v as Category)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-              </SelectContent>
-            </Select>
+            <Label className="mb-2 block">קטגוריה</Label>
+            <div className="flex flex-wrap gap-2">
+              {CATEGORIES.map(c => (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setCategory(c)}
+                  className={`py-2 px-4 rounded-lg text-sm font-medium transition-all ${category === c ? 'bg-primary text-primary-foreground' : 'bg-secondary text-muted-foreground'}`}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
           </div>
           <div>
             <Label>ימים בשבוע</Label>
