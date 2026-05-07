@@ -7,8 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Capacitor } from '@capacitor/core';
 import { SignInWithApple, SignInWithAppleOptions } from '@capacitor-community/apple-sign-in';
-import { Browser } from '@capacitor/browser';
-import { SocialLogin } from '@capgo/capacitor-social-login';
+
+const PUBLISHED_APP_ORIGIN = 'https://daily-dominator-tool.lovable.app';
 
 const generateNonce = () => {
   const bytes = new Uint8Array(16);
@@ -44,6 +44,24 @@ const AuthPage = () => {
     if (m.includes('email') && m.includes('exist'))
       return 'כבר קיים חשבון עם המייל הזה. התחבר עם המייל/Google ושייך את Apple מההגדרות.';
     return `שגיאה בהתחברות עם Apple: ${msg}`;
+  };
+
+  const startManagedGoogleOAuth = async () => {
+    if (Capacitor.isNativePlatform()) {
+      const params = new URLSearchParams({
+        provider: 'google',
+        redirect_uri: PUBLISHED_APP_ORIGIN,
+        state: generateNonce(),
+        prompt: 'select_account',
+      });
+      window.location.href = `${PUBLISHED_APP_ORIGIN}/~oauth/initiate?${params.toString()}`;
+      return { redirected: true, error: null };
+    }
+
+    return lovable.auth.signInWithOAuth('google', {
+      redirect_uri: window.location.origin,
+      extraParams: { prompt: 'select_account' },
+    });
   };
 
   const handleAppleSignIn = async () => {
@@ -179,36 +197,9 @@ const AuthPage = () => {
             setError('');
             setLoading(true);
             try {
-              // באפליקציית iOS - שימוש ב-Google Sign In נייטיבי + signInWithIdToken
-              if (Capacitor.isNativePlatform()) {
-                try {
-                  await SocialLogin.initialize({
-                    google: {
-                      iOSClientId: '309108409035-3sl22316bkmuom32e1c2jtjjbmgava6i.apps.googleusercontent.com',
-                    },
-                  } as any);
-                } catch {}
-                const res: any = await SocialLogin.login({
-                  provider: 'google',
-                  options: { scopes: ['profile', 'email'] },
-                } as any);
-                const idToken = res?.result?.idToken || res?.idToken;
-                if (!idToken) {
-                  setError('לא התקבל token מגוגל. נסה שוב.');
-                } else {
-                  const { error } = await supabase.auth.signInWithIdToken({
-                    provider: 'google',
-                    token: idToken,
-                  });
-                  if (error) setError(error.message);
-                }
-              } else {
-                const result = await lovable.auth.signInWithOAuth("google", {
-                  redirect_uri: window.location.origin,
-                });
-                if (result?.error) {
-                  setError(result.error.message || 'שגיאה בהתחברות עם Google');
-                }
+              const result = await startManagedGoogleOAuth();
+              if (result?.error) {
+                setError(result.error.message || 'שגיאה בהתחברות עם Google');
               }
             } catch (e: any) {
               const msg = (e?.message || '').toLowerCase();
