@@ -101,6 +101,19 @@ const ProgressPhotos = () => {
     };
   }, [previews]);
 
+  const signPhotoUrls = async (rows: ProgressPhoto[]): Promise<ProgressPhoto[]> => {
+    return Promise.all(
+      rows.map(async (p) => {
+        const path = p.image_url.split('/progress-photos/')[1];
+        if (!path) return p;
+        const { data } = await supabase.storage
+          .from('progress-photos')
+          .createSignedUrl(path, 60 * 60);
+        return data?.signedUrl ? { ...p, image_url: data.signedUrl } : p;
+      })
+    );
+  };
+
   const fetchPhotos = async () => {
     if (!user) return;
     const { data } = await supabase
@@ -108,7 +121,7 @@ const ProgressPhotos = () => {
       .select('*')
       .eq('user_id', user.id)
       .order('photo_date', { ascending: false });
-    if (data) setPhotos(data as ProgressPhoto[]);
+    if (data) setPhotos(await signPhotoUrls(data as ProgressPhoto[]));
   };
 
   const fetchCommunityPhotos = async () => {
@@ -118,7 +131,7 @@ const ProgressPhotos = () => {
       .eq('is_public', true)
       .order('created_at', { ascending: false })
       .limit(50);
-    if (data) setCommunityPhotos(data as ProgressPhoto[]);
+    if (data) setCommunityPhotos(await signPhotoUrls(data as ProgressPhoto[]));
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
