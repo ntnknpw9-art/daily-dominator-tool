@@ -8,18 +8,26 @@ import { Label } from '@/components/ui/label';
 import { Capacitor } from '@capacitor/core';
 import { SignInWithApple, SignInWithAppleOptions } from '@capacitor-community/apple-sign-in';
 import { GoogleSignIn } from '@capawesome/capacitor-google-sign-in';
-import { useEffect } from 'react';
 
 // אתחול Google Auth באפליקציה הנייטיבית
-const GOOGLE_IOS_CLIENT_ID = '309108409035-3sl22316bkmuom32e1c2jtjjbmgava6i.apps.googleusercontent.com';
 const GOOGLE_WEB_CLIENT_ID = '309108409035-c9khmlr7vf8lqg1r608tkcl2q7fu86mq.apps.googleusercontent.com';
+
+const generateNonce = () => {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, '0')).join('');
+};
+
+const sha256Hex = async (value: string) => {
+  const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
+  return Array.from(new Uint8Array(hash), (byte) => byte.toString(16).padStart(2, '0')).join('');
+};
 
 if (Capacitor.isNativePlatform()) {
   GoogleSignIn.initialize({
-    clientId: GOOGLE_IOS_CLIENT_ID,
-    serverClientId: GOOGLE_WEB_CLIENT_ID,
+    clientId: GOOGLE_WEB_CLIENT_ID,
     scopes: ['profile', 'email'],
-  } as any).catch((e) => console.warn('GoogleSignIn init failed', e));
+  }).catch((e) => console.warn('GoogleSignIn init failed', e));
 }
 
 const AuthPage = () => {
@@ -54,12 +62,14 @@ const AuthPage = () => {
     try {
       // באפליקציית iOS - שימוש ב-Sign in with Apple נייטיבי
       if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios') {
+        const rawNonce = generateNonce();
+        const hashedNonce = await sha256Hex(rawNonce);
         const options: SignInWithAppleOptions = {
           clientId: 'com.natanknafo.dailydominator',
           redirectURI: 'https://daily-dominator-tool.lovable.app',
           scopes: 'email name',
-          state: Math.random().toString(36).substring(7),
-          nonce: Math.random().toString(36).substring(7),
+          state: generateNonce(),
+          nonce: hashedNonce,
         };
         const res = await SignInWithApple.authorize(options);
         const idToken = res.response?.identityToken;
@@ -70,7 +80,7 @@ const AuthPage = () => {
         const { error } = await supabase.auth.signInWithIdToken({
           provider: 'apple',
           token: idToken,
-          nonce: options.nonce,
+          nonce: rawNonce,
         });
         if (error) {
           setAppleError(friendlyAppleError(error.message));
@@ -190,6 +200,7 @@ const AuthPage = () => {
                 const { error } = await supabase.auth.signInWithIdToken({
                   provider: 'google',
                   token: idToken,
+                  access_token: googleUser?.accessToken ?? undefined,
                 });
                 if (error) setError(error.message || 'שגיאה בהתחברות עם Google');
               } else {
