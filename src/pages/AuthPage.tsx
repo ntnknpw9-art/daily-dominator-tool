@@ -6,9 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Capacitor } from '@capacitor/core';
+import { SocialLogin } from '@capgo/capacitor-social-login';
 import { SignInWithApple, SignInWithAppleOptions } from '@capacitor-community/apple-sign-in';
 
 const PUBLISHED_APP_ORIGIN = 'https://daily-dominator-tool.lovable.app';
+const GOOGLE_IOS_CLIENT_ID = '309108409035-3sl22316bkmuom32e1c2jtjjbmgava6i.apps.googleusercontent.com';
 
 const generateNonce = () => {
   const bytes = new Uint8Array(16);
@@ -46,22 +48,62 @@ const AuthPage = () => {
     return `שגיאה בהתחברות עם Apple: ${msg}`;
   };
 
-  const startManagedGoogleOAuth = async () => {
-    if (Capacitor.isNativePlatform()) {
-      const params = new URLSearchParams({
-        provider: 'google',
-        redirect_uri: PUBLISHED_APP_ORIGIN,
-        state: generateNonce(),
-        prompt: 'select_account',
-      });
-      window.location.href = `${PUBLISHED_APP_ORIGIN}/~oauth/initiate?${params.toString()}`;
-      return { redirected: true, error: null };
-    }
+  const friendlyGoogleError = (msg?: string) => {
+    const m = (msg || '').toLowerCase();
+    if (!msg) return 'ההתחברות עם Google נכשלה. נסה שוב.';
+    if (m.includes('cancel') || m.includes('12501') || m.includes('canceled')) return '';
+    if (m.includes('invalid_client') || m.includes('client') || m.includes('audience'))
+      return 'התחברות Google לא מוגדרת נכון כרגע. צריך Client ID תקין של Google ל-iOS.';
+    if (m.includes('network') || m.includes('fetch') || m.includes('timeout'))
+      return 'בעיית רשת בהתחברות עם Google. בדוק את החיבור ונסה שוב.';
+    return `שגיאה בהתחברות עם Google: ${msg}`;
+  };
 
-    return lovable.auth.signInWithOAuth('google', {
-      redirect_uri: window.location.origin,
-      extraParams: { prompt: 'select_account' },
-    });
+  const handleGoogleSignIn = async () => {
+    setError('');
+    setLoading(true);
+    try {
+      if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios') {
+        const rawNonce = generateNonce();
+        await SocialLogin.initialize({
+          google: {
+            iOSClientId: GOOGLE_IOS_CLIENT_ID,
+            mode: 'online',
+          },
+        });
+        const res = await SocialLogin.login({
+          provider: 'google',
+          options: {
+            scopes: ['email', 'profile'],
+            nonce: rawNonce,
+            forcePrompt: true,
+          },
+        });
+        const idToken = res.result.responseType === 'online' ? res.result.idToken : null;
+        if (!idToken) {
+          setError('לא התקבל token מ-Google. נסה שוב.');
+          return;
+        }
+        const { error } = await supabase.auth.signInWithIdToken({
+          provider: 'google',
+          token: idToken,
+          nonce: rawNonce,
+        });
+        if (error) setError(friendlyGoogleError(error.message));
+        return;
+      }
+
+      const result = await lovable.auth.signInWithOAuth('google', {
+        redirect_uri: window.location.origin,
+        extraParams: { prompt: 'select_account' },
+      });
+      if (result?.error) setError(friendlyGoogleError(result.error.message));
+    } catch (e: any) {
+      const message = friendlyGoogleError(e?.message);
+      if (message) setError(message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleAppleSignIn = async () => {
