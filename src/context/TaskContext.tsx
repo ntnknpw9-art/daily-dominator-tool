@@ -4,6 +4,42 @@ import { formatDate, getNowInIsrael, getHebrewDayFromDate } from '@/lib/dateUtil
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 
+const LEGACY_TASKS_KEY = 'tracker-tasks';
+const MIGRATION_DONE_KEY_PREFIX = 'tracker-tasks-cloud-migrated-';
+
+const readLegacyTasks = (): Task[] => {
+  try {
+    const saved = localStorage.getItem(LEGACY_TASKS_KEY);
+    if (!saved) return [];
+    const parsed = JSON.parse(saved);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const mapDbTasks = (dbTasks: any[], dbCompletions: any[] = []): Task[] => {
+  const completionMap: Record<string, Record<string, boolean>> = {};
+  dbCompletions.forEach(c => {
+    if (!completionMap[c.task_id]) completionMap[c.task_id] = {};
+    completionMap[c.task_id][c.completion_date] = c.completed;
+  });
+
+  return dbTasks.map(t => ({
+    id: t.id,
+    name: t.name,
+    meaning: t.meaning || '',
+    startTime: t.start_time,
+    endTime: t.end_time,
+    startDate: t.start_date,
+    endDate: t.end_date,
+    category: t.category as Category,
+    days: (t.days || []) as DayOfWeek[],
+    completions: completionMap[t.id] || {},
+    workoutDetails: t.workout_details as unknown as Task['workoutDetails'],
+  }));
+};
+
 interface TaskContextType {
   tasks: Task[];
   stats: UserStats;
@@ -37,43 +73,65 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [timerTaskId, setTimerTaskId] = useState<string | null>(null);
 
-  // Fetch tasks + completions from Supabase
+  // Fetch tasks + completions from cloud, and import old localStorage data once after login
   useEffect(() => {
     if (!user) { setTasks([]); setLoading(false); return; }
 
     const fetchData = async () => {
       setLoading(true);
-      const { data: dbTasks } = await supabase
+      let { data: dbTasks } = await supabase
         .from('tasks')
         .select('*')
         .eq('user_id', user.id);
 
-      const { data: dbCompletions } = await supabase
+      let { data: dbCompletions } = await supabase
         .from('task_completions')
         .select('*')
         .eq('user_id', user.id);
 
-      if (dbTasks) {
-        const completionMap: Record<string, Record<string, boolean>> = {};
-        dbCompletions?.forEach(c => {
-          if (!completionMap[c.task_id]) completionMap[c.task_id] = {};
-          completionMap[c.task_id][c.completion_date] = c.completed;
-        });
+      const migrationDoneKey = `${MIGRATION_DONE_KEY_PREFIX}${user.id}`;
+      const legacyTasks = readLegacyTasks();
+      const shouldImportLegacy = !localStorage.getItem(migrationDoneKey) && (!dbTasks || dbTasks.length === 0) && legacyTasks.length > 0;
 
-        const mappedTasks: Task[] = dbTasks.map(t => ({
-          id: t.id,
-          name: t.name,
-          meaning: t.meaning || '',
-          startTime: t.start_time,
-          endTime: t.end_time,
-          startDate: t.start_date,
-          endDate: t.end_date,
-          category: t.category as Category,
-          days: (t.days || []) as DayOfWeek[],
-          completions: completionMap[t.id] || {},
-          workoutDetails: t.workout_details as unknown as Task['workoutDetails'],
-        }));
-        setTasks(mappedTasks);
+      if (shouldImportLegacy) {
+        const { data: insertedTasks } = await supabase
+          .from('tasks')
+          .insert(legacyTasks.map(task => ({
+            user_id: user.id,
+            name: task.name,
+            meaning: task.meaning,
+            start_time: task.startTime,
+            end_time: task.endTime,
+            start_date: task.startDate,
+            end_date: task.endDate,
+            category: task.category,
+            days: task.days,
+            workout_details: task.workoutDetails as any,
+          })))
+          .select('*');
+
+        if (insertedTasks?.length) {
+          const taskIdMap = new Map(legacyTasks.map((task, index) => [task.id, insertedTasks[index]?.id]).filter((entry): entry is [string, string] => Boolean(entry[1])));
+          const completionRows = legacyTasks.flatMap(task => {
+            const cloudTaskId = taskIdMap.get(task.id);
+            if (!cloudTaskId) return [];
+            return Object.entries(task.completions || {})
+              .filter(([, completed]) => completed)
+              .map(([completion_date]) => ({ user_id: user.id, task_id: cloudTaskId, completion_date, completed: true }));
+          });
+
+          if (completionRows.length) {
+            await supabase.from('task_completions').upsert(completionRows, { onConflict: 'task_id,completion_date' });
+          }
+
+          localStorage.setItem(migrationDoneKey, 'true');
+          dbTasks = insertedTasks;
+          dbCompletions = completionRows;
+        }
+      }
+
+      if (dbTasks) {
+        setTasks(mapDbTasks(dbTasks, dbCompletions || []));
       }
       setLoading(false);
     };
