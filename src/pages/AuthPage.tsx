@@ -69,6 +69,7 @@ const AuthPage = () => {
         await SocialLogin.initialize({
           google: {
             iOSClientId: GOOGLE_IOS_CLIENT_ID,
+            iOSServerClientId: GOOGLE_WEB_CLIENT_ID,
             mode: 'online',
           },
         });
