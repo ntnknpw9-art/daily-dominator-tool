@@ -68,6 +68,7 @@ const AuthPage = () => {
     try {
       if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios') {
         const rawNonce = generateNonce();
+        const hashedNonce = await sha256Hex(rawNonce);
         await SocialLogin.initialize({
           google: {
             iOSClientId: GOOGLE_IOS_CLIENT_ID,
@@ -79,7 +80,7 @@ const AuthPage = () => {
           provider: 'google',
           options: {
             scopes: ['email', 'profile'],
-            nonce: rawNonce,
+            nonce: hashedNonce,
             forcePrompt: true,
           },
         });
