@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Capacitor } from '@capacitor/core';
 import { SignInWithApple, SignInWithAppleOptions } from '@capacitor-community/apple-sign-in';
 import { Browser } from '@capacitor/browser';
+import { GoogleAuth } from '@codetrix-studio/capacitor-google-auth';
 
 const generateNonce = () => {
   const bytes = new Uint8Array(16);
