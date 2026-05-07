@@ -117,7 +117,7 @@ const AuthPage = () => {
         const hashedNonce = await sha256Hex(rawNonce);
         const options: SignInWithAppleOptions = {
           clientId: 'com.natanknafo.dailydominator',
-          redirectURI: 'https://daily-dominator-tool.lovable.app',
+          redirectURI: PUBLISHED_APP_ORIGIN,
           scopes: 'email name',
           state: generateNonce(),
           nonce: hashedNonce,
