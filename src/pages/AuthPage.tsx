@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Capacitor } from '@capacitor/core';
 import { SignInWithApple, SignInWithAppleOptions } from '@capacitor-community/apple-sign-in';
 import { Browser } from '@capacitor/browser';
+import { SocialLogin } from '@capgo/capacitor-social-login';
 
 const generateNonce = () => {
   const bytes = new Uint8Array(16);
@@ -178,17 +179,41 @@ const AuthPage = () => {
             setError('');
             setLoading(true);
             try {
-              // OAuth דרך דפדפן (גם בנייטיב וגם בדפדפן) — Managed Google Auth של Lovable Cloud
-              const result = await lovable.auth.signInWithOAuth("google", {
-                redirect_uri: window.location.origin,
-              });
-              if (result?.error) {
-                setError(result.error.message || 'שגיאה בהתחברות עם Google');
+              // באפליקציית iOS - שימוש ב-Google Sign In נייטיבי + signInWithIdToken
+              if (Capacitor.isNativePlatform()) {
+                try {
+                  await SocialLogin.initialize({
+                    google: {
+                      iOSClientId: '309108409035-3sl22316bkmuom32e1c2jtjjbmgava6i.apps.googleusercontent.com',
+                    },
+                  } as any);
+                } catch {}
+                const res: any = await SocialLogin.login({
+                  provider: 'google',
+                  options: { scopes: ['profile', 'email'] },
+                } as any);
+                const idToken = res?.result?.idToken || res?.idToken;
+                if (!idToken) {
+                  setError('לא התקבל token מגוגל. נסה שוב.');
+                } else {
+                  const { error } = await supabase.auth.signInWithIdToken({
+                    provider: 'google',
+                    token: idToken,
+                  });
+                  if (error) setError(error.message);
+                }
+              } else {
+                const result = await lovable.auth.signInWithOAuth("google", {
+                  redirect_uri: window.location.origin,
+                });
+                if (result?.error) {
+                  setError(result.error.message || 'שגיאה בהתחברות עם Google');
+                }
               }
             } catch (e: any) {
               const msg = (e?.message || '').toLowerCase();
-              if (msg.includes('cancel') || msg.includes('12501')) {
-                // המשתמש ביטל - אין צורך להציג שגיאה
+              if (msg.includes('cancel') || msg.includes('12501') || msg.includes('canceled')) {
+                // המשתמש ביטל
               } else {
                 setError(e?.message || 'שגיאה בהתחברות עם Google');
               }
