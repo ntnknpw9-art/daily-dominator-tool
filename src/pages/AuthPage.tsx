@@ -19,7 +19,7 @@ if (Capacitor.isNativePlatform()) {
     clientId: GOOGLE_IOS_CLIENT_ID,
     serverClientId: GOOGLE_WEB_CLIENT_ID,
     scopes: ['profile', 'email'],
-  }).catch((e) => console.warn('GoogleSignIn init failed', e));
+  } as any).catch((e) => console.warn('GoogleSignIn init failed', e));
 }
 
 const AuthPage = () => {
