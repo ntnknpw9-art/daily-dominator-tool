@@ -28,6 +28,7 @@ const config: CapacitorConfig = {
   plugins: {
     GoogleSignIn: {
       clientId: '309108409035-3sl22316bkmuom32e1c2jtjjbmgava6i.apps.googleusercontent.com',
+      serverClientId: '309108409035-c9khmlr7vf8lqg1r608tkcl2q7fu86mq.apps.googleusercontent.com',
       scopes: ['profile', 'email'],
     },
     StatusBar: {
