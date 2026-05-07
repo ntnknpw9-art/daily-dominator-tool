@@ -178,29 +178,12 @@ const AuthPage = () => {
             setError('');
             setLoading(true);
             try {
-              if (Capacitor.isNativePlatform()) {
-                // Google Sign-In נייטיבי באפליקציה
-                const googleUser = await GoogleSignIn.signIn();
-                const idToken = googleUser?.idToken;
-                if (!idToken) {
-                  setError('לא התקבל token מ-Google. נסה שוב.');
-                  setLoading(false);
-                  return;
-                }
-                const { error } = await supabase.auth.signInWithIdToken({
-                  provider: 'google',
-                  token: idToken,
-                  access_token: googleUser?.accessToken ?? undefined,
-                });
-                if (error) setError(error.message || 'שגיאה בהתחברות עם Google');
-              } else {
-                // OAuth דפדפן רגיל
-                const result = await lovable.auth.signInWithOAuth("google", {
-                  redirect_uri: window.location.origin,
-                });
-                if (result.error) {
-                  setError(result.error.message || 'שגיאה בהתחברות עם Google');
-                }
+              // OAuth דרך דפדפן (גם בנייטיב וגם בדפדפן) — Managed Google Auth של Lovable Cloud
+              const result = await lovable.auth.signInWithOAuth("google", {
+                redirect_uri: window.location.origin,
+              });
+              if (result?.error) {
+                setError(result.error.message || 'שגיאה בהתחברות עם Google');
               }
             } catch (e: any) {
               const msg = (e?.message || '').toLowerCase();
