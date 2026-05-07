@@ -53,8 +53,10 @@ const AuthPage = () => {
     const m = (msg || '').toLowerCase();
     if (!msg) return 'ההתחברות עם Google נכשלה. נסה שוב.';
     if (m.includes('cancel') || m.includes('12501') || m.includes('canceled')) return '';
+    if (m.includes('unacceptable audience') || m.includes('audience'))
+      return 'ה-Web Client ID של Google עדיין לא מאושר ב-Lovable Cloud. צריך להזין שם את ה-Web Client ID וה-Client Secret ואז להריץ שוב sync.';
     if (m.includes('invalid_client') || m.includes('client') || m.includes('audience'))
-      return 'התחברות Google לא מוגדרת נכון כרגע. צריך Client ID תקין של Google ל-iOS.';
+      return 'התחברות Google לא מוגדרת נכון כרגע. בדוק שה-Web Client ID וה-Client Secret שמורים בהגדרות Google ב-Lovable Cloud.';
     if (m.includes('network') || m.includes('fetch') || m.includes('timeout'))
       return 'בעיית רשת בהתחברות עם Google. בדוק את החיבור ונסה שוב.';
     return `שגיאה בהתחברות עם Google: ${msg}`;
