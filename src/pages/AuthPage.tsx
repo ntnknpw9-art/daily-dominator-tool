@@ -181,12 +181,18 @@ const AuthPage = () => {
             try {
               // באפליקציית iOS - שימוש ב-Google Sign In נייטיבי + signInWithIdToken
               if (Capacitor.isNativePlatform()) {
-                try { await GoogleAuth.initialize({
-                  clientId: '309108409035-3sl22316bkmuom32e1c2jtjjbmgava6i.apps.googleusercontent.com',
-                  scopes: ['profile', 'email'],
-                }); } catch {}
-                const res: any = await GoogleAuth.signIn();
-                const idToken = res?.authentication?.idToken;
+                try {
+                  await SocialLogin.initialize({
+                    google: {
+                      iOSClientId: '309108409035-3sl22316bkmuom32e1c2jtjjbmgava6i.apps.googleusercontent.com',
+                    },
+                  } as any);
+                } catch {}
+                const res: any = await SocialLogin.login({
+                  provider: 'google',
+                  options: { scopes: ['profile', 'email'] },
+                } as any);
+                const idToken = res?.result?.idToken || res?.idToken;
                 if (!idToken) {
                   setError('לא התקבל token מגוגל. נסה שוב.');
                 } else {
