@@ -235,24 +235,7 @@ const AuthPage = () => {
         <Button
           variant="outline"
           className="w-full gap-2"
-          onClick={async () => {
-            setError('');
-            setLoading(true);
-            try {
-              const result = await startManagedGoogleOAuth();
-              if (result?.error) {
-                setError(result.error.message || 'שגיאה בהתחברות עם Google');
-              }
-            } catch (e: any) {
-              const msg = (e?.message || '').toLowerCase();
-              if (msg.includes('cancel') || msg.includes('12501') || msg.includes('canceled')) {
-                // המשתמש ביטל
-              } else {
-                setError(e?.message || 'שגיאה בהתחברות עם Google');
-              }
-            }
-            setLoading(false);
-          }}
+          onClick={handleGoogleSignIn}
           disabled={loading}
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
