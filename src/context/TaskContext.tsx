@@ -90,7 +90,7 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
       let { data: dbCompletions } = await supabase
         .from('task_completions')
         .select('*')
-        .eq('user_id', user.id);
+        .eq('user_id', user.id) as { data: DbTaskCompletion[] | null };
 
       const migrationDoneKey = `${MIGRATION_DONE_KEY_PREFIX}${user.id}`;
       const legacyTasks = readLegacyTasks();
