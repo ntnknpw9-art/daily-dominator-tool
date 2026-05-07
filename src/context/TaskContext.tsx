@@ -3,9 +3,12 @@ import { Task, UserStats, Category, DayOfWeek } from '@/types/task';
 import { formatDate, getNowInIsrael, getHebrewDayFromDate } from '@/lib/dateUtils';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
+import type { Database } from '@/integrations/supabase/types';
 
 const LEGACY_TASKS_KEY = 'tracker-tasks';
 const MIGRATION_DONE_KEY_PREFIX = 'tracker-tasks-cloud-migrated-';
+
+type DbTaskCompletion = Database['public']['Tables']['task_completions']['Row'] | Database['public']['Tables']['task_completions']['Insert'];
 
 const readLegacyTasks = (): Task[] => {
   try {
@@ -18,7 +21,7 @@ const readLegacyTasks = (): Task[] => {
   }
 };
 
-const mapDbTasks = (dbTasks: any[], dbCompletions: any[] = []): Task[] => {
+const mapDbTasks = (dbTasks: any[], dbCompletions: DbTaskCompletion[] = []): Task[] => {
   const completionMap: Record<string, Record<string, boolean>> = {};
   dbCompletions.forEach(c => {
     if (!completionMap[c.task_id]) completionMap[c.task_id] = {};
