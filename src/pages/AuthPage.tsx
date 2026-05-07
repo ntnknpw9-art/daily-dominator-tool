@@ -11,6 +11,7 @@ import { SignInWithApple, SignInWithAppleOptions } from '@capacitor-community/ap
 
 const PUBLISHED_APP_ORIGIN = 'https://daily-dominator-tool.lovable.app';
 const GOOGLE_IOS_CLIENT_ID = '309108409035-3sl22316bkmuom32e1c2jtjjbmgava6i.apps.googleusercontent.com';
+const GOOGLE_WEB_CLIENT_ID = '309108409035-c9khmlr7vf8lqg1r608tkcl2q7fu86mq.apps.googleusercontent.com';
 
 const generateNonce = () => {
   const bytes = new Uint8Array(16);
@@ -68,6 +69,7 @@ const AuthPage = () => {
         await SocialLogin.initialize({
           google: {
             iOSClientId: GOOGLE_IOS_CLIENT_ID,
+            iOSServerClientId: GOOGLE_WEB_CLIENT_ID,
             mode: 'online',
           },
         });
