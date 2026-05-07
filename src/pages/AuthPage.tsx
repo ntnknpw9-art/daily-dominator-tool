@@ -7,10 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Capacitor } from '@capacitor/core';
 import { SignInWithApple, SignInWithAppleOptions } from '@capacitor-community/apple-sign-in';
-import { GoogleSignIn } from '@capawesome/capacitor-google-sign-in';
-
-// אתחול Google Auth באפליקציה הנייטיבית
-const GOOGLE_WEB_CLIENT_ID = '309108409035-c9khmlr7vf8lqg1r608tkcl2q7fu86mq.apps.googleusercontent.com';
+import { Browser } from '@capacitor/browser';
 
 const generateNonce = () => {
   const bytes = new Uint8Array(16);
@@ -22,13 +19,6 @@ const sha256Hex = async (value: string) => {
   const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
   return Array.from(new Uint8Array(hash), (byte) => byte.toString(16).padStart(2, '0')).join('');
 };
-
-if (Capacitor.isNativePlatform()) {
-  GoogleSignIn.initialize({
-    clientId: GOOGLE_WEB_CLIENT_ID,
-    scopes: ['profile', 'email'],
-  }).catch((e) => console.warn('GoogleSignIn init failed', e));
-}
 
 const AuthPage = () => {
   const { signIn, signUp } = useAuth();
