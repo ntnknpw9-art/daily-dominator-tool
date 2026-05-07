@@ -11,11 +11,15 @@ import { GoogleSignIn } from '@capawesome/capacitor-google-sign-in';
 import { useEffect } from 'react';
 
 // אתחול Google Auth באפליקציה הנייטיבית
+const GOOGLE_IOS_CLIENT_ID = '309108409035-3sl22316bkmuom32e1c2jtjjbmgava6i.apps.googleusercontent.com';
+const GOOGLE_WEB_CLIENT_ID = '309108409035-c9khmlr7vf8lqg1r608tkcl2q7fu86mq.apps.googleusercontent.com';
+
 if (Capacitor.isNativePlatform()) {
   GoogleSignIn.initialize({
-    clientId: '309108409035-3sl22316bkmuom32e1c2jtjjbmgava6i.apps.googleusercontent.com',
+    clientId: GOOGLE_IOS_CLIENT_ID,
+    serverClientId: GOOGLE_WEB_CLIENT_ID,
     scopes: ['profile', 'email'],
-  }).catch((e) => console.warn('GoogleSignIn init failed', e));
+  } as any).catch((e) => console.warn('GoogleSignIn init failed', e));
 }
 
 const AuthPage = () => {
