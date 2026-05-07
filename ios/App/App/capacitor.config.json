@@ -20,6 +20,6 @@
 	"packageClassList": [
 		"InstagramStories",
 		"SignInWithApple",
-		"GoogleAuth"
+		"SocialLoginPlugin"
 	]
 }
