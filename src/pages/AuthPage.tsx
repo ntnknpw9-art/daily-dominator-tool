@@ -179,17 +179,35 @@ const AuthPage = () => {
             setError('');
             setLoading(true);
             try {
-              // OAuth דרך דפדפן (גם בנייטיב וגם בדפדפן) — Managed Google Auth של Lovable Cloud
-              const result = await lovable.auth.signInWithOAuth("google", {
-                redirect_uri: window.location.origin,
-              });
-              if (result?.error) {
-                setError(result.error.message || 'שגיאה בהתחברות עם Google');
+              // באפליקציית iOS - שימוש ב-Google Sign In נייטיבי + signInWithIdToken
+              if (Capacitor.isNativePlatform()) {
+                try { await GoogleAuth.initialize({
+                  clientId: '309108409035-3sl22316bkmuom32e1c2jtjjbmgava6i.apps.googleusercontent.com',
+                  scopes: ['profile', 'email'],
+                }); } catch {}
+                const res: any = await GoogleAuth.signIn();
+                const idToken = res?.authentication?.idToken;
+                if (!idToken) {
+                  setError('לא התקבל token מגוגל. נסה שוב.');
+                } else {
+                  const { error } = await supabase.auth.signInWithIdToken({
+                    provider: 'google',
+                    token: idToken,
+                  });
+                  if (error) setError(error.message);
+                }
+              } else {
+                const result = await lovable.auth.signInWithOAuth("google", {
+                  redirect_uri: window.location.origin,
+                });
+                if (result?.error) {
+                  setError(result.error.message || 'שגיאה בהתחברות עם Google');
+                }
               }
             } catch (e: any) {
               const msg = (e?.message || '').toLowerCase();
-              if (msg.includes('cancel') || msg.includes('12501')) {
-                // המשתמש ביטל - אין צורך להציג שגיאה
+              if (msg.includes('cancel') || msg.includes('12501') || msg.includes('canceled')) {
+                // המשתמש ביטל
               } else {
                 setError(e?.message || 'שגיאה בהתחברות עם Google');
               }
