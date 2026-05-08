@@ -12,9 +12,9 @@ const SmartNotifications = () => {
 
   useEffect(() => {
     const check = () => {
-      // Check if notifications are enabled
+      // Notifications are opt-in. Only run if explicitly enabled.
       const enabled = localStorage.getItem('app_notifications_enabled');
-      if (enabled === 'false') return;
+      if (enabled !== 'true') return;
 
       const now = getNowInIsrael();
       const nowMin = now.getHours() * 60 + now.getMinutes();
