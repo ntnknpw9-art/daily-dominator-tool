@@ -45,8 +45,41 @@ const ProgressPhotos = () => {
   const [targetImage, setTargetImage] = useState<string | null>(null);
   const [showApplyDialog, setShowApplyDialog] = useState(false);
   const [showHistoryDialog, setShowHistoryDialog] = useState(false);
+  const [blockedIds, setBlockedIds] = useState<Set<string>>(new Set());
+  const [eulaOpen, setEulaOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const targetInputRef = useRef<HTMLInputElement>(null);
+
+  const requireEulaThen = (next: () => void) => {
+    if (hasAcceptedEula()) { next(); return; }
+    setEulaOpen(true);
+    pendingEulaActionRef.current = next;
+  };
+  const pendingEulaActionRef = useRef<(() => void) | null>(null);
+
+  const blockUser = async (blockedId: string) => {
+    if (!user || blockedId === user.id) return;
+    const { error } = await supabase.from('user_blocks').insert({
+      blocker_id: user.id,
+      blocked_id: blockedId,
+    });
+    if (error && !error.message.includes('duplicate')) {
+      toast.error('שגיאה בחסימה');
+      return;
+    }
+    toast.success('המשתמש נחסם. לא תראה ממנו תוכן.');
+    setBlockedIds(prev => new Set(prev).add(blockedId));
+    fetchCommunityPhotos();
+  };
+
+  const fetchBlocks = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('user_blocks')
+      .select('blocked_id')
+      .eq('blocker_id', user.id);
+    if (data) setBlockedIds(new Set(data.map((d: any) => d.blocked_id)));
+  };
 
   const handleTargetSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
