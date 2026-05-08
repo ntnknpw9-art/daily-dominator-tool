@@ -126,6 +126,7 @@ const ProgressPhotos = () => {
   useEffect(() => {
     if (user) {
       fetchPhotos();
+      fetchBlocks();
       fetchCommunityPhotos();
     }
   }, [user]);
