@@ -65,7 +65,7 @@ const TermsOfService = () => {
         <section className="space-y-2">
           <h2 className="text-xl font-semibold">8. יצירת קשר</h2>
           <p>
-            <a className="text-primary underline" href="mailto:support@dailydominator.app">support@dailydominator.app</a>
+            <a className="text-primary underline" href="mailto:ntnknpw9@gmail.com">ntnknpw9@gmail.com</a>
           </p>
         </section>
       </div>
