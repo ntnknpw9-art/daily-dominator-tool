@@ -25,9 +25,8 @@ const SettingsTab = () => {
   const [soundOn, setSoundOn] = useState(isSoundEnabled);
   const [theme, setTheme] = useState<'dark' | 'light'>(getTheme);
   const [notificationsOn, setNotificationsOn] = useState(() => {
-    if (typeof window === 'undefined') return true;
-    const val = localStorage.getItem('app_notifications_enabled');
-    return val === null ? true : val === 'true';
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('app_notifications_enabled') === 'true';
   });
   const [noMercy, setNoMercy] = useState(() => {
     if (typeof window === 'undefined') return false;
