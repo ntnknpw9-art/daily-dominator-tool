@@ -318,7 +318,10 @@ const ProgressPhotos = () => {
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   {isPublic ? <Eye className="w-4 h-4 text-green-400" /> : <EyeOff className="w-4 h-4 text-muted-foreground" />}
-                  <Switch checked={isPublic} onCheckedChange={setIsPublic} />
+                  <Switch checked={isPublic} onCheckedChange={(v) => {
+                    if (v) requireEulaThen(() => setIsPublic(true));
+                    else setIsPublic(false);
+                  }} />
                   <span className="text-muted-foreground">{isPublic ? 'ציבורי' : 'פרטי'}</span>
                 </div>
               </div>
