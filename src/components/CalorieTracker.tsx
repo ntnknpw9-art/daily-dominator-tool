@@ -743,6 +743,9 @@ const CalorieTracker = () => {
 
   return (
     <div className="space-y-4">
+      <div className="text-[11px] text-muted-foreground/80 bg-muted/30 border border-border/40 rounded-lg p-2 leading-relaxed">
+        ⚠️ ערכים קלוריים והמלצות הם הערכות בלבד ואינם מהווים ייעוץ רפואי או תזונתי. התייעץ עם איש מקצוע מוסמך.
+      </div>
       {dailyNeeds && (
         <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
           <CardHeader className="pb-3">

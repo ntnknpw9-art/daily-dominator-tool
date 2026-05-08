@@ -368,6 +368,9 @@ ${todayTasks.map(t => `- ${t.completions[todayStr] ? '✅' : '⬜'} ${t.name} ($
           <Send className="w-4 h-4" />
         </Button>
       </div>
+      <div className="px-3 pb-2 text-[10px] text-muted-foreground/70 text-center leading-tight">
+        תגובות AI הן הערכות בלבד ואינן מחליפות ייעוץ רפואי מקצועי.
+      </div>
     </div>
   );
 };
