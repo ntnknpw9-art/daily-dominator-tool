@@ -104,6 +104,36 @@ export type Database = {
         }
         Relationships: []
       }
+      comment_reports: {
+        Row: {
+          comment_id: string
+          created_at: string
+          details: string | null
+          id: string
+          reason: string
+          reporter_id: string
+          status: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason: string
+          reporter_id: string
+          status?: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason?: string
+          reporter_id?: string
+          status?: string
+        }
+        Relationships: []
+      }
       daily_spins: {
         Row: {
           created_at: string
@@ -167,6 +197,27 @@ export type Database = {
           start_date?: string
           status?: string
           winner_id?: string | null
+        }
+        Relationships: []
+      }
+      eula_acceptances: {
+        Row: {
+          accepted_at: string
+          id: string
+          user_id: string
+          version: string
+        }
+        Insert: {
+          accepted_at?: string
+          id?: string
+          user_id: string
+          version: string
+        }
+        Update: {
+          accepted_at?: string
+          id?: string
+          user_id?: string
+          version?: string
         }
         Relationships: []
       }
@@ -411,6 +462,36 @@ export type Database = {
           },
         ]
       }
+      photo_reports: {
+        Row: {
+          created_at: string
+          details: string | null
+          id: string
+          photo_id: string
+          reason: string
+          reporter_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          photo_id: string
+          reason: string
+          reporter_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          details?: string | null
+          id?: string
+          photo_id?: string
+          reason?: string
+          reporter_id?: string
+          status?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -572,6 +653,27 @@ export type Database = {
           id?: string
           unlocked_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_blocks: {
+        Row: {
+          blocked_id: string
+          blocker_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          blocked_id: string
+          blocker_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          blocked_id?: string
+          blocker_id?: string
+          created_at?: string
+          id?: string
         }
         Relationships: []
       }
