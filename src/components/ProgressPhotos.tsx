@@ -6,12 +6,14 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
-import { Camera, Upload, Trash2, Eye, EyeOff, ImagePlus, Users, Lock, SlidersHorizontal, X, Heart, MessageCircle, Send, Sparkles, Loader2, Target, Dumbbell, History } from 'lucide-react';
+import { Camera, Upload, Trash2, Eye, EyeOff, ImagePlus, Users, Lock, SlidersHorizontal, X, Heart, MessageCircle, Send, Sparkles, Loader2, Target, Dumbbell, History, Flag, UserX } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
 import ApplyPlanDialog from './ApplyPlanDialog';
 import PlanHistoryDialog from './PlanHistoryDialog';
+import ReportPhotoDialog from './ReportPhotoDialog';
+import CommunityEula, { hasAcceptedEula } from './CommunityEula';
 
 interface ProgressPhoto {
   id: string;
@@ -43,8 +45,41 @@ const ProgressPhotos = () => {
   const [targetImage, setTargetImage] = useState<string | null>(null);
   const [showApplyDialog, setShowApplyDialog] = useState(false);
   const [showHistoryDialog, setShowHistoryDialog] = useState(false);
+  const [blockedIds, setBlockedIds] = useState<Set<string>>(new Set());
+  const [eulaOpen, setEulaOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const targetInputRef = useRef<HTMLInputElement>(null);
+
+  const requireEulaThen = (next: () => void) => {
+    if (hasAcceptedEula()) { next(); return; }
+    setEulaOpen(true);
+    pendingEulaActionRef.current = next;
+  };
+  const pendingEulaActionRef = useRef<(() => void) | null>(null);
+
+  const blockUser = async (blockedId: string) => {
+    if (!user || blockedId === user.id) return;
+    const { error } = await supabase.from('user_blocks').insert({
+      blocker_id: user.id,
+      blocked_id: blockedId,
+    });
+    if (error && !error.message.includes('duplicate')) {
+      toast.error('שגיאה בחסימה');
+      return;
+    }
+    toast.success('המשתמש נחסם. לא תראה ממנו תוכן.');
+    setBlockedIds(prev => new Set(prev).add(blockedId));
+    fetchCommunityPhotos();
+  };
+
+  const fetchBlocks = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('user_blocks')
+      .select('blocked_id')
+      .eq('blocker_id', user.id);
+    if (data) setBlockedIds(new Set(data.map((d: any) => d.blocked_id)));
+  };
 
   const handleTargetSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -91,6 +126,7 @@ const ProgressPhotos = () => {
   useEffect(() => {
     if (user) {
       fetchPhotos();
+      fetchBlocks();
       fetchCommunityPhotos();
     }
   }, [user]);
@@ -131,7 +167,10 @@ const ProgressPhotos = () => {
       .eq('is_public', true)
       .order('created_at', { ascending: false })
       .limit(50);
-    if (data) setCommunityPhotos(await signPhotoUrls(data as ProgressPhoto[]));
+    if (data) {
+      const filtered = (data as ProgressPhoto[]).filter(p => !blockedIds.has(p.user_id));
+      setCommunityPhotos(await signPhotoUrls(filtered));
+    }
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -238,7 +277,7 @@ const ProgressPhotos = () => {
             <Button
               size="sm"
               variant={viewMode === 'community' ? 'default' : 'outline'}
-              onClick={() => setViewMode('community')}
+              onClick={() => requireEulaThen(() => setViewMode('community'))}
             >
               <Users className="w-3 h-3 ml-1" />
               קהילה
@@ -279,7 +318,10 @@ const ProgressPhotos = () => {
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   {isPublic ? <Eye className="w-4 h-4 text-green-400" /> : <EyeOff className="w-4 h-4 text-muted-foreground" />}
-                  <Switch checked={isPublic} onCheckedChange={setIsPublic} />
+                  <Switch checked={isPublic} onCheckedChange={(v) => {
+                    if (v) requireEulaThen(() => setIsPublic(true));
+                    else setIsPublic(false);
+                  }} />
                   <span className="text-muted-foreground">{isPublic ? 'ציבורי' : 'פרטי'}</span>
                 </div>
               </div>
@@ -546,7 +588,7 @@ const ProgressPhotos = () => {
                     if (p.photo_type === 'after' && !g.after) g.after = p;
                   });
                   return Array.from(groups.entries()).map(([key, { before, after, photos }]) => (
-                    <CommunityCard key={key} before={before} after={after} photos={photos} userId={user?.id} />
+                    <CommunityCard key={key} before={before} after={after} photos={photos} userId={user?.id} onBlock={blockUser} />
                   ));
                 })()}
               </div>
@@ -554,6 +596,19 @@ const ProgressPhotos = () => {
           </div>
         )}
       </CardContent>
+      <CommunityEula
+        open={eulaOpen}
+        onAccept={() => {
+          setEulaOpen(false);
+          const next = pendingEulaActionRef.current;
+          pendingEulaActionRef.current = null;
+          next?.();
+        }}
+        onDecline={() => {
+          setEulaOpen(false);
+          pendingEulaActionRef.current = null;
+        }}
+      />
     </Card>
   );
 };
@@ -672,11 +727,12 @@ interface CommentData {
   created_at: string;
 }
 
-const CommunityCard = ({ before, after, photos, userId }: {
+const CommunityCard = ({ before, after, photos, userId, onBlock }: {
   before?: ProgressPhoto;
   after?: ProgressPhoto;
   photos: ProgressPhoto[];
   userId?: string;
+  onBlock?: (userId: string) => void;
 }) => {
   const [likes, setLikes] = useState<string[]>([]);
   const [comments, setComments] = useState<CommentData[]>([]);
@@ -762,7 +818,25 @@ const CommunityCard = ({ before, after, photos, userId }: {
               <span className="text-xs text-muted-foreground">{comments.length}</span>
             </button>
           </div>
-          <span className="text-[10px] text-muted-foreground">{(before || after)?.photo_date}</span>
+          <div className="flex items-center gap-2">
+            {photos[0] && userId && photos[0].user_id !== userId && (
+              <>
+                <ReportPhotoDialog photoId={photos[0].id} />
+                <button
+                  onClick={() => {
+                    if (confirm('לחסום את המשתמש הזה? לא תראה ממנו תוכן יותר.')) {
+                      onBlock?.(photos[0].user_id);
+                    }
+                  }}
+                  className="text-muted-foreground hover:text-destructive transition-colors"
+                  title="חסום משתמש"
+                >
+                  <UserX className="w-3.5 h-3.5" />
+                </button>
+              </>
+            )}
+            <span className="text-[10px] text-muted-foreground">{(before || after)?.photo_date}</span>
+          </div>
         </div>
 
         {(before?.caption || after?.caption) && (

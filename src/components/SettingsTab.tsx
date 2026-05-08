@@ -25,9 +25,8 @@ const SettingsTab = () => {
   const [soundOn, setSoundOn] = useState(isSoundEnabled);
   const [theme, setTheme] = useState<'dark' | 'light'>(getTheme);
   const [notificationsOn, setNotificationsOn] = useState(() => {
-    if (typeof window === 'undefined') return true;
-    const val = localStorage.getItem('app_notifications_enabled');
-    return val === null ? true : val === 'true';
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('app_notifications_enabled') === 'true';
   });
   const [noMercy, setNoMercy] = useState(() => {
     if (typeof window === 'undefined') return false;
@@ -103,16 +102,31 @@ const SettingsTab = () => {
           <div className="flex items-center justify-between">
             <div>
               <div className="text-sm font-medium">התראות חכמות</div>
-              <div className="text-xs text-muted-foreground">תזכורות לפני משימות, התראות פספוס ועידוד</div>
+              <div className="text-xs text-muted-foreground">תזכורות לפני משימות, התראות פספוס ועידוד. דורש אישורך.</div>
             </div>
             <Button
               variant={notificationsOn ? "default" : "outline"}
               size="sm"
               className="gap-2"
-              onClick={() => {
-                const newVal = !notificationsOn;
-                setNotificationsOn(newVal);
-                localStorage.setItem('app_notifications_enabled', String(newVal));
+              onClick={async () => {
+                if (!notificationsOn) {
+                  // Request explicit consent before enabling
+                  try {
+                    if (typeof Notification !== 'undefined' && Notification.requestPermission) {
+                      const perm = await Notification.requestPermission();
+                      if (perm !== 'granted') {
+                        toast.error('לא ניתן אישור להתראות. ניתן להפעיל מההגדרות של המכשיר.');
+                        return;
+                      }
+                    }
+                  } catch {}
+                  setNotificationsOn(true);
+                  localStorage.setItem('app_notifications_enabled', 'true');
+                  toast.success('התראות הופעלו');
+                } else {
+                  setNotificationsOn(false);
+                  localStorage.setItem('app_notifications_enabled', 'false');
+                }
               }}
             >
               {notificationsOn ? <Bell className="w-4 h-4" /> : <BellOff className="w-4 h-4" />}
