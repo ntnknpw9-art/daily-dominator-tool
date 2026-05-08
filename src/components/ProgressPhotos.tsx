@@ -593,6 +593,19 @@ const ProgressPhotos = () => {
           </div>
         )}
       </CardContent>
+      <CommunityEula
+        open={eulaOpen}
+        onAccept={() => {
+          setEulaOpen(false);
+          const next = pendingEulaActionRef.current;
+          pendingEulaActionRef.current = null;
+          next?.();
+        }}
+        onDecline={() => {
+          setEulaOpen(false);
+          pendingEulaActionRef.current = null;
+        }}
+      />
     </Card>
   );
 };
