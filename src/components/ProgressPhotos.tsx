@@ -727,11 +727,12 @@ interface CommentData {
   created_at: string;
 }
 
-const CommunityCard = ({ before, after, photos, userId }: {
+const CommunityCard = ({ before, after, photos, userId, onBlock }: {
   before?: ProgressPhoto;
   after?: ProgressPhoto;
   photos: ProgressPhoto[];
   userId?: string;
+  onBlock?: (userId: string) => void;
 }) => {
   const [likes, setLikes] = useState<string[]>([]);
   const [comments, setComments] = useState<CommentData[]>([]);
