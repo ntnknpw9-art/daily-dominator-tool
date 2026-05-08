@@ -102,16 +102,31 @@ const SettingsTab = () => {
           <div className="flex items-center justify-between">
             <div>
               <div className="text-sm font-medium">התראות חכמות</div>
-              <div className="text-xs text-muted-foreground">תזכורות לפני משימות, התראות פספוס ועידוד</div>
+              <div className="text-xs text-muted-foreground">תזכורות לפני משימות, התראות פספוס ועידוד. דורש אישורך.</div>
             </div>
             <Button
               variant={notificationsOn ? "default" : "outline"}
               size="sm"
               className="gap-2"
-              onClick={() => {
-                const newVal = !notificationsOn;
-                setNotificationsOn(newVal);
-                localStorage.setItem('app_notifications_enabled', String(newVal));
+              onClick={async () => {
+                if (!notificationsOn) {
+                  // Request explicit consent before enabling
+                  try {
+                    if (typeof Notification !== 'undefined' && Notification.requestPermission) {
+                      const perm = await Notification.requestPermission();
+                      if (perm !== 'granted') {
+                        toast.error('לא ניתן אישור להתראות. ניתן להפעיל מההגדרות של המכשיר.');
+                        return;
+                      }
+                    }
+                  } catch {}
+                  setNotificationsOn(true);
+                  localStorage.setItem('app_notifications_enabled', 'true');
+                  toast.success('התראות הופעלו');
+                } else {
+                  setNotificationsOn(false);
+                  localStorage.setItem('app_notifications_enabled', 'false');
+                }
               }}
             >
               {notificationsOn ? <Bell className="w-4 h-4" /> : <BellOff className="w-4 h-4" />}
