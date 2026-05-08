@@ -277,7 +277,7 @@ const ProgressPhotos = () => {
             <Button
               size="sm"
               variant={viewMode === 'community' ? 'default' : 'outline'}
-              onClick={() => setViewMode('community')}
+              onClick={() => requireEulaThen(() => setViewMode('community'))}
             >
               <Users className="w-3 h-3 ml-1" />
               קהילה
