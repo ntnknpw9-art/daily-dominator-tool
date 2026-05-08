@@ -34,6 +34,7 @@ const AuthPage = () => {
   const [appleError, setAppleError] = useState('');
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const friendlyAppleError = (msg?: string) => {
     const m = (msg || '').toLowerCase();
@@ -161,6 +162,12 @@ const AuthPage = () => {
     e.preventDefault();
     setError('');
     setSuccessMsg('');
+
+    if (!isLogin && !acceptedTerms) {
+      setError('יש לאשר את תנאי השימוש ומדיניות הפרטיות כדי להירשם.');
+      return;
+    }
+
     setLoading(true);
 
     if (isLogin) {
