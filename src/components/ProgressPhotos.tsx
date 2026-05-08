@@ -588,7 +588,7 @@ const ProgressPhotos = () => {
                     if (p.photo_type === 'after' && !g.after) g.after = p;
                   });
                   return Array.from(groups.entries()).map(([key, { before, after, photos }]) => (
-                    <CommunityCard key={key} before={before} after={after} photos={photos} userId={user?.id} />
+                    <CommunityCard key={key} before={before} after={after} photos={photos} userId={user?.id} onBlock={blockUser} />
                   ));
                 })()}
               </div>
