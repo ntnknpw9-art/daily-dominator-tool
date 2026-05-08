@@ -34,6 +34,7 @@ const AuthPage = () => {
   const [appleError, setAppleError] = useState('');
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
 
   const friendlyAppleError = (msg?: string) => {
     const m = (msg || '').toLowerCase();
@@ -161,6 +162,12 @@ const AuthPage = () => {
     e.preventDefault();
     setError('');
     setSuccessMsg('');
+
+    if (!isLogin && !acceptedTerms) {
+      setError('יש לאשר את תנאי השימוש ומדיניות הפרטיות כדי להירשם.');
+      return;
+    }
+
     setLoading(true);
 
     if (isLogin) {
@@ -220,10 +227,27 @@ const AuthPage = () => {
             />
           </div>
 
+          {!isLogin && (
+            <label className="flex items-start gap-2 text-xs text-muted-foreground cursor-pointer">
+              <input
+                type="checkbox"
+                checked={acceptedTerms}
+                onChange={(e) => setAcceptedTerms(e.target.checked)}
+                className="mt-0.5 w-4 h-4 accent-primary cursor-pointer"
+              />
+              <span className="leading-relaxed">
+                אני מאשר/ת שקראתי ואני מסכים/ה ל
+                <a href="/terms" target="_blank" rel="noopener" className="text-primary underline mx-1">תנאי השימוש</a>
+                ול
+                <a href="/privacy" target="_blank" rel="noopener" className="text-primary underline mx-1">מדיניות הפרטיות</a>
+              </span>
+            </label>
+          )}
+
           {error && <div className="text-destructive text-sm bg-destructive/10 rounded-lg p-3">{error}</div>}
           {successMsg && <div className="text-success text-sm bg-success/10 rounded-lg p-3">{successMsg}</div>}
 
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button type="submit" className="w-full" disabled={loading || (!isLogin && !acceptedTerms)}>
             {loading ? '...' : isLogin ? 'התחבר' : 'הירשם'}
           </Button>
         </form>

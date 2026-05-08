@@ -1,7 +1,16 @@
+import { ArrowRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
+
 const TermsOfService = () => {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-background p-6 md:p-10" dir="rtl">
       <div className="max-w-3xl mx-auto glass-card p-6 md:p-10 space-y-4">
+        <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="gap-1 -mr-2">
+          <ArrowRight className="w-4 h-4" />
+          חזרה
+        </Button>
         <h1 className="text-3xl font-bold">תנאי שימוש (EULA)</h1>
         <p className="text-sm text-muted-foreground">עודכן לאחרונה: מאי 2026</p>
 
@@ -65,7 +74,7 @@ const TermsOfService = () => {
         <section className="space-y-2">
           <h2 className="text-xl font-semibold">8. יצירת קשר</h2>
           <p>
-            <a className="text-primary underline" href="mailto:support@dailydominator.app">support@dailydominator.app</a>
+            <a className="text-primary underline" href="mailto:ntnknpw9@gmail.com">ntnknpw9@gmail.com</a>
           </p>
         </section>
       </div>
