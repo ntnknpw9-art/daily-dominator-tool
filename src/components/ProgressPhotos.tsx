@@ -167,7 +167,10 @@ const ProgressPhotos = () => {
       .eq('is_public', true)
       .order('created_at', { ascending: false })
       .limit(50);
-    if (data) setCommunityPhotos(await signPhotoUrls(data as ProgressPhoto[]));
+    if (data) {
+      const filtered = (data as ProgressPhoto[]).filter(p => !blockedIds.has(p.user_id));
+      setCommunityPhotos(await signPhotoUrls(filtered));
+    }
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
