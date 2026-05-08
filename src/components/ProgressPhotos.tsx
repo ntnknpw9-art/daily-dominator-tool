@@ -818,7 +818,25 @@ const CommunityCard = ({ before, after, photos, userId, onBlock }: {
               <span className="text-xs text-muted-foreground">{comments.length}</span>
             </button>
           </div>
-          <span className="text-[10px] text-muted-foreground">{(before || after)?.photo_date}</span>
+          <div className="flex items-center gap-2">
+            {photos[0] && userId && photos[0].user_id !== userId && (
+              <>
+                <ReportPhotoDialog photoId={photos[0].id} />
+                <button
+                  onClick={() => {
+                    if (confirm('לחסום את המשתמש הזה? לא תראה ממנו תוכן יותר.')) {
+                      onBlock?.(photos[0].user_id);
+                    }
+                  }}
+                  className="text-muted-foreground hover:text-destructive transition-colors"
+                  title="חסום משתמש"
+                >
+                  <UserX className="w-3.5 h-3.5" />
+                </button>
+              </>
+            )}
+            <span className="text-[10px] text-muted-foreground">{(before || after)?.photo_date}</span>
+          </div>
         </div>
 
         {(before?.caption || after?.caption) && (
