@@ -35,6 +35,24 @@ const AuthPage = () => {
   const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [mode, setMode] = useState<'login' | 'signup' | 'forgot'>('login');
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setSuccessMsg('');
+    if (!email) {
+      setError('הזן את כתובת המייל שלך');
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    setLoading(false);
+    if (error) setError(error.message);
+    else setSuccessMsg('נשלח מייל לאיפוס סיסמה. בדוק את תיבת הדואר שלך.');
+  };
 
   const friendlyAppleError = (msg?: string) => {
     const m = (msg || '').toLowerCase();
