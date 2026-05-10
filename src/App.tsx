@@ -9,6 +9,7 @@ import NotFound from "./pages/NotFound.tsx";
 import SupportPage from "./pages/SupportPage.tsx";
 import PrivacyPolicy from "./pages/PrivacyPolicy.tsx";
 import TermsOfService from "./pages/TermsOfService.tsx";
+import ResetPassword from "./pages/ResetPassword.tsx";
 
 const queryClient = new QueryClient();
 
