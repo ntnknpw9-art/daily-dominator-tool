@@ -112,14 +112,30 @@ const SettingsTab = () => {
                 if (!notificationsOn) {
                   // Request explicit consent before enabling
                   try {
-                    if (typeof Notification !== 'undefined' && Notification.requestPermission) {
+                    const { Capacitor } = await import('@capacitor/core');
+                    if (Capacitor.isNativePlatform()) {
+                      const { LocalNotifications } = await import('@capacitor/local-notifications');
+                      const status = await LocalNotifications.checkPermissions();
+                      let display = status.display;
+                      if (display !== 'granted') {
+                        const req = await LocalNotifications.requestPermissions();
+                        display = req.display;
+                      }
+                      if (display !== 'granted') {
+                        toast.error('לא ניתן אישור להתראות. ניתן להפעיל מההגדרות של המכשיר.');
+                        return;
+                      }
+                    } else if (typeof Notification !== 'undefined' && Notification.requestPermission) {
                       const perm = await Notification.requestPermission();
                       if (perm !== 'granted') {
                         toast.error('לא ניתן אישור להתראות. ניתן להפעיל מההגדרות של המכשיר.');
                         return;
                       }
                     }
-                  } catch {}
+                  } catch (e) {
+                    toast.error('שגיאה בבקשת אישור להתראות.');
+                    return;
+                  }
                   setNotificationsOn(true);
                   localStorage.setItem('app_notifications_enabled', 'true');
                   toast.success('התראות הופעלו');
