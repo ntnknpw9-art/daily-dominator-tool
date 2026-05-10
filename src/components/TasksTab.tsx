@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { useTaskContext } from '@/context/TaskContext';
 import { Task, DayOfWeek } from '@/types/task';
 import { formatDate, getDatesBetween, getNowInIsrael, getHebrewDayFromDate } from '@/lib/dateUtils';
-import { Trash2, Timer, Check } from 'lucide-react';
+import { Trash2, Timer, Check, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import NewTaskDialog from './NewTaskDialog';
 
 const getCategoryColor = (cat: string) => {
   const map: Record<string, string> = {
