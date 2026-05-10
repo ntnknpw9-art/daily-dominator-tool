@@ -19,7 +19,8 @@ const getCategoryColor = (cat: string) => {
 
 const TaskCard = ({ task }: { task: Task }) => {
   const { toggleCompletion, deleteTask, setTimerTaskId } = useTaskContext();
-  
+  const [editOpen, setEditOpen] = useState(false);
+
   const today = getNowInIsrael();
   const endDate = new Date(task.endDate) > today ? today : new Date(task.endDate);
   const allDates = getDatesBetween(task.startDate, formatDate(endDate))
