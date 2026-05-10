@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTaskContext } from '@/context/TaskContext';
-import { Category, DayOfWeek, ALL_DAYS, WorkoutDetail } from '@/types/task';
+import { Task, Category, DayOfWeek, ALL_DAYS, WorkoutDetail } from '@/types/task';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,9 +10,25 @@ import { Plus, ChevronDown, ChevronUp } from 'lucide-react';
 
 const CATEGORIES: Category[] = ['כושר', 'לימודים', 'כסף', 'משמעת', 'אישי'];
 
-const NewTaskDialog = () => {
-  const { addTask } = useTaskContext();
-  const [open, setOpen] = useState(false);
+interface NewTaskDialogProps {
+  editTask?: Task | null;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  hideTrigger?: boolean;
+}
+
+const NewTaskDialog = ({ editTask, open: controlledOpen, onOpenChange, hideTrigger }: NewTaskDialogProps) => {
+  const { addTask, updateTask } = useTaskContext();
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+  const setOpen = (v: boolean) => {
+    if (isControlled) onOpenChange?.(v);
+    else setInternalOpen(v);
+  };
+
+  const isEdit = !!editTask;
+
   const [name, setName] = useState('');
   const [meaning, setMeaning] = useState('');
   const [startTime, setStartTime] = useState('08:00');
@@ -24,6 +40,29 @@ const NewTaskDialog = () => {
   const [days, setDays] = useState<DayOfWeek[]>([]);
   const [showDailyDetails, setShowDailyDetails] = useState(false);
   const [dailyDetails, setDailyDetails] = useState<Record<DayOfWeek, string>>({} as any);
+
+  useEffect(() => {
+    if (open && editTask) {
+      setName(editTask.name);
+      setMeaning(editTask.meaning || '');
+      setStartTime(editTask.startTime);
+      setEndTime(editTask.endTime);
+      const forever = editTask.startDate === '2020-01-01' && editTask.endDate === '2099-12-31';
+      setIsForever(forever);
+      setStartDate(forever ? '' : editTask.startDate);
+      setEndDate(forever ? '' : editTask.endDate);
+      setCategory(editTask.category);
+      setDays(editTask.days);
+      const details: Record<string, string> = {};
+      editTask.workoutDetails?.forEach(wd => { details[wd.day] = wd.description; });
+      setDailyDetails(details as any);
+      setShowDailyDetails((editTask.workoutDetails?.length || 0) > 0);
+    } else if (open && !editTask) {
+      setName(''); setMeaning(''); setStartTime('08:00'); setEndTime('09:00');
+      setIsForever(false); setStartDate(''); setEndDate('');
+      setCategory('אישי'); setDays([]); setDailyDetails({} as any); setShowDailyDetails(false);
+    }
+  }, [open, editTask]);
 
   const toggleDay = (day: DayOfWeek) => {
     setDays(prev => prev.includes(day) ? prev.filter(d => d !== day) : [...prev, day]);
@@ -39,28 +78,34 @@ const NewTaskDialog = () => {
       .filter(d => dailyDetails[d]?.trim())
       .map(d => ({ day: d, description: dailyDetails[d].trim() }));
 
-    addTask({
+    const payload = {
       name, meaning, startTime, endTime,
       startDate: finalStart, endDate: finalEnd,
       category, days,
       workoutDetails: workoutDetails.length > 0 ? workoutDetails : undefined,
-    });
-    setName(''); setMeaning(''); setDays([]); setIsForever(false);
-    setDailyDetails({} as any); setShowDailyDetails(false);
+    };
+
+    if (isEdit && editTask) {
+      updateTask(editTask.id, payload);
+    } else {
+      addTask(payload);
+    }
     setOpen(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="gap-2">
-          <Plus className="w-4 h-4" />
-          משימה חדשה
-        </Button>
-      </DialogTrigger>
+      {!hideTrigger && (
+        <DialogTrigger asChild>
+          <Button className="gap-2">
+            <Plus className="w-4 h-4" />
+            משימה חדשה
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>יצירת משימה חדשה</DialogTitle>
+          <DialogTitle>{isEdit ? 'עריכת משימה' : 'יצירת משימה חדשה'}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div>
@@ -139,7 +184,6 @@ const NewTaskDialog = () => {
             </div>
           </div>
 
-          {/* Daily details — works for any task */}
           {days.length > 0 && (
             <div className="border border-border/40 rounded-lg p-3 bg-secondary/20">
               <button
@@ -169,7 +213,9 @@ const NewTaskDialog = () => {
             </div>
           )}
 
-          <Button onClick={handleSubmit} className="w-full">צור משימה</Button>
+          <Button onClick={handleSubmit} className="w-full">
+            {isEdit ? 'שמור שינויים' : 'צור משימה'}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

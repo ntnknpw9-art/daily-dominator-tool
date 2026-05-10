@@ -48,6 +48,7 @@ interface TaskContextType {
   stats: UserStats;
   loading: boolean;
   addTask: (task: Omit<Task, 'id' | 'completions'>) => void;
+  updateTask: (id: string, task: Omit<Task, 'id' | 'completions'>) => void;
   deleteTask: (id: string) => void;
   toggleCompletion: (taskId: string, date: string) => void;
   getTasksForDay: (day: DayOfWeek) => Task[];
@@ -174,6 +175,36 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user]);
 
+  const updateTask = useCallback(async (id: string, task: Omit<Task, 'id' | 'completions'>) => {
+    if (!user) return;
+    const { data } = await supabase.from('tasks').update({
+      name: task.name,
+      meaning: task.meaning,
+      start_time: task.startTime,
+      end_time: task.endTime,
+      start_date: task.startDate,
+      end_date: task.endDate,
+      category: task.category,
+      days: task.days,
+      workout_details: task.workoutDetails as any,
+    }).eq('id', id).select().single();
+
+    if (data) {
+      setTasks(prev => prev.map(t => t.id === id ? {
+        ...t,
+        name: data.name,
+        meaning: data.meaning || '',
+        startTime: data.start_time,
+        endTime: data.end_time,
+        startDate: data.start_date,
+        endDate: data.end_date,
+        category: data.category as Category,
+        days: (data.days || []) as DayOfWeek[],
+        workoutDetails: data.workout_details as unknown as Task['workoutDetails'],
+      } : t));
+    }
+  }, [user]);
+
   const deleteTask = useCallback(async (id: string) => {
     if (!user) return;
     await supabase.from('tasks').delete().eq('id', id);
@@ -290,7 +321,7 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <TaskContext.Provider value={{
-      tasks, stats, loading, addTask, deleteTask, toggleCompletion,
+      tasks, stats, loading, addTask, updateTask, deleteTask, toggleCompletion,
       getTasksForDay, getTasksForDate, getTodayTasks,
       getDailyCompletionPercent, getTotalCompletions, getPlannedTotal,
       getCategoryStats, getFailureAnalysis, timerTaskId, setTimerTaskId,

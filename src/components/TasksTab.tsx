@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { useTaskContext } from '@/context/TaskContext';
 import { Task, DayOfWeek } from '@/types/task';
 import { formatDate, getDatesBetween, getNowInIsrael, getHebrewDayFromDate } from '@/lib/dateUtils';
-import { Trash2, Timer, Check } from 'lucide-react';
+import { Trash2, Timer, Check, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import NewTaskDialog from './NewTaskDialog';
 
 const getCategoryColor = (cat: string) => {
   const map: Record<string, string> = {
@@ -17,7 +19,8 @@ const getCategoryColor = (cat: string) => {
 
 const TaskCard = ({ task }: { task: Task }) => {
   const { toggleCompletion, deleteTask, setTimerTaskId } = useTaskContext();
-  
+  const [editOpen, setEditOpen] = useState(false);
+
   const today = getNowInIsrael();
   const endDate = new Date(task.endDate) > today ? today : new Date(task.endDate);
   const allDates = getDatesBetween(task.startDate, formatDate(endDate))
@@ -41,11 +44,15 @@ const TaskCard = ({ task }: { task: Task }) => {
           <Button variant="ghost" size="icon" onClick={() => setTimerTaskId(task.id)}>
             <Timer className="w-4 h-4" />
           </Button>
+          <Button variant="ghost" size="icon" onClick={() => setEditOpen(true)}>
+            <Pencil className="w-4 h-4 text-accent" />
+          </Button>
           <Button variant="ghost" size="icon" onClick={() => deleteTask(task.id)}>
             <Trash2 className="w-4 h-4 text-destructive" />
           </Button>
         </div>
       </div>
+      <NewTaskDialog editTask={task} open={editOpen} onOpenChange={setEditOpen} hideTrigger />
 
       <p className="text-sm text-muted-foreground">{task.meaning}</p>
       <div className="text-xs text-muted-foreground">
