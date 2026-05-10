@@ -321,7 +321,7 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <TaskContext.Provider value={{
-      tasks, stats, loading, addTask, deleteTask, toggleCompletion,
+      tasks, stats, loading, addTask, updateTask, deleteTask, toggleCompletion,
       getTasksForDay, getTasksForDate, getTodayTasks,
       getDailyCompletionPercent, getTotalCompletions, getPlannedTotal,
       getCategoryStats, getFailureAnalysis, timerTaskId, setTimerTaskId,
