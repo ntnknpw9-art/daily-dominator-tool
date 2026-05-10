@@ -44,11 +44,15 @@ const TaskCard = ({ task }: { task: Task }) => {
           <Button variant="ghost" size="icon" onClick={() => setTimerTaskId(task.id)}>
             <Timer className="w-4 h-4" />
           </Button>
+          <Button variant="ghost" size="icon" onClick={() => setEditOpen(true)}>
+            <Pencil className="w-4 h-4 text-accent" />
+          </Button>
           <Button variant="ghost" size="icon" onClick={() => deleteTask(task.id)}>
             <Trash2 className="w-4 h-4 text-destructive" />
           </Button>
         </div>
       </div>
+      <NewTaskDialog editTask={task} open={editOpen} onOpenChange={setEditOpen} hideTrigger />
 
       <p className="text-sm text-muted-foreground">{task.meaning}</p>
       <div className="text-xs text-muted-foreground">
