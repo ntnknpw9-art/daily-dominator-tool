@@ -48,6 +48,7 @@ interface TaskContextType {
   stats: UserStats;
   loading: boolean;
   addTask: (task: Omit<Task, 'id' | 'completions'>) => void;
+  updateTask: (id: string, task: Omit<Task, 'id' | 'completions'>) => void;
   deleteTask: (id: string) => void;
   toggleCompletion: (taskId: string, date: string) => void;
   getTasksForDay: (day: DayOfWeek) => Task[];
