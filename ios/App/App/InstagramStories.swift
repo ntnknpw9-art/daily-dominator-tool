@@ -20,8 +20,11 @@ public class InstagramStories: CAPPlugin, CAPBridgedPlugin {
         call.resolve(["available": UIApplication.shared.canOpenURL(url)])
     }
 
+    // Facebook App ID required by Instagram for Stories sharing
+    private let facebookAppId = "1529039678842404"
+
     @objc func share(_ call: CAPPluginCall) {
-        guard let url = URL(string: "instagram-stories://share") else {
+        guard let url = URL(string: "instagram-stories://share?source_application=\(facebookAppId)") else {
             call.reject("Instagram Stories URL is invalid")
             return
         }
