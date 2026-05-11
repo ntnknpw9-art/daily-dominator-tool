@@ -517,16 +517,9 @@ const CalorieTracker = () => {
         }
       } catch {}
       const url = URL.createObjectURL(blob);
-      const ua = navigator.userAgent.toLowerCase();
-      const isMobile = /iphone|ipad|android/.test(ua);
       const a = document.createElement('a');
       a.href = url; a.download = 'food-story.png'; a.click();
-      if (isMobile) {
-        toast.success('פותח אינסטגרם סטורי...');
-        setTimeout(() => { window.location.href = 'instagram-stories://share'; }, 400);
-      } else {
-        toast.success('התמונה הורדה והועתקה — הדבק/העלה לסטורי');
-      }
+      toast.success('התמונה הורדה והועתקה — העלה אותה לסטורי ידנית מהגלריה');
       setTimeout(() => URL.revokeObjectURL(url), 5000);
     } catch (e: any) {
       toast.error(e.message || 'שגיאה בהכנת הסטורי');
