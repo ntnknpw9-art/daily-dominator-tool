@@ -11,14 +11,22 @@ export const getTheme = (): 'dark' | 'light' => {
 
 const syncNativeStatusBar = async (theme: 'dark' | 'light') => {
   if (!Capacitor.isNativePlatform()) return;
+  const mod = await import('@capacitor/status-bar');
+  const { StatusBar, Style } = mod;
+  if (!StatusBar || !Style) {
+    console.error('[StatusBar] @capacitor/status-bar loaded but exports missing', mod);
+    return;
+  }
   try {
-    const { StatusBar, Style } = await import('@capacitor/status-bar');
     await StatusBar.setStyle({ style: theme === 'light' ? Style.Light : Style.Dark });
     if (Capacitor.getPlatform() === 'android') {
       await StatusBar.setBackgroundColor({ color: theme === 'light' ? '#fafafa' : '#0a0a0a' });
     }
+    console.log(`[StatusBar] synced -> ${theme} on ${Capacitor.getPlatform()}`);
   } catch (e) {
-    console.warn('StatusBar sync failed', e);
+    // לוג רועש בלי fallback שקט במכשיר נטיב
+    console.error('[StatusBar] native call failed:', e);
+    throw e;
   }
 };
 
