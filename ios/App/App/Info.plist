@@ -24,10 +24,20 @@
 		<dict>
 			<key>CFBundleURLSchemes</key>
 			<array>
+				<string>fb1529039678842404</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
 				<string>com.googleusercontent.apps.309108409035-3sl22316bkmuom32e1c2jtjjbmgava6i</string>
 			</array>
 		</dict>
 	</array>
+	<key>FacebookAppID</key>
+	<string>1529039678842404</string>
+	<key>FacebookDisplayName</key>
+	<string>Daily Dominator</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>GIDClientID</key>
