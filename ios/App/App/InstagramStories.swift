@@ -49,7 +49,10 @@ public class InstagramStories: CAPPlugin, CAPBridgedPlugin {
         }
 
         UIPasteboard.general.setItems(
-            [["com.instagram.sharedSticker.backgroundImage": imageData]],
+            [[
+                "com.instagram.sharedSticker.backgroundImage": imageData,
+                "com.instagram.sharedSticker.sourceApplication": facebookAppId
+            ]],
             options: [.expirationDate: Date().addingTimeInterval(300)]
         )
 
