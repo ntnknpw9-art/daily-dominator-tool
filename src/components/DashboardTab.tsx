@@ -232,6 +232,54 @@ const DashboardTab = () => {
           ))}
         </div>
       </div>
+
+      {/* 💧 Health & Recovery Quick Actions */}
+      <div className="grid grid-cols-3 gap-3 sm:gap-4">
+        {/* Water */}
+        <div className="glass-card p-3 flex flex-col items-center justify-center text-center">
+          <Droplets className="w-6 h-6 text-blue-400 mb-2 drop-shadow-[0_0_8px_rgba(96,165,250,0.6)]" />
+          <div className="text-sm font-bold text-foreground">מים</div>
+          <div className="text-xl font-black">{healthLogs.water_liters}L</div>
+          <div className="flex gap-2 mt-2">
+            <Button size="icon" variant="outline" className="h-6 w-6 rounded-full" onClick={() => updateHealthLog('water_liters', healthLogs.water_liters - 0.5)}>
+              <Minus className="w-3 h-3" />
+            </Button>
+            <Button size="icon" variant="outline" className="h-6 w-6 rounded-full" onClick={() => updateHealthLog('water_liters', healthLogs.water_liters + 0.5)}>
+              <Plus className="w-3 h-3" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Steps */}
+        <div className="glass-card p-3 flex flex-col items-center justify-center text-center">
+          <Footprints className="w-6 h-6 text-green-400 mb-2 drop-shadow-[0_0_8px_rgba(74,222,128,0.6)]" />
+          <div className="text-sm font-bold text-foreground">צעדים</div>
+          <div className="text-xl font-black">{healthLogs.steps}</div>
+          <div className="flex gap-2 mt-2">
+            <Button size="icon" variant="outline" className="h-6 w-6 rounded-full" onClick={() => updateHealthLog('steps', healthLogs.steps - 1000)}>
+              <Minus className="w-3 h-3" />
+            </Button>
+            <Button size="icon" variant="outline" className="h-6 w-6 rounded-full" onClick={() => updateHealthLog('steps', healthLogs.steps + 1000)}>
+              <Plus className="w-3 h-3" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Screen Time */}
+        <div className="glass-card p-3 flex flex-col items-center justify-center text-center">
+          <Smartphone className="w-6 h-6 text-purple-400 mb-2 drop-shadow-[0_0_8px_rgba(167,139,250,0.6)]" />
+          <div className="text-sm font-bold text-foreground">מסך (דק')</div>
+          <div className="text-xl font-black">{healthLogs.screen_time_minutes}</div>
+          <div className="flex gap-2 mt-2">
+            <Button size="icon" variant="outline" className="h-6 w-6 rounded-full" onClick={() => updateHealthLog('screen_time_minutes', healthLogs.screen_time_minutes - 15)}>
+              <Minus className="w-3 h-3" />
+            </Button>
+            <Button size="icon" variant="outline" className="h-6 w-6 rounded-full" onClick={() => updateHealthLog('screen_time_minutes', healthLogs.screen_time_minutes + 15)}>
+              <Plus className="w-3 h-3" />
+            </Button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
