@@ -287,6 +287,23 @@ ${todayTasks.map(t => `- ${t.completions[todayStr] ? '✅' : '⬜'} ${t.name} ($
           <Button
             variant="ghost"
             size="sm"
+            className="h-7 w-7 p-0 text-muted-foreground hover:text-primary"
+            onClick={() => {
+              if (!voiceMode && 'speechSynthesis' in window) {
+                // Initialize voices
+                window.speechSynthesis.getVoices();
+              } else if (voiceMode) {
+                window.speechSynthesis.cancel();
+              }
+              setVoiceMode(!voiceMode);
+            }}
+            title={voiceMode ? 'השתק קול' : 'הפעל קול'}
+          >
+            {voiceMode ? <Volume2 className="w-4 h-4 text-primary animate-pulse" /> : <VolumeX className="w-4 h-4" />}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
             className="h-7 px-2 text-xs gap-1"
             onClick={() => setShowModes(!showModes)}
             disabled={loading}
