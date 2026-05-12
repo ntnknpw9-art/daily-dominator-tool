@@ -64,18 +64,24 @@ export const useHealthSync = () => {
       });
 
       // Aggregate data by date
-      const aggregatedData: Record<string, { steps: number; sleepSeconds: number }> = {};
+      const aggregatedData: Record<string, { steps: number; sleepSeconds: number; activeCalories: number; exerciseMinutes: number }> = {};
       
       const getLocalDateStr = (dateStr: string) => {
         const d = new Date(dateStr);
         return d.toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
       };
 
+      const initDate = (date: string) => {
+        if (!aggregatedData[date]) {
+          aggregatedData[date] = { steps: 0, sleepSeconds: 0, activeCalories: 0, exerciseMinutes: 0 };
+        }
+      };
+
       // Aggregate Steps
       if (stepsRes && stepsRes.resultData) {
         stepsRes.resultData.forEach((s) => {
           const date = getLocalDateStr(s.startDate);
-          if (!aggregatedData[date]) aggregatedData[date] = { steps: 0, sleepSeconds: 0 };
+          initDate(date);
           aggregatedData[date].steps += s.value;
         });
       }
@@ -83,11 +89,9 @@ export const useHealthSync = () => {
       // Aggregate Sleep (Only count actual sleep: Asleep/InBed)
       if (sleepRes && sleepRes.resultData) {
         sleepRes.resultData.forEach((s) => {
-          // Check if it's actual sleep, sleepState is string, could be 'inBed' or 'asleep'
           if (s.sleepState === 'asleep' || s.sleepState === 'inBed' || s.sleepState?.toLowerCase().includes('asleep')) {
              const date = getLocalDateStr(s.endDate); // Use end date for sleep (waking up day)
-             if (!aggregatedData[date]) aggregatedData[date] = { steps: 0, sleepSeconds: 0 };
-             // duration might be missing, calculate from start/end
+             initDate(date);
              const start = new Date(s.startDate).getTime();
              const end = new Date(s.endDate).getTime();
              const durationSecs = (end - start) / 1000;
@@ -95,6 +99,24 @@ export const useHealthSync = () => {
                aggregatedData[date].sleepSeconds += durationSecs;
              }
           }
+        });
+      }
+
+      // Aggregate Active Calories
+      if (activeCalsRes && activeCalsRes.resultData) {
+        activeCalsRes.resultData.forEach((s) => {
+          const date = getLocalDateStr(s.startDate);
+          initDate(date);
+          aggregatedData[date].activeCalories += s.value;
+        });
+      }
+
+      // Aggregate Exercise Time
+      if (exerciseRes && exerciseRes.resultData) {
+        exerciseRes.resultData.forEach((s) => {
+          const date = getLocalDateStr(s.startDate);
+          initDate(date);
+          aggregatedData[date].exerciseMinutes += s.value;
         });
       }
 
