@@ -213,12 +213,12 @@ const DisciplineScore = () => {
             <div className="text-[8px] sm:text-[9px] text-muted-foreground font-bold uppercase">שינה</div>
           </div>
           <div className="bg-background/50 border border-border/50 rounded-xl p-2 text-center hover:bg-background/80 transition-colors">
-            <Target className="w-3.5 h-3.5 sm:w-4 sm:h-4 mx-auto mb-1 text-green-400" />
+            <Footprints className="w-3.5 h-3.5 sm:w-4 sm:h-4 mx-auto mb-1 text-green-400" />
             <div className="text-sm sm:text-base font-black">{stepsScore}%</div>
             <div className="text-[8px] sm:text-[9px] text-muted-foreground font-bold uppercase">צעדים</div>
           </div>
           <div className="bg-background/50 border border-border/50 rounded-xl p-2 text-center hover:bg-background/80 transition-colors">
-            <Target className="w-3.5 h-3.5 sm:w-4 sm:h-4 mx-auto mb-1 text-blue-400" />
+            <Droplets className="w-3.5 h-3.5 sm:w-4 sm:h-4 mx-auto mb-1 text-blue-400" />
             <div className="text-sm sm:text-base font-black">{waterScore}%</div>
             <div className="text-[8px] sm:text-[9px] text-muted-foreground font-bold uppercase">מים</div>
           </div>
