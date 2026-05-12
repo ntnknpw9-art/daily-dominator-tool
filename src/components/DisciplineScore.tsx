@@ -68,6 +68,12 @@ const DisciplineScore = () => {
       setNutritionScore(nScore);
       
       setSleepScore(habitRes.data?.completed ? 100 : 0);
+      
+      const steps = healthRes.data?.steps || 0;
+      setStepsScore(Math.min(100, Math.round((steps / 10000) * 100)));
+      
+      const water = Number(healthRes.data?.water_liters || 0);
+      setWaterScore(Math.min(100, Math.round((water / 2) * 100)));
     };
     fetchExtraData();
   }, [user]);
