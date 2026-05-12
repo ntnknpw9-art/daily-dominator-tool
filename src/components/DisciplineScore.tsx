@@ -124,7 +124,7 @@ const DisciplineScore = () => {
     const trend = secondHalf - firstHalf;
 
     return { score: baseScore, completionPct, streak, hardTaskBonus, trend, weekScores: scores };
-  }, [getDailyCompletionPercent, stats, tasks, nutritionScore, sleepScore]);
+  }, [getDailyCompletionPercent, stats, tasks, nutritionScore, sleepScore, stepsScore, waterScore]);
 
   const animatedScore = useCountUp(score);
   const animatedCompletion = useCountUp(completionPct);
