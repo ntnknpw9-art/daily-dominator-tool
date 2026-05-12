@@ -33,6 +33,26 @@ const SettingsTab = () => {
     return localStorage.getItem(NO_MERCY_KEY) === 'true';
   });
 
+  const [connectedWearables, setConnectedWearables] = useState<string[]>(() => {
+    if (typeof window === 'undefined') return [];
+    try {
+      return JSON.parse(localStorage.getItem('app_connected_wearables') || '[]');
+    } catch { return []; }
+  });
+
+  const toggleWearable = (wearable: string) => {
+    setConnectedWearables(prev => {
+      const next = prev.includes(wearable) ? prev.filter(w => w !== wearable) : [...prev, wearable];
+      localStorage.setItem('app_connected_wearables', JSON.stringify(next));
+      if (!prev.includes(wearable)) {
+        toast.success(`חובר בהצלחה: ${wearable}`);
+      } else {
+        toast.info(`נותק: ${wearable}`);
+      }
+      return next;
+    });
+  };
+
   const handleDeleteAccount = async () => {
     setDeleting(true);
     try {
