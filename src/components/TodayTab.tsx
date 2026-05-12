@@ -10,8 +10,10 @@ import { Progress } from '@/components/ui/progress';
 import { playSuccessSound, playWarningSound, createParticleBurst, vibrate } from '@/lib/sounds';
 
 const TodayTab = () => {
+  const { user } = useAuth();
   const { getTodayTasks, toggleCompletion } = useTaskContext();
   const [now, setNow] = useState(getNowInIsrael());
+  const [steps, setSteps] = useState<number>(0);
   const todayStr = getTodayStr();
   const todayTasks = getTodayTasks();
   const hebrewDay = getHebrewDayFromDate(now) as DayOfWeek;
@@ -21,6 +23,22 @@ const TodayTab = () => {
     const timer = setInterval(() => setNow(getNowInIsrael()), 30000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    const fetchSteps = async () => {
+      const { data } = await supabase
+        .from('daily_health_logs')
+        .select('steps')
+        .eq('user_id', user.id)
+        .eq('log_date', todayStr)
+        .maybeSingle();
+      if (data) {
+        setSteps(data.steps || 0);
+      }
+    };
+    fetchSteps();
+  }, [user, todayStr]);
 
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
 
