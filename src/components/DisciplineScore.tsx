@@ -101,13 +101,15 @@ const DisciplineScore = () => {
 
     const streakScore = Math.min(streak / 30, 1) * 100;
     
-    // NEW SCORE CALCULATION: 40% completion, 10% streak, 20% hard tasks, 15% nutrition, 15% sleep
+    // NEW SCORE CALCULATION: 30% completion, 10% streak, 15% hard tasks, 15% nutrition, 15% sleep, 10% steps, 5% water
     const baseScore = Math.round(
-      completionPct * 0.4 + 
+      completionPct * 0.3 + 
       streakScore * 0.1 + 
-      hardTaskBonus * 0.2 + 
+      hardTaskBonus * 0.15 + 
       nutritionScore * 0.15 + 
-      sleepScore * 0.15
+      sleepScore * 0.15 +
+      stepsScore * 0.1 +
+      waterScore * 0.05
     );
 
     const scores: number[] = [];
