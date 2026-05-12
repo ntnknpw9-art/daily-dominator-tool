@@ -163,7 +163,11 @@ ${categoryStats.map(c => `- ${c.category}: ${c.percent}%`).join('\n')}
 ${failureAnalysis.slice(0, 5).map(f => `- ${f.name}: ${f.misses} פספוסים (${f.percent}%)`).join('\n')}
 
 🕐 משימות היום: ${todayTasks.length}, הושלמו: ${completed.length}
-${todayTasks.map(t => `- ${t.completions[todayStr] ? '✅' : '⬜'} ${t.name} (${t.startTime}-${t.endTime})`).join('\n')}`;
+${todayTasks.map(t => `- ${t.completions[todayStr] ? '✅' : '⬜'} ${t.name} (${t.startTime}-${t.endTime})`).join('\n')}
+
+🍎 תזונה היום: ${nutrition.calories} קלוריות מתוך יעד של ${nutrition.target}. חלבון: ${nutrition.protein}g.
+💤 שינה הלילה: ${sleep.done ? 'הושלם (טוב)' : 'לא הושלם או לא נרשם'} מתוך יעד של ${sleep.target} שעות.
+`;
   };
 
   const streamResponse = async (allMsgs: Msg[], mode?: string) => {
