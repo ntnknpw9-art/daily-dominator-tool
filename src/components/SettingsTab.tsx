@@ -35,6 +35,8 @@ const SettingsTab = () => {
     return localStorage.getItem(NO_MERCY_KEY) === 'true';
   });
 
+  const [wearableToConnect, setWearableToConnect] = useState<string | null>(null);
+
   const [connectedWearables, setConnectedWearables] = useState<string[]>(() => {
     if (typeof window === 'undefined') return [];
     try {
@@ -53,6 +55,46 @@ const SettingsTab = () => {
       }
       return next;
     });
+  };
+
+  const getWearableInstructions = (wearable: string) => {
+    if (wearable.includes('Garmin')) {
+      return (
+        <div className="space-y-2 text-sm text-right mt-2">
+          <p>האפליקציה שלנו שואבת נתונים מ-Apple Health. כדי שנתוני ה-Garmin יגיעו אלינו, צריך לחבר אותו ל-Apple Health:</p>
+          <ol className="list-decimal list-inside space-y-1 pr-4">
+            <li>פתח את אפליקציית <strong>Garmin Connect</strong> בטלפון שלך.</li>
+            <li>עבור להגדרות (Settings) {'>'} אפליקציות מחוברות (Connected Apps).</li>
+            <li>בחר ב-<strong>Apple Health</strong> ואשר את כל ההרשאות.</li>
+            <li>אחרי שאישרת, הנתונים יסתנכרו אוטומטית כשתלחץ על ״סנכרן נתונים״ אצלנו.</li>
+          </ol>
+        </div>
+      );
+    }
+    if (wearable.includes('Fitbit')) {
+      return (
+        <div className="space-y-2 text-sm text-right mt-2">
+          <p>האפליקציה שלנו שואבת נתונים מ-Apple Health. כדי שנתוני ה-Fitbit יגיעו אלינו, צריך לחבר אותו ל-Apple Health:</p>
+          <ol className="list-decimal list-inside space-y-1 pr-4">
+            <li>פתח את אפליקציית <strong>Fitbit</strong> בטלפון שלך.</li>
+            <li>עבור להגדרות החשבון {'>'} שילובים/אפליקציות צד שלישי.</li>
+            <li>בחר ב-<strong>Apple Health</strong> ואפשר גישה.</li>
+            <li>אחרי שאישרת, הנתונים יסתנכרו אוטומטית כשתלחץ על ״סנכרן נתונים״ אצלנו.</li>
+          </ol>
+        </div>
+      );
+    }
+    return (
+      <div className="space-y-2 text-sm text-right mt-2">
+        <p>כדי לחבר את המכשיר ל-Apple Health:</p>
+        <ol className="list-decimal list-inside space-y-1 pr-4">
+          <li>לחץ על "הבנתי".</li>
+          <li>המערכת שלנו תקפיץ חלון שמבקש הרשאה מ-Apple Health לצעדים, שינה, קלוריות וזמן אימון.</li>
+          <li><strong>סמן את כל ההרשאות באישורים (Turn On All).</strong></li>
+          <li>זהו! כעת אפשר ללחוץ תמיד על ״סנכרן נתונים״ והכל יתעדכן.</li>
+        </ol>
+      </div>
+    );
   };
 
   const handleDeleteAccount = async () => {
@@ -224,7 +266,13 @@ const SettingsTab = () => {
                 variant={connectedWearables.includes(wearable) ? "default" : "outline"}
                 size="sm"
                 className="gap-2"
-                onClick={() => toggleWearable(wearable)}
+                onClick={() => {
+                  if (connectedWearables.includes(wearable)) {
+                    toggleWearable(wearable);
+                  } else {
+                    setWearableToConnect(wearable);
+                  }
+                }}
               >
                 {connectedWearables.includes(wearable) ? (
                   <><CheckCircle2 className="w-4 h-4" /> מחובר</>
@@ -232,6 +280,30 @@ const SettingsTab = () => {
               </Button>
             </div>
           ))}
+          
+          <AlertDialog open={!!wearableToConnect} onOpenChange={(open) => !open && setWearableToConnect(null)}>
+            <AlertDialogContent dir="rtl">
+              <AlertDialogHeader>
+                <AlertDialogTitle>חיבור {wearableToConnect}</AlertDialogTitle>
+                <AlertDialogDescription asChild>
+                  {wearableToConnect && getWearableInstructions(wearableToConnect)}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter className="flex-row gap-2 justify-end sm:justify-start">
+                <AlertDialogCancel className="mt-0">ביטול</AlertDialogCancel>
+                <AlertDialogAction onClick={() => {
+                  if (wearableToConnect) {
+                    toggleWearable(wearableToConnect);
+                    if (wearableToConnect.includes('Apple')) {
+                      syncHealthData(); // Trigger the actual prompt
+                    }
+                  }
+                }}>
+                  הבנתי, סמן כמחובר
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </CardContent>
       </Card>
 
