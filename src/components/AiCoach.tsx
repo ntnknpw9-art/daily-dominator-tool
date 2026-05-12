@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { getNowInIsrael, getTodayStr, formatDateHebrew } from '@/lib/dateUtils';
 import ReactMarkdown from 'react-markdown';
+import ApplyPlanDialog from './ApplyPlanDialog';
 
 type Msg = { role: 'user' | 'assistant'; content: string };
 
@@ -19,6 +20,9 @@ const AI_MODES = [
   { id: 'failure_analysis', label: 'למה אני נכשל?', icon: AlertTriangle, prompt: 'נתח את הכישלונות שלי — למה אני מפספס? מה הסיבות האמיתיות?' },
   { id: 'behavior_engine', label: 'AI לומד אותי', icon: Brain, prompt: 'נתח את דפוסי ההתנהגות שלי, זהה נקודות חולשה, והצע שינויי לו"ז אוטומטיים' },
   { id: 'nutrition_link', label: 'תזונה × אימון', icon: Apple, prompt: 'נתח את הקשר בין התזונה שלי לביצועים והצע שיפורים' },
+  { id: 'recovery_system', label: 'התאוששות', icon: Brain, prompt: 'נתח את המצב הפיזי שלי (שינה, תזונה, עומס אימונים) ותן לי פרוטוקול התאוששות חכם. האם עלי לנוח היום?' },
+  { id: 'gym_buddy', label: 'AI חדר כושר', icon: MessageCircle, prompt: 'מעכשיו אתה חבר האימון שלי לחדר כושר. תעזור לי לבחור משקלים, לספור סטים, ותן לי מוטיבציה בזמן אמת!' },
+  { id: 'build_plan', label: 'מסלול AI מלא', icon: Brain, prompt: 'אני רוצה שתיצור לי מסלול אימונים ותזונה מלא (לדוגמה: ירידה במשקל, מסה, איש ברזל, קליסטניקס). תשאל אותי שאלות אם צריך, ואז בסוף התשובה שלך תוסיף בדיוק את המילה [CREATE_PLAN] כדי שאוכל להחיל את התוכנית.' },
 ];
 
 const AiCoach = () => {
@@ -34,6 +38,8 @@ const AiCoach = () => {
   const [voiceMode, setVoiceMode] = useState(false);
   const [nutrition, setNutrition] = useState({ calories: 0, target: 0, protein: 0 });
   const [sleep, setSleep] = useState({ done: false, target: 7 });
+  const [showPlanDialog, setShowPlanDialog] = useState(false);
+  const [planText, setPlanText] = useState('');
 
   useEffect(() => {
     if (!user) return;
@@ -390,7 +396,16 @@ ${todayTasks.map(t => `- ${t.completions[todayStr] ? '✅' : '⬜'} ${t.name} ($
             }`}>
               {m.role === 'assistant' ? (
                 <div className="prose prose-sm prose-invert max-w-none">
-                  <ReactMarkdown>{m.content}</ReactMarkdown>
+                  <ReactMarkdown>{m.content.replace('[CREATE_PLAN]', '')}</ReactMarkdown>
+                  {m.content.includes('[CREATE_PLAN]') && (
+                    <Button 
+                      size="sm" 
+                      className="mt-2 w-full gap-2" 
+                      onClick={() => { setPlanText(m.content); setShowPlanDialog(true); }}
+                    >
+                      <Brain className="w-4 h-4" /> צור תוכנית באפליקציה
+                    </Button>
+                  )}
                 </div>
               ) : m.content}
             </div>
@@ -425,6 +440,8 @@ ${todayTasks.map(t => `- ${t.completions[todayStr] ? '✅' : '⬜'} ${t.name} ($
       <div className="px-3 pb-2 text-[10px] text-muted-foreground/70 text-center leading-tight">
         תגובות AI הן הערכות בלבד ואינן מחליפות ייעוץ רפואי מקצועי.
       </div>
+
+      <ApplyPlanDialog open={showPlanDialog} onOpenChange={setShowPlanDialog} analysisText={planText} />
     </div>
   );
 };

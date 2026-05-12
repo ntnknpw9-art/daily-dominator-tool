@@ -2,10 +2,25 @@ import { useMemo, useState, useEffect, useRef } from 'react';
 import { useTaskContext } from '@/context/TaskContext';
 import { getNowInIsrael } from '@/lib/dateUtils';
 import { Card, CardContent } from '@/components/ui/card';
-import { Shield, TrendingUp, TrendingDown, Minus, Flame, Target, Swords } from 'lucide-react';
+import { Shield, TrendingUp, TrendingDown, Minus, Flame, Target, Swords, Footprints, Droplets, Instagram } from 'lucide-react';
 import { DayOfWeek } from '@/types/task';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
+import { toast } from 'sonner';
+
+declare global {
+  interface Window {
+    Capacitor?: {
+      nativePromise?: (pluginName: string, methodName: string, options?: Record<string, unknown>) => Promise<any>;
+      Plugins?: {
+        InstagramStories?: {
+          canShare: () => Promise<{ available: boolean }>;
+          share: (options: { backgroundImage: string }) => Promise<{ completed: boolean }>;
+        };
+      };
+    };
+  }
+}
 
 const useCountUp = (target: number, duration = 1200) => {
   const [current, setCurrent] = useState(0);
@@ -39,16 +54,19 @@ const DisciplineScore = () => {
   
   const [nutritionScore, setNutritionScore] = useState(0);
   const [sleepScore, setSleepScore] = useState(0);
+  const [stepsScore, setStepsScore] = useState(0);
+  const [waterScore, setWaterScore] = useState(0);
 
   useEffect(() => {
     if (!user) return;
     const fetchExtraData = async () => {
       const todayStr = getNowInIsrael().toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
       
-      const [logsRes, profileRes, habitRes] = await Promise.all([
+      const [logsRes, profileRes, habitRes, healthRes] = await Promise.all([
         supabase.from('nutrition_logs').select('calories').eq('user_id', user.id).eq('log_date', todayStr),
         supabase.from('nutrition_profiles').select('daily_calories').eq('user_id', user.id).maybeSingle(),
-        supabase.from('habits').select('completed').eq('user_id', user.id).eq('habit_date', todayStr).eq('habit_id', 'sleep').maybeSingle()
+        supabase.from('habits').select('completed').eq('user_id', user.id).eq('habit_date', todayStr).eq('habit_id', 'sleep').maybeSingle(),
+        supabase.from('daily_health_logs').select('*').eq('user_id', user.id).eq('log_date', todayStr).maybeSingle()
       ]);
 
       const cals = logsRes.data?.reduce((sum, log) => sum + (log.calories || 0), 0) || 0;
@@ -65,6 +83,12 @@ const DisciplineScore = () => {
       setNutritionScore(nScore);
       
       setSleepScore(habitRes.data?.completed ? 100 : 0);
+      
+      const steps = healthRes.data?.steps || 0;
+      setStepsScore(Math.min(100, Math.round((steps / 10000) * 100)));
+      
+      const water = Number(healthRes.data?.water_liters || 0);
+      setWaterScore(Math.min(100, Math.round((water / 2) * 100)));
     };
     fetchExtraData();
   }, [user]);
@@ -92,13 +116,15 @@ const DisciplineScore = () => {
 
     const streakScore = Math.min(streak / 30, 1) * 100;
     
-    // NEW SCORE CALCULATION: 40% completion, 10% streak, 20% hard tasks, 15% nutrition, 15% sleep
+    // NEW SCORE CALCULATION: 30% completion, 10% streak, 15% hard tasks, 15% nutrition, 15% sleep, 10% steps, 5% water
     const baseScore = Math.round(
-      completionPct * 0.4 + 
+      completionPct * 0.3 + 
       streakScore * 0.1 + 
-      hardTaskBonus * 0.2 + 
+      hardTaskBonus * 0.15 + 
       nutritionScore * 0.15 + 
-      sleepScore * 0.15
+      sleepScore * 0.15 +
+      stepsScore * 0.1 +
+      waterScore * 0.05
     );
 
     const scores: number[] = [];
@@ -113,7 +139,7 @@ const DisciplineScore = () => {
     const trend = secondHalf - firstHalf;
 
     return { score: baseScore, completionPct, streak, hardTaskBonus, trend, weekScores: scores };
-  }, [getDailyCompletionPercent, stats, tasks, nutritionScore, sleepScore]);
+  }, [getDailyCompletionPercent, stats, tasks, nutritionScore, sleepScore, stepsScore, waterScore]);
 
   const animatedScore = useCountUp(score);
   const animatedCompletion = useCountUp(completionPct);
@@ -144,6 +170,85 @@ const DisciplineScore = () => {
   const days = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
   const now = getNowInIsrael();
 
+  const shareScore = async () => {
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1080;
+      canvas.height = 1920;
+      const ctx = canvas.getContext('2d')!;
+
+      // Background gradient
+      const grad = ctx.createLinearGradient(0, 0, 0, 1920);
+      grad.addColorStop(0, '#0a0a0a');
+      grad.addColorStop(1, '#1a0000'); // dark red
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 1080, 1920);
+
+      ctx.textAlign = 'center';
+      const drawTextWithShadow = (text: string, x: number, y: number, font: string, color: string) => {
+        ctx.font = font;
+        ctx.shadowColor = color === '#ffffff' ? 'rgba(0,0,0,0.8)' : color;
+        ctx.shadowBlur = 20;
+        ctx.fillStyle = color;
+        ctx.fillText(text, x, y);
+        ctx.shadowBlur = 0;
+      };
+
+      const cx = 540;
+      let y = 500;
+
+      drawTextWithShadow('Daily Dominator', cx, y, 'bold 48px Heebo, sans-serif', '#ffffff');
+      y += 100;
+      drawTextWithShadow('ציון משמעת', cx, y, 'bold 80px Heebo, sans-serif', '#ef4444');
+      y += 250;
+      drawTextWithShadow(`${score}`, cx, y, '900 280px Heebo, sans-serif', score >= 80 ? '#4ade80' : score >= 60 ? '#facc15' : '#ef4444');
+      y += 180;
+      drawTextWithShadow(`🔥 רצף: ${streak} ימים`, cx, y, 'bold 64px Heebo, sans-serif', '#f97316');
+      y += 120;
+      drawTextWithShadow(`דרגה: ${getRank(score)}`, cx, y, 'bold 56px Heebo, sans-serif', '#ffffff');
+
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+
+      const { Capacitor } = await import('@capacitor/core');
+      if (Capacitor.isNativePlatform()) {
+        const nativeInstagramStories = window.Capacitor?.Plugins?.InstagramStories;
+        const callInstagramStories = async (methodName: 'canShare' | 'share', options?: Record<string, unknown>) => {
+          if (nativeInstagramStories) {
+            return methodName === 'canShare'
+              ? nativeInstagramStories.canShare()
+              : nativeInstagramStories.share(options as { backgroundImage: string });
+          }
+          return window.Capacitor?.nativePromise?.('InstagramStories', methodName, options);
+        };
+
+        if (Capacitor.getPlatform() === 'ios' && window.Capacitor?.nativePromise) {
+          const { available } = await callInstagramStories('canShare');
+          if (!available) { toast.error('Instagram לא מותקן'); return; }
+          await callInstagramStories('share', { backgroundImage: dataUrl });
+          toast.success('פותח אינסטגרם');
+          return;
+        }
+
+        const base64 = dataUrl.split(',')[1];
+        const { Filesystem, Directory } = await import('@capacitor/filesystem');
+        const fileName = `score-story-${Date.now()}.png`;
+        await Filesystem.writeFile({ path: fileName, data: base64, directory: Directory.Cache });
+        const { Share } = await import('@capacitor/share');
+        await Share.share({
+          files: [(await Filesystem.getUri({ path: fileName, directory: Directory.Cache })).uri]
+        });
+      } else {
+        const link = document.createElement('a');
+        link.download = 'discipline-score.jpg';
+        link.href = dataUrl;
+        link.click();
+        toast.success('התמונה הורדה בהצלחה!');
+      }
+    } catch (e) {
+      toast.error('שגיאה ביצירת תמונה לשיתוף');
+    }
+  };
+
   return (
     <Card className={`bg-card/80 backdrop-blur-md border-border/50 shadow-2xl ${getGlowColor(score)} transition-all duration-500`}>
       <CardContent className="pt-4 pb-3 sm:pt-5 sm:pb-4 px-3 sm:px-6">
@@ -154,7 +259,10 @@ const DisciplineScore = () => {
               ציון משמעת כולל
             </span>
           </div>
-          <div className="flex items-center gap-1 text-[10px] sm:text-xs font-bold">
+          <div className="flex items-center gap-2 text-[10px] sm:text-xs font-bold">
+            <button onClick={shareScore} className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-1 bg-secondary/50 px-2 py-1 rounded-full">
+              <Instagram className="w-3 h-3" /> <span className="hidden sm:inline">שתף</span>
+            </button>
             {trend > 5 ? (
               <><TrendingUp className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-green-400" /><span className="text-green-400">עולה</span></>
             ) : trend < -5 ? (
@@ -180,7 +288,7 @@ const DisciplineScore = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-4 gap-1.5 sm:gap-2 mb-3 sm:mb-4">
+        <div className="grid grid-cols-3 gap-1.5 sm:gap-2 mb-3 sm:mb-4">
           <div className="bg-background/50 border border-border/50 rounded-xl p-2 text-center hover:bg-background/80 transition-colors">
             <Target className="w-3.5 h-3.5 sm:w-4 sm:h-4 mx-auto mb-1 text-primary" />
             <div className="text-sm sm:text-base font-black">{animatedCompletion}%</div>
@@ -200,6 +308,16 @@ const DisciplineScore = () => {
             <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4 mx-auto mb-1 text-indigo-400" />
             <div className="text-sm sm:text-base font-black">{sleepScore}%</div>
             <div className="text-[8px] sm:text-[9px] text-muted-foreground font-bold uppercase">שינה</div>
+          </div>
+          <div className="bg-background/50 border border-border/50 rounded-xl p-2 text-center hover:bg-background/80 transition-colors">
+            <Footprints className="w-3.5 h-3.5 sm:w-4 sm:h-4 mx-auto mb-1 text-green-400" />
+            <div className="text-sm sm:text-base font-black">{stepsScore}%</div>
+            <div className="text-[8px] sm:text-[9px] text-muted-foreground font-bold uppercase">צעדים</div>
+          </div>
+          <div className="bg-background/50 border border-border/50 rounded-xl p-2 text-center hover:bg-background/80 transition-colors">
+            <Droplets className="w-3.5 h-3.5 sm:w-4 sm:h-4 mx-auto mb-1 text-blue-400" />
+            <div className="text-sm sm:text-base font-black">{waterScore}%</div>
+            <div className="text-[8px] sm:text-[9px] text-muted-foreground font-bold uppercase">מים</div>
           </div>
         </div>
 

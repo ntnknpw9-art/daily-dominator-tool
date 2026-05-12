@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Volume2, VolumeX, Sun, Moon, Bell, BellOff, Skull, Trash2 } from 'lucide-react';
+import { Volume2, VolumeX, Sun, Moon, Bell, BellOff, Skull, Trash2, Watch, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -32,6 +32,26 @@ const SettingsTab = () => {
     if (typeof window === 'undefined') return false;
     return localStorage.getItem(NO_MERCY_KEY) === 'true';
   });
+
+  const [connectedWearables, setConnectedWearables] = useState<string[]>(() => {
+    if (typeof window === 'undefined') return [];
+    try {
+      return JSON.parse(localStorage.getItem('app_connected_wearables') || '[]');
+    } catch { return []; }
+  });
+
+  const toggleWearable = (wearable: string) => {
+    setConnectedWearables(prev => {
+      const next = prev.includes(wearable) ? prev.filter(w => w !== wearable) : [...prev, wearable];
+      localStorage.setItem('app_connected_wearables', JSON.stringify(next));
+      if (!prev.includes(wearable)) {
+        toast.success(`חובר בהצלחה: ${wearable}`);
+      } else {
+        toast.info(`נותק: ${wearable}`);
+      }
+      return next;
+    });
+  };
 
   const handleDeleteAccount = async () => {
     setDeleting(true);
@@ -173,6 +193,36 @@ const SettingsTab = () => {
               {noMercy ? 'מופעל' : 'מושבת'}
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Watch className="w-5 h-5 text-blue-400" />
+            שעונים ובריאות
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="text-xs text-muted-foreground mb-4">
+            חבר את השעון החכם שלך (Apple Watch, Garmin, Fitbit) לקבלת נתונים מדויקים ל-AI (צעדים, שינה, התאוששות).
+          </div>
+          
+          {['Apple Health / Watch', 'Garmin Connect', 'Fitbit'].map(wearable => (
+            <div key={wearable} className="flex items-center justify-between bg-background/50 border border-border/50 rounded-lg p-3">
+              <div className="text-sm font-medium">{wearable}</div>
+              <Button
+                variant={connectedWearables.includes(wearable) ? "default" : "outline"}
+                size="sm"
+                className="gap-2"
+                onClick={() => toggleWearable(wearable)}
+              >
+                {connectedWearables.includes(wearable) ? (
+                  <><CheckCircle2 className="w-4 h-4" /> מחובר</>
+                ) : 'התחבר'}
+              </Button>
+            </div>
+          ))}
         </CardContent>
       </Card>
 

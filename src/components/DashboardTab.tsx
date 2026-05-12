@@ -3,7 +3,9 @@ import { getNowInIsrael, timeToMinutes, isNowBetween } from '@/lib/dateUtils';
 import { useMemo, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
-import { Flame, Zap, Moon, Apple, Target, Timer, Trophy } from 'lucide-react';
+import { Flame, Zap, Moon, Apple, Target, Timer, Trophy, Droplets, Smartphone, Footprints, Plus, Minus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 const DashboardTab = () => {
   const { user } = useAuth();
@@ -12,16 +14,18 @@ const DashboardTab = () => {
   
   const [nutrition, setNutrition] = useState({ calories: 0, target: 0 });
   const [sleepHabit, setSleepHabit] = useState(false);
+  const [healthLogs, setHealthLogs] = useState({ water_liters: 0, steps: 0, screen_time_minutes: 0 });
 
   useEffect(() => {
     if (!user) return;
     const fetchDashboardData = async () => {
       const todayStr = getNowInIsrael().toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
       
-      const [logsRes, profileRes, habitRes] = await Promise.all([
+      const [logsRes, profileRes, habitRes, healthRes] = await Promise.all([
         supabase.from('nutrition_logs').select('calories').eq('user_id', user.id).eq('log_date', todayStr),
         supabase.from('nutrition_profiles').select('daily_calories').eq('user_id', user.id).maybeSingle(),
-        supabase.from('habits').select('completed').eq('user_id', user.id).eq('habit_date', todayStr).eq('habit_id', 'sleep').maybeSingle()
+        supabase.from('habits').select('completed').eq('user_id', user.id).eq('habit_date', todayStr).eq('habit_id', 'sleep').maybeSingle(),
+        supabase.from('daily_health_logs').select('*').eq('user_id', user.id).eq('log_date', todayStr).maybeSingle()
       ]);
 
       const cals = logsRes.data?.reduce((sum, log) => sum + (log.calories || 0), 0) || 0;
@@ -30,9 +34,33 @@ const DashboardTab = () => {
         target: profileRes.data?.daily_calories || 0
       });
       setSleepHabit(habitRes.data?.completed || false);
+      if (healthRes.data) {
+        setHealthLogs({
+          water_liters: Number(healthRes.data.water_liters) || 0,
+          steps: healthRes.data.steps || 0,
+          screen_time_minutes: healthRes.data.screen_time_minutes || 0
+        });
+      }
     };
     fetchDashboardData();
   }, [user]);
+
+  const updateHealthLog = async (field: keyof typeof healthLogs, value: number) => {
+    if (!user) return;
+    const todayStr = getNowInIsrael().toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
+    const newLogs = { ...healthLogs, [field]: Math.max(0, value) };
+    setHealthLogs(newLogs);
+    
+    try {
+      await supabase.from('daily_health_logs').upsert({
+        user_id: user.id,
+        log_date: todayStr,
+        ...newLogs
+      }, { onConflict: 'user_id,log_date' });
+    } catch (e) {
+      toast.error('שגיאה בשמירת נתונים');
+    }
+  };
 
   const activeTasks = tasks.length;
   const totalCompletions = getTotalCompletions();
@@ -198,10 +226,58 @@ const DashboardTab = () => {
           {chartData.map((d, i) => (
             <div key={i} className="text-center" style={{ width: `${100 / chartData.length}%` }}>
               <div className={`text-[8px] sm:text-[9px] ${hoveredBar === i ? 'text-foreground font-bold scale-110 transition-transform' : 'text-muted-foreground'}`}>
-                {d.dayName}
+                {d.date}
               </div>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* 💧 Health & Recovery Quick Actions */}
+      <div className="grid grid-cols-3 gap-3 sm:gap-4">
+        {/* Water */}
+        <div className="glass-card p-3 flex flex-col items-center justify-center text-center">
+          <Droplets className="w-6 h-6 text-blue-400 mb-2 drop-shadow-[0_0_8px_rgba(96,165,250,0.6)]" />
+          <div className="text-sm font-bold text-foreground">מים</div>
+          <div className="text-xl font-black">{healthLogs.water_liters}L</div>
+          <div className="flex gap-2 mt-2">
+            <Button size="icon" variant="outline" className="h-6 w-6 rounded-full" onClick={() => updateHealthLog('water_liters', healthLogs.water_liters - 0.5)}>
+              <Minus className="w-3 h-3" />
+            </Button>
+            <Button size="icon" variant="outline" className="h-6 w-6 rounded-full" onClick={() => updateHealthLog('water_liters', healthLogs.water_liters + 0.5)}>
+              <Plus className="w-3 h-3" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Steps */}
+        <div className="glass-card p-3 flex flex-col items-center justify-center text-center">
+          <Footprints className="w-6 h-6 text-green-400 mb-2 drop-shadow-[0_0_8px_rgba(74,222,128,0.6)]" />
+          <div className="text-sm font-bold text-foreground">צעדים</div>
+          <div className="text-xl font-black">{healthLogs.steps}</div>
+          <div className="flex gap-2 mt-2">
+            <Button size="icon" variant="outline" className="h-6 w-6 rounded-full" onClick={() => updateHealthLog('steps', healthLogs.steps - 1000)}>
+              <Minus className="w-3 h-3" />
+            </Button>
+            <Button size="icon" variant="outline" className="h-6 w-6 rounded-full" onClick={() => updateHealthLog('steps', healthLogs.steps + 1000)}>
+              <Plus className="w-3 h-3" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Screen Time */}
+        <div className="glass-card p-3 flex flex-col items-center justify-center text-center">
+          <Smartphone className="w-6 h-6 text-purple-400 mb-2 drop-shadow-[0_0_8px_rgba(167,139,250,0.6)]" />
+          <div className="text-sm font-bold text-foreground">מסך (דק')</div>
+          <div className="text-xl font-black">{healthLogs.screen_time_minutes}</div>
+          <div className="flex gap-2 mt-2">
+            <Button size="icon" variant="outline" className="h-6 w-6 rounded-full" onClick={() => updateHealthLog('screen_time_minutes', healthLogs.screen_time_minutes - 15)}>
+              <Minus className="w-3 h-3" />
+            </Button>
+            <Button size="icon" variant="outline" className="h-6 w-6 rounded-full" onClick={() => updateHealthLog('screen_time_minutes', healthLogs.screen_time_minutes + 15)}>
+              <Plus className="w-3 h-3" />
+            </Button>
+          </div>
         </div>
       </div>
     </div>

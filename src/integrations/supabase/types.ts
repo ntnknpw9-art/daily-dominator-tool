@@ -134,6 +134,39 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_health_logs: {
+        Row: {
+          created_at: string | null
+          id: string
+          log_date: string
+          screen_time_minutes: number | null
+          steps: number | null
+          updated_at: string | null
+          user_id: string
+          water_liters: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          log_date: string
+          screen_time_minutes?: number | null
+          steps?: number | null
+          updated_at?: string | null
+          user_id: string
+          water_liters?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          log_date?: string
+          screen_time_minutes?: number | null
+          steps?: number | null
+          updated_at?: string | null
+          user_id?: string
+          water_liters?: number | null
+        }
+        Relationships: []
+      }
       daily_spins: {
         Row: {
           created_at: string
