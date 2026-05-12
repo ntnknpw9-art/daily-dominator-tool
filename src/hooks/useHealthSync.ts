@@ -157,7 +157,9 @@ export const useHealthSync = () => {
          await supabase.from('daily_health_logs').upsert({
            user_id: log.user_id,
            log_date: log.log_date,
-           steps: log.steps
+           steps: log.steps,
+           active_calories: log.active_calories,
+           exercise_minutes: log.exercise_minutes
          }, { onConflict: 'user_id,log_date' });
       }
 
