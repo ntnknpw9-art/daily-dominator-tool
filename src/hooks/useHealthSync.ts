@@ -129,11 +129,13 @@ export const useHealthSync = () => {
       const targetSleepHours = Number(targets?.sleep_hours) || 7;
 
       for (const [date, data] of Object.entries(aggregatedData)) {
-        if (data.steps > 0) {
+        if (data.steps > 0 || data.activeCalories > 0 || data.exerciseMinutes > 0) {
           healthLogsToUpsert.push({
             user_id: user.id,
             log_date: date,
             steps: Math.round(data.steps),
+            active_calories: Math.round(data.activeCalories),
+            exercise_minutes: Math.round(data.exerciseMinutes),
           });
         }
         
