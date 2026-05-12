@@ -3,6 +3,7 @@ import { useTaskContext } from '@/context/TaskContext';
 import { getNowInIsrael, getTodayStr, isNowBetween, getNowMinutes, timeToMinutes } from '@/lib/dateUtils';
 import { LEVELS, ACHIEVEMENTS, DayOfWeek } from '@/types/task';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { Check, Play, Square } from 'lucide-react';
 import { getHebrewDayFromDate } from '@/lib/dateUtils';
 
