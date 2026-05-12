@@ -35,25 +35,18 @@ import AchievementShowcase from '@/components/AchievementShowcase';
 import AdvancedAnalytics from '@/components/AdvancedAnalytics';
 import MotivationalSplash from '@/components/MotivationalSplash';
 import { ConfettiOverlay, useConfetti } from '@/components/CinematicEffects';
-import { LayoutDashboard, ListTodo, CalendarDays, Calendar, Zap, BarChart3, BookOpen, LogOut, Users, Timer, Apple, Settings, Camera, Dna } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, TrendingUp, BarChart3, Settings, LogOut, Users, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { AppSidebar } from '@/components/AppSidebar';
+import { QuickActionFAB } from '@/components/QuickActionFAB';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 
-const tabs = [
+const mobileBottomTabs = [
   { id: 'dashboard', label: 'ראשי', icon: LayoutDashboard },
-  { id: 'tasks', label: 'משימות', icon: ListTodo },
-  { id: 'today', label: 'היום', icon: CalendarDays },
-  { id: 'weekly', label: 'שבועי', icon: Calendar },
-  { id: 'analytics', label: 'ניתוח', icon: BarChart3 },
-  { id: 'advanced', label: 'מתקדם', icon: Zap },
-  { id: 'growth', label: 'צמיחה', icon: BookOpen },
-  { id: 'photos', label: 'תמונות', icon: Camera },
-  { id: 'focus', label: 'פוקוס', icon: Timer },
-  { id: 'nutrition', label: 'תזונה', icon: Apple },
-  { id: 'settings', label: 'הגדרות', icon: Settings },
+  { id: 'action', label: 'פעולות', icon: CheckSquare },
+  { id: 'growth', label: 'צמיחה', icon: TrendingUp },
+  { id: 'analytics', label: 'נתונים', icon: BarChart3 },
 ];
-
-// Bottom nav shows fewer tabs on mobile
-const mobileBottomTabs = ['dashboard', 'tasks', 'today', 'analytics', 'settings'];
 
 const AppContent = () => {
   const { signOut } = useAuth();
