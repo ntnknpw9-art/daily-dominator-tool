@@ -24,7 +24,7 @@
 		"LocalNotificationsPlugin",
 		"SharePlugin",
 		"StatusBarPlugin",
-		"SocialLoginPlugin",
-		"CapacitorHealthkitPlugin"
+		"HealthPlugin",
+		"SocialLoginPlugin"
 	]
 }
