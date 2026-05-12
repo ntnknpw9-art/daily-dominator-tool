@@ -180,7 +180,6 @@ const AppContent = () => {
               <DuelSystem />
               <ChallengesAndPunishments />
               <FriendsSystem />
-              <ProgressPhotos />
               <ReflectionJournal />
             </div>
           )}
