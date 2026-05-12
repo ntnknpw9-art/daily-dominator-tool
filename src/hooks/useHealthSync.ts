@@ -47,6 +47,22 @@ export const useHealthSync = () => {
         limit: 0,
       });
 
+      // Active Calories
+      const activeCalsRes = await CapacitorHealthkit.queryHKitSampleType<OtherData>({
+        sampleName: SampleNames.ACTIVE_ENERGY_BURNED,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        limit: 0,
+      });
+
+      // Exercise Time
+      const exerciseRes = await CapacitorHealthkit.queryHKitSampleType<OtherData>({
+        sampleName: SampleNames.APPLE_EXERCISE_TIME,
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        limit: 0,
+      });
+
       // Aggregate data by date
       const aggregatedData: Record<string, { steps: number; sleepSeconds: number }> = {};
       
