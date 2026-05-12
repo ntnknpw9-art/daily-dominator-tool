@@ -86,5 +86,9 @@
 		<string>instagram</string>
 		<string>instagram-stories</string>
 	</array>
+	<key>NSHealthShareUsageDescription</key>
+	<string>האפליקציה זקוקה לגישה לנתוני בריאות כדי לסנכרן את מספר הצעדים וזמן השינה שלך.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>האפליקציה זקוקה לגישה לנתוני בריאות כדי לסנכרן את מספר הצעדים וזמן השינה שלך.</string>
 </dict>
 </plist>
