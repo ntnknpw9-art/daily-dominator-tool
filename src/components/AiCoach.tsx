@@ -231,6 +231,11 @@ ${todayTasks.map(t => `- ${t.completions[todayStr] ? '✅' : '⬜'} ${t.name} ($
 
       if (assistantSoFar) {
         saveMessage('assistant', assistantSoFar);
+        if (voiceMode && 'speechSynthesis' in window) {
+          const utterance = new SpeechSynthesisUtterance(assistantSoFar);
+          utterance.lang = 'he-IL';
+          window.speechSynthesis.speak(utterance);
+        }
       }
     } catch (e: any) {
       const errMsg = `❌ ${e.message || 'שגיאה זמנית. נסה שוב.'}`;
