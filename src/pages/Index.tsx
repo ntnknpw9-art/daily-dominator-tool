@@ -59,167 +59,134 @@ const AppContent = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20 sm:pb-0">
-      <ConfettiOverlay particles={particles} />
-      
-      {/* Header */}
-      <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-50 safe-top">
-        <div className="max-w-4xl mx-auto px-3 sm:px-4 py-2 sm:py-4 flex items-center justify-between gap-1">
-          <h1 className="text-sm sm:text-xl font-bold text-foreground whitespace-nowrap truncate">🎯 <span className="hidden sm:inline">מערכת </span>המעקב שלך</h1>
-          <div className="flex gap-0 sm:gap-2 shrink-0 items-center">
-            <Button variant="ghost" size="sm" asChild title="קהילה" className="gap-1 h-8 text-xs sm:text-sm">
-              <a href="https://chat.whatsapp.com/EJcWCuUd50U4t4KSu7pmrf" target="_blank" rel="noopener noreferrer">
-                <Users className="w-4 h-4" />
-                קהילה
-              </a>
-            </Button>
-            <NewTaskDialog />
-            <Button variant="ghost" size="icon" onClick={() => setActiveTab('settings')} title="הגדרות" className="hidden sm:inline-flex h-9 w-9">
-              <Settings className="w-4 h-4" />
-            </Button>
-            <Button variant="ghost" size="icon" onClick={signOut} title="התנתק" className="h-8 w-8 sm:h-9 sm:w-9">
-              <LogOut className="w-4 h-4" />
-            </Button>
+    <SidebarProvider>
+      <div className="min-h-screen bg-background pb-20 sm:pb-0 flex w-full">
+        <ConfettiOverlay particles={particles} />
+        
+        {/* Desktop Sidebar */}
+        <AppSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+        
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Header */}
+          <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-40 safe-top">
+            <div className="max-w-4xl mx-auto px-3 sm:px-4 py-2 sm:py-4 flex items-center justify-between gap-1">
+              <div className="flex items-center gap-2">
+                <SidebarTrigger className="hidden md:flex ml-2" />
+                <h1 className="text-sm sm:text-xl font-bold text-foreground whitespace-nowrap truncate">🎯 <span className="hidden sm:inline">מערכת </span>המעקב שלך</h1>
+              </div>
+              <div className="flex gap-1 sm:gap-2 shrink-0 items-center">
+                <Button variant="ghost" size="sm" asChild title="קהילה" className="gap-1 h-8 text-xs sm:text-sm">
+                  <a href="https://chat.whatsapp.com/EJcWCuUd50U4t4KSu7pmrf" target="_blank" rel="noopener noreferrer">
+                    <Users className="w-4 h-4" />
+                    <span className="hidden sm:inline">קהילה</span>
+                  </a>
+                </Button>
+                <Button variant="ghost" size="icon" onClick={() => setActiveTab('settings')} title="הגדרות" className="h-8 w-8 sm:h-9 sm:w-9">
+                  <Settings className="w-4 h-4" />
+                </Button>
+                <Button variant="ghost" size="icon" onClick={signOut} title="התנתק" className="h-8 w-8 sm:h-9 sm:w-9 text-muted-foreground hover:text-destructive">
+                  <LogOut className="w-4 h-4" />
+                </Button>
+              </div>
+            </div>
+          </header>
+
+          {/* Main content */}
+          <main className="flex-1 max-w-4xl mx-auto w-full px-3 sm:px-4 py-3 sm:py-6">
+            <div className="mb-4 sm:mb-6">
+              <GamificationBar />
+            </div>
+
+            <div key={activeTab} className="page-enter">
+              {activeTab === 'dashboard' && (
+                <div className="space-y-4 sm:space-y-6 card-stagger">
+                  <DailyQuote />
+                  <DisciplineScore />
+                  <DashboardTab />
+                  <ProgressMap />
+                  <AchievementShowcase />
+                  <NightSummary />
+                </div>
+              )}
+              {activeTab === 'action' && (
+                <div className="space-y-4 sm:space-y-6 card-stagger">
+                  <TodayTab />
+                  <HabitsTracker />
+                  <TasksTab />
+                </div>
+              )}
+              {activeTab === 'analytics' && (
+                <div className="space-y-4 sm:space-y-6 card-stagger">
+                  <WeeklyReport />
+                  <WeeklyTab />
+                  <Heatmap />
+                  <ProductiveHours />
+                  <AdvancedAnalytics />
+                  <DisciplineDNA />
+                </div>
+              )}
+              {activeTab === 'growth' && (
+                <div className="space-y-4 sm:space-y-6 card-stagger">
+                  <Leaderboard />
+                  <LeaguesAndSeasons />
+                  <DuelSystem />
+                  <ChallengesAndPunishments />
+                  <FriendsSystem />
+                  <ReflectionJournal />
+                </div>
+              )}
+              
+              {/* Extra Tools from Sidebar/FAB */}
+              {activeTab === 'focus' && (
+                <div className="space-y-4 sm:space-y-6">
+                  <PomodoroTimer />
+                </div>
+              )}
+              {activeTab === 'nutrition' && (
+                <div className="space-y-4 sm:space-y-6">
+                  <CalorieTracker />
+                </div>
+              )}
+              {activeTab === 'photos' && (
+                <div className="space-y-4 sm:space-y-6">
+                  <ProgressPhotos />
+                </div>
+              )}
+              {activeTab === 'settings' && <SettingsTab />}
+            </div>
+          </main>
+        </div>
+
+        <QuickActionFAB setActiveTab={setActiveTab} />
+
+        {/* Mobile bottom nav */}
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-card/95 backdrop-blur-md border-t border-border/50 safe-bottom">
+          <div className="flex justify-around items-center px-1 py-1.5">
+            {mobileBottomTabs.map(tab => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg transition-all ${
+                    activeTab === tab.id
+                      ? 'text-primary'
+                      : 'text-muted-foreground active:text-foreground'
+                  }`}
+                >
+                  <Icon className={`w-5 h-5 transition-transform ${activeTab === tab.id ? 'scale-110' : ''}`} />
+                  <span className="text-[11px] font-semibold">{tab.label}</span>
+                  {activeTab === tab.id && (
+                    <div className="absolute -top-1 w-8 h-0.5 bg-primary rounded-full" />
+                  )}
+                </button>
+              );
+            })}
           </div>
-        </div>
-      </header>
-
-      {/* Desktop top nav */}
-      <nav className="hidden sm:block border-b border-border/50 bg-card/30 sticky top-[65px] z-40 overflow-x-auto scrollbar-hide">
-        <div className="max-w-4xl mx-auto px-4 flex gap-1">
-          {tabs.map(tab => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-1.5 px-3 py-3 text-sm font-medium whitespace-nowrap transition-colors border-b-2 ${
-                  activeTab === tab.id
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
-      </nav>
-
-      {/* Mobile horizontal scroll nav (all tabs) */}
-      <nav className="sm:hidden border-b border-border/50 bg-card/30 sticky top-[49px] z-40 overflow-x-auto scrollbar-hide">
-        <div className="flex gap-1.5 px-2 py-0.5">
-          {tabs.map(tab => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-1.5 px-3.5 py-2.5 text-sm font-semibold whitespace-nowrap transition-all border-b-2 rounded-t-md ${
-                  activeTab === tab.id
-                    ? 'border-primary text-primary bg-primary/5'
-                    : 'border-transparent text-muted-foreground active:text-foreground'
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
-      </nav>
-
-      {/* Main content */}
-      <main className="max-w-4xl mx-auto px-3 sm:px-4 py-3 sm:py-6">
-        <div className="mb-4 sm:mb-6">
-          <GamificationBar />
-        </div>
-
-        <div key={activeTab} className="page-enter">
-          {activeTab === 'dashboard' && (
-            <div className="space-y-4 sm:space-y-6 card-stagger">
-              <DailyQuote />
-              <DisciplineScore />
-              <DashboardTab />
-              <ProgressMap />
-              <AchievementShowcase />
-              <Leaderboard />
-              <LeaguesAndSeasons />
-              <NightSummary />
-            </div>
-          )}
-          {activeTab === 'tasks' && <TasksTab />}
-          {activeTab === 'today' && (
-            <div className="space-y-4 sm:space-y-6 card-stagger">
-              <TodayTab />
-              <HabitsTracker />
-            </div>
-          )}
-          {activeTab === 'weekly' && <WeeklyTab />}
-          {activeTab === 'analytics' && (
-            <div className="space-y-4 sm:space-y-6 card-stagger">
-              <AdvancedAnalytics />
-              <DisciplineDNA />
-              <DisciplineScore />
-              <Heatmap />
-              <WeeklyReport />
-              <ProductiveHours />
-            </div>
-          )}
-          {activeTab === 'advanced' && <AdvancedTab />}
-          {activeTab === 'growth' && (
-            <div className="space-y-4 sm:space-y-6 card-stagger">
-              <DuelSystem />
-              <ChallengesAndPunishments />
-              <FriendsSystem />
-              <ReflectionJournal />
-            </div>
-          )}
-          {activeTab === 'focus' && (
-            <div className="space-y-4 sm:space-y-6">
-              <PomodoroTimer />
-            </div>
-          )}
-          {activeTab === 'nutrition' && (
-            <div className="space-y-4 sm:space-y-6">
-              <CalorieTracker />
-            </div>
-          )}
-          {activeTab === 'photos' && (
-            <div className="space-y-4 sm:space-y-6">
-              <ProgressPhotos />
-            </div>
-          )}
-          {activeTab === 'settings' && <SettingsTab />}
-        </div>
-      </main>
-
-      {/* Mobile bottom nav */}
-      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-t border-border/50 safe-bottom">
-        <div className="flex justify-around items-center px-1 py-1.5">
-          {tabs.filter(t => mobileBottomTabs.includes(t.id)).map(tab => {
-            const Icon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`relative flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg transition-all ${
-                  activeTab === tab.id
-                    ? 'text-primary'
-                    : 'text-muted-foreground active:text-foreground'
-                }`}
-              >
-                <Icon className={`w-5 h-5 transition-transform ${activeTab === tab.id ? 'scale-110' : ''}`} />
-                <span className="text-[11px] font-semibold">{tab.label}</span>
-                {activeTab === tab.id && (
-                  <div className="absolute -top-1 w-8 h-0.5 bg-primary rounded-full" />
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </nav>
+        </nav>
+      </div>
+    </SidebarProvider>
+  );
 
       <AiCoach />
       <SmartNotifications />
