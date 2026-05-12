@@ -38,6 +38,8 @@ const AiCoach = () => {
   const [voiceMode, setVoiceMode] = useState(false);
   const [nutrition, setNutrition] = useState({ calories: 0, target: 0, protein: 0 });
   const [sleep, setSleep] = useState({ done: false, target: 7 });
+  const [showPlanDialog, setShowPlanDialog] = useState(false);
+  const [planText, setPlanText] = useState('');
 
   useEffect(() => {
     if (!user) return;
