@@ -3,12 +3,14 @@ import { useTaskContext } from '@/context/TaskContext';
 import { getNowInIsrael, getTodayStr, isNowBetween, getNowMinutes, timeToMinutes } from '@/lib/dateUtils';
 import { LEVELS, ACHIEVEMENTS, DayOfWeek } from '@/types/task';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { Check, Play, Square } from 'lucide-react';
 import { getHebrewDayFromDate } from '@/lib/dateUtils';
 
 const AdvancedTab = () => {
   const ctx = useTaskContext();
   const { tasks, stats, getTodayTasks, toggleCompletion, getDailyCompletionPercent, getCategoryStats, getFailureAnalysis, timerTaskId, setTimerTaskId } = ctx;
+  const [warMode, setWarMode] = useState(() => document.body.classList.contains('war-mode-active'));
 
   const today = getNowInIsrael();
   const todayStr = getTodayStr();
@@ -121,13 +123,28 @@ const AdvancedTab = () => {
       </div>
 
       {/* 2. No Excuses */}
-      <div className="glass-card p-5">
-        <h3 className="text-lg font-bold mb-2">💪 אין תירוצים</h3>
+      <div className={`glass-card p-5 transition-all duration-500 ${warMode ? 'bg-red-950/40 border-red-500/50 shadow-[0_0_30px_rgba(220,38,38,0.2)]' : ''}`}>
+        <div className="flex justify-between items-center mb-2">
+          <h3 className="text-lg font-bold">💪 מצב ללא תירוצים</h3>
+          <Switch checked={warMode} onCheckedChange={(c) => {
+            setWarMode(c);
+            if (c) {
+              document.body.classList.add('war-mode-active');
+            } else {
+              document.body.classList.remove('war-mode-active');
+            }
+          }} />
+        </div>
         <p className="text-foreground font-semibold">{disciplineMsg}</p>
         <p className="text-sm text-muted-foreground mt-2">יעד יומי חובה: 80%</p>
         <div className={`text-sm font-bold mt-1 ${dailyPercent >= 80 ? 'text-success' : 'text-destructive'}`}>
           {dailyPercent >= 80 ? '✅ הושג!' : `❌ עדיין נכשל (${dailyPercent}%)`}
         </div>
+        {warMode && (
+          <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg animate-pulse">
+            <p className="text-xs text-red-400 font-bold uppercase text-center">הכל מוקלט. אין לאן לברוח. המאמן קשוח.</p>
+          </div>
+        )}
       </div>
 
       {/* 3-6. Points, Streak, Score, Level */}

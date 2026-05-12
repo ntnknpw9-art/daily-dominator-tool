@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Send, Bot, User, X, MessageCircle, BarChart3, Trash2, AlertTriangle, Brain, Skull, Apple } from 'lucide-react';
+import { Send, Bot, User, X, MessageCircle, BarChart3, Trash2, AlertTriangle, Brain, Skull, Apple, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useTaskContext } from '@/context/TaskContext';
@@ -14,9 +14,10 @@ const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-coach`;
 
 const AI_MODES = [
   { id: 'analyze', label: 'נתח ביצועים', icon: BarChart3, prompt: 'נתח את הביצועים שלי ותן לי פידבק מפורט עם המלצות לשינויים' },
+  { id: 'future_self', label: 'האני העתידי', icon: User, prompt: 'דבר אליי כאילו אתה האני העתידי שלי בעוד חצי שנה שמסתכל אחורה על מה שאני עושה היום. הראה לי לאן אני יכול להגיע אם אמשיך ככה.' },
+  { id: 'no_mercy', label: 'אין רחמים', icon: Skull, prompt: 'תן לי את האמת. בלי פילטרים. אין תירוצים. תהיה קשוח.' },
   { id: 'failure_analysis', label: 'למה אני נכשל?', icon: AlertTriangle, prompt: 'נתח את הכישלונות שלי — למה אני מפספס? מה הסיבות האמיתיות?' },
   { id: 'behavior_engine', label: 'AI לומד אותי', icon: Brain, prompt: 'נתח את דפוסי ההתנהגות שלי, זהה נקודות חולשה, והצע שינויי לו"ז אוטומטיים' },
-  { id: 'no_mercy', label: 'אין רחמים', icon: Skull, prompt: 'תן לי את האמת. בלי פילטרים. אין תירוצים.' },
   { id: 'nutrition_link', label: 'תזונה × אימון', icon: Apple, prompt: 'נתח את הקשר בין התזונה שלי לביצועים והצע שיפורים' },
 ];
 
@@ -30,6 +31,28 @@ const AiCoach = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const { tasks, stats, getTotalCompletions, getTodayTasks, getDailyCompletionPercent, getCategoryStats, getFailureAnalysis } = useTaskContext();
+  const [voiceMode, setVoiceMode] = useState(false);
+  const [nutrition, setNutrition] = useState({ calories: 0, target: 0, protein: 0 });
+  const [sleep, setSleep] = useState({ done: false, target: 7 });
+
+  useEffect(() => {
+    if (!user) return;
+    const fetchExtraContext = async () => {
+      const todayStr = getTodayStr();
+      const [logsRes, profileRes, habitRes, targetsRes] = await Promise.all([
+        supabase.from('nutrition_logs').select('calories, protein').eq('user_id', user.id).eq('log_date', todayStr),
+        supabase.from('nutrition_profiles').select('daily_calories').eq('user_id', user.id).maybeSingle(),
+        supabase.from('habits').select('completed').eq('user_id', user.id).eq('habit_date', todayStr).eq('habit_id', 'sleep').maybeSingle(),
+        supabase.from('user_targets').select('sleep_hours').eq('user_id', user.id).maybeSingle()
+      ]);
+
+      const cals = logsRes.data?.reduce((sum, log) => sum + (log.calories || 0), 0) || 0;
+      const prot = logsRes.data?.reduce((sum, log) => sum + Number(log.protein || 0), 0) || 0;
+      setNutrition({ calories: cals, target: profileRes.data?.daily_calories || 0, protein: prot });
+      setSleep({ done: habitRes.data?.completed || false, target: Number(targetsRes.data?.sleep_hours) || 7 });
+    };
+    fetchExtraContext();
+  }, [user]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
@@ -141,7 +164,11 @@ ${categoryStats.map(c => `- ${c.category}: ${c.percent}%`).join('\n')}
 ${failureAnalysis.slice(0, 5).map(f => `- ${f.name}: ${f.misses} פספוסים (${f.percent}%)`).join('\n')}
 
 🕐 משימות היום: ${todayTasks.length}, הושלמו: ${completed.length}
-${todayTasks.map(t => `- ${t.completions[todayStr] ? '✅' : '⬜'} ${t.name} (${t.startTime}-${t.endTime})`).join('\n')}`;
+${todayTasks.map(t => `- ${t.completions[todayStr] ? '✅' : '⬜'} ${t.name} (${t.startTime}-${t.endTime})`).join('\n')}
+
+🍎 תזונה היום: ${nutrition.calories} קלוריות מתוך יעד של ${nutrition.target}. חלבון: ${nutrition.protein}g.
+💤 שינה הלילה: ${sleep.done ? 'הושלם (טוב)' : 'לא הושלם או לא נרשם'} מתוך יעד של ${sleep.target} שעות.
+`;
   };
 
   const streamResponse = async (allMsgs: Msg[], mode?: string) => {
@@ -205,6 +232,11 @@ ${todayTasks.map(t => `- ${t.completions[todayStr] ? '✅' : '⬜'} ${t.name} ($
 
       if (assistantSoFar) {
         saveMessage('assistant', assistantSoFar);
+        if (voiceMode && 'speechSynthesis' in window) {
+          const utterance = new SpeechSynthesisUtterance(assistantSoFar);
+          utterance.lang = 'he-IL';
+          window.speechSynthesis.speak(utterance);
+        }
       }
     } catch (e: any) {
       const errMsg = `❌ ${e.message || 'שגיאה זמנית. נסה שוב.'}`;
@@ -253,6 +285,23 @@ ${todayTasks.map(t => `- ${t.completions[todayStr] ? '✅' : '⬜'} ${t.name} ($
           <span className="font-bold text-foreground">מאמן AI</span>
         </div>
         <div className="flex items-center gap-1">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 w-7 p-0 text-muted-foreground hover:text-primary"
+            onClick={() => {
+              if (!voiceMode && 'speechSynthesis' in window) {
+                // Initialize voices
+                window.speechSynthesis.getVoices();
+              } else if (voiceMode) {
+                window.speechSynthesis.cancel();
+              }
+              setVoiceMode(!voiceMode);
+            }}
+            title={voiceMode ? 'השתק קול' : 'הפעל קול'}
+          >
+            {voiceMode ? <Volume2 className="w-4 h-4 text-primary animate-pulse" /> : <VolumeX className="w-4 h-4" />}
+          </Button>
           <Button
             variant="ghost"
             size="sm"

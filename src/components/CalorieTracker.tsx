@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
-import { Apple, Plus, Trash2, Calculator, Loader2, UtensilsCrossed, Target, TrendingUp, Calendar, Camera, X, ScanLine, ChefHat, Barcode, Search, Instagram } from 'lucide-react';
+import { Apple, Plus, Trash2, Calculator, Loader2, UtensilsCrossed, Target, TrendingUp, Calendar, Camera, X, ScanLine, ChefHat, Barcode, Search, Instagram, Brain } from 'lucide-react';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, ReferenceLine, BarChart, Bar } from 'recharts';
 import { toast } from 'sonner';
@@ -1035,6 +1035,23 @@ const CalorieTracker = () => {
 
                     {scanResult.portion && (
                       <p className="text-xs text-muted-foreground mt-1">{scanResult.portion}</p>
+                    )}
+
+                    {scanResult.feedback && (
+                      <div className="mt-3 p-3 rounded-lg bg-background/50 border border-border/50 space-y-2">
+                        <p className="text-[11px] font-bold tracking-widest text-muted-foreground uppercase flex items-center gap-1.5 mb-2">
+                          <Brain className="w-3.5 h-3.5 text-primary" /> ניתוח תזונאי AI
+                        </p>
+                        {scanResult.feedback.good && (
+                          <p className="text-xs text-green-400 font-medium">✅ {scanResult.feedback.good}</p>
+                        )}
+                        {scanResult.feedback.bad && (
+                          <p className="text-xs text-red-400 font-medium">⚠️ {scanResult.feedback.bad}</p>
+                        )}
+                        {scanResult.feedback.improvement && (
+                          <p className="text-xs text-accent font-medium">💡 לשיפור: {scanResult.feedback.improvement}</p>
+                        )}
+                      </div>
                     )}
                   </div>
 
