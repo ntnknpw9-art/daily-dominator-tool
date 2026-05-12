@@ -14,18 +14,16 @@ const DashboardTab = () => {
   
   const [nutrition, setNutrition] = useState({ calories: 0, target: 0 });
   const [sleepHabit, setSleepHabit] = useState(false);
-  const [healthLogs, setHealthLogs] = useState({ water_liters: 0, steps: 0, screen_time_minutes: 0 });
 
   useEffect(() => {
     if (!user) return;
     const fetchDashboardData = async () => {
       const todayStr = getNowInIsrael().toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
       
-      const [logsRes, profileRes, habitRes, healthRes] = await Promise.all([
+      const [logsRes, profileRes, habitRes] = await Promise.all([
         supabase.from('nutrition_logs').select('calories').eq('user_id', user.id).eq('log_date', todayStr),
         supabase.from('nutrition_profiles').select('daily_calories').eq('user_id', user.id).maybeSingle(),
         supabase.from('habits').select('completed').eq('user_id', user.id).eq('habit_date', todayStr).eq('habit_id', 'sleep').maybeSingle(),
-        supabase.from('daily_health_logs').select('*').eq('user_id', user.id).eq('log_date', todayStr).maybeSingle()
       ]);
 
       const cals = logsRes.data?.reduce((sum, log) => sum + (log.calories || 0), 0) || 0;
@@ -34,33 +32,9 @@ const DashboardTab = () => {
         target: profileRes.data?.daily_calories || 0
       });
       setSleepHabit(habitRes.data?.completed || false);
-      if (healthRes.data) {
-        setHealthLogs({
-          water_liters: Number(healthRes.data.water_liters) || 0,
-          steps: healthRes.data.steps || 0,
-          screen_time_minutes: healthRes.data.screen_time_minutes || 0
-        });
-      }
     };
     fetchDashboardData();
   }, [user]);
-
-  const updateHealthLog = async (field: keyof typeof healthLogs, value: number) => {
-    if (!user) return;
-    const todayStr = getNowInIsrael().toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
-    const newLogs = { ...healthLogs, [field]: Math.max(0, value) };
-    setHealthLogs(newLogs);
-    
-    try {
-      await supabase.from('daily_health_logs').upsert({
-        user_id: user.id,
-        log_date: todayStr,
-        ...newLogs
-      }, { onConflict: 'user_id,log_date' });
-    } catch (e) {
-      toast.error('שגיאה בשמירת נתונים');
-    }
-  };
 
   const activeTasks = tasks.length;
   const totalCompletions = getTotalCompletions();
