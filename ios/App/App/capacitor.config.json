@@ -18,8 +18,13 @@
 		}
 	},
 	"packageClassList": [
-		"InstagramStories",
 		"SignInWithApple",
-		"SocialLoginPlugin"
+		"CAPBrowserPlugin",
+		"FilesystemPlugin",
+		"LocalNotificationsPlugin",
+		"SharePlugin",
+		"StatusBarPlugin",
+		"SocialLoginPlugin",
+		"CapacitorHealthkitPlugin"
 	]
 }

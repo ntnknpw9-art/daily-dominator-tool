@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Volume2, VolumeX, Sun, Moon, Bell, BellOff, Skull, Trash2, Watch, CheckCircle2 } from 'lucide-react';
+import { Volume2, VolumeX, Sun, Moon, Bell, BellOff, Skull, Trash2, Watch, CheckCircle2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import { getTheme, applyTheme } from '@/lib/theme';
+import { useHealthSync } from '@/hooks/useHealthSync';
 
 const NO_MERCY_KEY = 'app_no_mercy_mode';
 
@@ -21,6 +22,7 @@ export const isNoMercyMode = () => {
 
 const SettingsTab = () => {
   const { signOut } = useAuth();
+  const { syncHealthData, isSyncing } = useHealthSync();
   const [deleting, setDeleting] = useState(false);
   const [soundOn, setSoundOn] = useState(isSoundEnabled);
   const [theme, setTheme] = useState<'dark' | 'light'>(getTheme);
@@ -198,17 +200,24 @@ const SettingsTab = () => {
 
       <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Watch className="w-5 h-5 text-blue-400" />
-            שעונים ובריאות
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Watch className="w-5 h-5 text-blue-400" />
+              שעונים ובריאות
+            </CardTitle>
+            <Button variant="outline" size="sm" onClick={syncHealthData} disabled={isSyncing} className="gap-2">
+              <RefreshCw className={`w-3.5 h-3.5 ${isSyncing ? 'animate-spin' : ''}`} />
+              סנכרן נתונים
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="text-xs text-muted-foreground mb-4">
-            חבר את השעון החכם שלך (Apple Watch, Garmin, Fitbit) לקבלת נתונים מדויקים ל-AI (צעדים, שינה, התאוששות).
+            חבר את השעון החכם שלך (Apple Health, Garmin, Fitbit) לקבלת נתוני צעדים ושינה.
+            <br/><span className="text-primary font-bold">הערה:</span> משתמשי Garmin/Fitbit ב-iOS צריכים להגדיר סנכרון דרך Apple Health.
           </div>
           
-          {['Apple Health / Watch', 'Garmin Connect', 'Fitbit'].map(wearable => (
+          {['Apple Health (iOS)', 'Garmin Connect (דרך Apple Health)', 'Fitbit (דרך Apple Health)'].map(wearable => (
             <div key={wearable} className="flex items-center justify-between bg-background/50 border border-border/50 rounded-lg p-3">
               <div className="text-sm font-medium">{wearable}</div>
               <Button
