@@ -14,9 +14,10 @@ const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-coach`;
 
 const AI_MODES = [
   { id: 'analyze', label: 'נתח ביצועים', icon: BarChart3, prompt: 'נתח את הביצועים שלי ותן לי פידבק מפורט עם המלצות לשינויים' },
+  { id: 'future_self', label: 'האני העתידי', icon: User, prompt: 'דבר אליי כאילו אתה האני העתידי שלי בעוד חצי שנה שמסתכל אחורה על מה שאני עושה היום. הראה לי לאן אני יכול להגיע אם אמשיך ככה.' },
+  { id: 'no_mercy', label: 'אין רחמים', icon: Skull, prompt: 'תן לי את האמת. בלי פילטרים. אין תירוצים. תהיה קשוח.' },
   { id: 'failure_analysis', label: 'למה אני נכשל?', icon: AlertTriangle, prompt: 'נתח את הכישלונות שלי — למה אני מפספס? מה הסיבות האמיתיות?' },
   { id: 'behavior_engine', label: 'AI לומד אותי', icon: Brain, prompt: 'נתח את דפוסי ההתנהגות שלי, זהה נקודות חולשה, והצע שינויי לו"ז אוטומטיים' },
-  { id: 'no_mercy', label: 'אין רחמים', icon: Skull, prompt: 'תן לי את האמת. בלי פילטרים. אין תירוצים.' },
   { id: 'nutrition_link', label: 'תזונה × אימון', icon: Apple, prompt: 'נתח את הקשר בין התזונה שלי לביצועים והצע שיפורים' },
 ];
 
