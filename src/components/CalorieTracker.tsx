@@ -1036,6 +1036,23 @@ const CalorieTracker = () => {
                     {scanResult.portion && (
                       <p className="text-xs text-muted-foreground mt-1">{scanResult.portion}</p>
                     )}
+
+                    {scanResult.feedback && (
+                      <div className="mt-3 p-3 rounded-lg bg-background/50 border border-border/50 space-y-2">
+                        <p className="text-[11px] font-bold tracking-widest text-muted-foreground uppercase flex items-center gap-1.5 mb-2">
+                          <Brain className="w-3.5 h-3.5 text-primary" /> ניתוח תזונאי AI
+                        </p>
+                        {scanResult.feedback.good && (
+                          <p className="text-xs text-green-400 font-medium">✅ {scanResult.feedback.good}</p>
+                        )}
+                        {scanResult.feedback.bad && (
+                          <p className="text-xs text-red-400 font-medium">⚠️ {scanResult.feedback.bad}</p>
+                        )}
+                        {scanResult.feedback.improvement && (
+                          <p className="text-xs text-accent font-medium">💡 לשיפור: {scanResult.feedback.improvement}</p>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex gap-2 flex-wrap">
