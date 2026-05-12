@@ -170,6 +170,85 @@ const DisciplineScore = () => {
   const days = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
   const now = getNowInIsrael();
 
+  const shareScore = async () => {
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1080;
+      canvas.height = 1920;
+      const ctx = canvas.getContext('2d')!;
+
+      // Background gradient
+      const grad = ctx.createLinearGradient(0, 0, 0, 1920);
+      grad.addColorStop(0, '#0a0a0a');
+      grad.addColorStop(1, '#1a0000'); // dark red
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 1080, 1920);
+
+      ctx.textAlign = 'center';
+      const drawTextWithShadow = (text: string, x: number, y: number, font: string, color: string) => {
+        ctx.font = font;
+        ctx.shadowColor = color === '#ffffff' ? 'rgba(0,0,0,0.8)' : color;
+        ctx.shadowBlur = 20;
+        ctx.fillStyle = color;
+        ctx.fillText(text, x, y);
+        ctx.shadowBlur = 0;
+      };
+
+      const cx = 540;
+      let y = 500;
+
+      drawTextWithShadow('Daily Dominator', cx, y, 'bold 48px Heebo, sans-serif', '#ffffff');
+      y += 100;
+      drawTextWithShadow('ציון משמעת', cx, y, 'bold 80px Heebo, sans-serif', '#ef4444');
+      y += 250;
+      drawTextWithShadow(`${score}`, cx, y, '900 280px Heebo, sans-serif', score >= 80 ? '#4ade80' : score >= 60 ? '#facc15' : '#ef4444');
+      y += 180;
+      drawTextWithShadow(`🔥 רצף: ${streak} ימים`, cx, y, 'bold 64px Heebo, sans-serif', '#f97316');
+      y += 120;
+      drawTextWithShadow(`דרגה: ${getRank(score)}`, cx, y, 'bold 56px Heebo, sans-serif', '#ffffff');
+
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+
+      const { Capacitor } = await import('@capacitor/core');
+      if (Capacitor.isNativePlatform()) {
+        const nativeInstagramStories = window.Capacitor?.Plugins?.InstagramStories;
+        const callInstagramStories = async (methodName: 'canShare' | 'share', options?: Record<string, unknown>) => {
+          if (nativeInstagramStories) {
+            return methodName === 'canShare'
+              ? nativeInstagramStories.canShare()
+              : nativeInstagramStories.share(options as { backgroundImage: string });
+          }
+          return window.Capacitor?.nativePromise?.('InstagramStories', methodName, options);
+        };
+
+        if (Capacitor.getPlatform() === 'ios' && window.Capacitor?.nativePromise) {
+          const { available } = await callInstagramStories('canShare');
+          if (!available) { toast.error('Instagram לא מותקן'); return; }
+          await callInstagramStories('share', { backgroundImage: dataUrl });
+          toast.success('פותח אינסטגרם');
+          return;
+        }
+
+        const base64 = dataUrl.split(',')[1];
+        const { Filesystem, Directory } = await import('@capacitor/filesystem');
+        const fileName = `score-story-${Date.now()}.png`;
+        await Filesystem.writeFile({ path: fileName, data: base64, directory: Directory.Cache });
+        const { Share } = await import('@capacitor/share');
+        await Share.share({
+          files: [(await Filesystem.getUri({ path: fileName, directory: Directory.Cache })).uri]
+        });
+      } else {
+        const link = document.createElement('a');
+        link.download = 'discipline-score.jpg';
+        link.href = dataUrl;
+        link.click();
+        toast.success('התמונה הורדה בהצלחה!');
+      }
+    } catch (e) {
+      toast.error('שגיאה ביצירת תמונה לשיתוף');
+    }
+  };
+
   return (
     <Card className={`bg-card/80 backdrop-blur-md border-border/50 shadow-2xl ${getGlowColor(score)} transition-all duration-500`}>
       <CardContent className="pt-4 pb-3 sm:pt-5 sm:pb-4 px-3 sm:px-6">
