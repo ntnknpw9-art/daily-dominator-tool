@@ -19,6 +19,8 @@ const AI_MODES = [
   { id: 'failure_analysis', label: 'למה אני נכשל?', icon: AlertTriangle, prompt: 'נתח את הכישלונות שלי — למה אני מפספס? מה הסיבות האמיתיות?' },
   { id: 'behavior_engine', label: 'AI לומד אותי', icon: Brain, prompt: 'נתח את דפוסי ההתנהגות שלי, זהה נקודות חולשה, והצע שינויי לו"ז אוטומטיים' },
   { id: 'nutrition_link', label: 'תזונה × אימון', icon: Apple, prompt: 'נתח את הקשר בין התזונה שלי לביצועים והצע שיפורים' },
+  { id: 'recovery_system', label: 'התאוששות', icon: Brain, prompt: 'נתח את המצב הפיזי שלי (שינה, תזונה, עומס אימונים) ותן לי פרוטוקול התאוששות חכם. האם עלי לנוח היום?' },
+  { id: 'gym_buddy', label: 'AI חדר כושר', icon: MessageCircle, prompt: 'מעכשיו אתה חבר האימון שלי לחדר כושר. תעזור לי לבחור משקלים, לספור סטים, ותן לי מוטיבציה בזמן אמת!' },
 ];
 
 const AiCoach = () => {
