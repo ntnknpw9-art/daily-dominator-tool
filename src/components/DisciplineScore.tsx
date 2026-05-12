@@ -39,6 +39,8 @@ const DisciplineScore = () => {
   
   const [nutritionScore, setNutritionScore] = useState(0);
   const [sleepScore, setSleepScore] = useState(0);
+  const [stepsScore, setStepsScore] = useState(0);
+  const [waterScore, setWaterScore] = useState(0);
 
   useEffect(() => {
     if (!user) return;
