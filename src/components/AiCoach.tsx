@@ -366,7 +366,7 @@ ${todayTasks.map(t => `- ${t.completions[todayStr] ? '✅' : '⬜'} ${t.name} ($
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && send()}
           placeholder="שאל את המאמן..."
-          className="flex-1 text-sm"
+          className="flex-1 text-base md:text-sm"
           disabled={loading}
         />
         <Button size="icon" onClick={send} disabled={loading || !input.trim()}>
