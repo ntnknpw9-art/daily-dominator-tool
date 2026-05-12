@@ -6,6 +6,21 @@ import { Shield, TrendingUp, TrendingDown, Minus, Flame, Target, Swords, Footpri
 import { DayOfWeek } from '@/types/task';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
+import { toast } from 'sonner';
+
+declare global {
+  interface Window {
+    Capacitor?: {
+      nativePromise?: (pluginName: string, methodName: string, options?: Record<string, unknown>) => Promise<any>;
+      Plugins?: {
+        InstagramStories?: {
+          canShare: () => Promise<{ available: boolean }>;
+          share: (options: { backgroundImage: string }) => Promise<{ completed: boolean }>;
+        };
+      };
+    };
+  }
+}
 
 const useCountUp = (target: number, duration = 1200) => {
   const [current, setCurrent] = useState(0);
