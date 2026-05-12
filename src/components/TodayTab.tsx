@@ -203,6 +203,20 @@ const TodayTab = () => {
           </div>
         );
       })}
+
+      {/* Steps Widget */}
+      <div className="glass-card p-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="bg-green-500/20 p-2 rounded-full">
+            <Footprints className="w-5 h-5 text-green-400" />
+          </div>
+          <div>
+            <h3 className="font-bold text-sm text-foreground">צעדים היום</h3>
+            <p className="text-xs text-muted-foreground">מתעדכן אוטומטית מהטלפון</p>
+          </div>
+        </div>
+        <div className="text-2xl font-black">{steps.toLocaleString()}</div>
+      </div>
     </div>
   );
 };
