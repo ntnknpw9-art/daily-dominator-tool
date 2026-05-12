@@ -47,10 +47,11 @@ const DisciplineScore = () => {
     const fetchExtraData = async () => {
       const todayStr = getNowInIsrael().toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
       
-      const [logsRes, profileRes, habitRes] = await Promise.all([
+      const [logsRes, profileRes, habitRes, healthRes] = await Promise.all([
         supabase.from('nutrition_logs').select('calories').eq('user_id', user.id).eq('log_date', todayStr),
         supabase.from('nutrition_profiles').select('daily_calories').eq('user_id', user.id).maybeSingle(),
-        supabase.from('habits').select('completed').eq('user_id', user.id).eq('habit_date', todayStr).eq('habit_id', 'sleep').maybeSingle()
+        supabase.from('habits').select('completed').eq('user_id', user.id).eq('habit_date', todayStr).eq('habit_id', 'sleep').maybeSingle(),
+        supabase.from('daily_health_logs').select('*').eq('user_id', user.id).eq('log_date', todayStr).maybeSingle()
       ]);
 
       const cals = logsRes.data?.reduce((sum, log) => sum + (log.calories || 0), 0) || 0;
