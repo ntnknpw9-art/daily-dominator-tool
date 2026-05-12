@@ -33,13 +33,45 @@ const useCountUp = (target: number, duration = 1200) => {
 
 const DisciplineScore = () => {
   const { getDailyCompletionPercent, stats, tasks } = useTaskContext();
+  const { user } = useAuth();
+  
+  const [nutritionScore, setNutritionScore] = useState(0);
+  const [sleepScore, setSleepScore] = useState(0);
+
+  useEffect(() => {
+    if (!user) return;
+    const fetchExtraData = async () => {
+      const todayStr = getNowInIsrael().toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
+      
+      const [logsRes, profileRes, habitRes] = await Promise.all([
+        supabase.from('nutrition_logs').select('calories').eq('user_id', user.id).eq('log_date', todayStr),
+        supabase.from('nutrition_profiles').select('daily_calories').eq('user_id', user.id).maybeSingle(),
+        supabase.from('habits').select('completed').eq('user_id', user.id).eq('habit_date', todayStr).eq('habit_id', 'sleep').maybeSingle()
+      ]);
+
+      const cals = logsRes.data?.reduce((sum, log) => sum + (log.calories || 0), 0) || 0;
+      const targetCals = profileRes.data?.daily_calories || 0;
+      
+      // Nutrition score logic (if within 200 cals of target = 100, else scales down)
+      let nScore = 100;
+      if (targetCals > 0) {
+        const diff = Math.abs(cals - targetCals);
+        if (diff > 200) nScore = Math.max(0, 100 - ((diff - 200) / 10));
+      } else {
+        nScore = cals > 0 ? 50 : 0; // If they tracked but no target
+      }
+      setNutritionScore(nScore);
+      
+      setSleepScore(habitRes.data?.completed ? 100 : 0);
+    };
+    fetchExtraData();
+  }, [user]);
 
   const { score, completionPct, streak, hardTaskBonus, trend, weekScores } = useMemo(() => {
     const now = getNowInIsrael();
     const completionPct = getDailyCompletionPercent(now);
     const streak = stats.streak;
 
-    // Hard tasks bonus: count tasks scheduled before 7am or in "אימון" category completed today
     const todayStr = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Jerusalem' });
     const dayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
     const todayDay = dayNames[now.getDay()] as DayOfWeek;
@@ -56,11 +88,17 @@ const DisciplineScore = () => {
     });
     const hardTaskBonus = hardTotal > 0 ? Math.round((hardDone / hardTotal) * 100) : 100;
 
-    // Composite score: 50% completion + 20% streak (capped at 30 days) + 30% hard tasks
     const streakScore = Math.min(streak / 30, 1) * 100;
-    const score = Math.round(completionPct * 0.5 + streakScore * 0.2 + hardTaskBonus * 0.3);
+    
+    // NEW SCORE CALCULATION: 40% completion, 10% streak, 20% hard tasks, 15% nutrition, 15% sleep
+    const baseScore = Math.round(
+      completionPct * 0.4 + 
+      streakScore * 0.1 + 
+      hardTaskBonus * 0.2 + 
+      nutritionScore * 0.15 + 
+      sleepScore * 0.15
+    );
 
-    // Week scores for mini chart
     const scores: number[] = [];
     for (let i = 6; i >= 0; i--) {
       const d = new Date(now);
@@ -72,8 +110,8 @@ const DisciplineScore = () => {
     const secondHalf = scores.slice(4).reduce((a, b) => a + b, 0) / 3;
     const trend = secondHalf - firstHalf;
 
-    return { score, completionPct, streak, hardTaskBonus, trend, weekScores: scores };
-  }, [getDailyCompletionPercent, stats, tasks]);
+    return { score: baseScore, completionPct, streak, hardTaskBonus, trend, weekScores: scores };
+  }, [getDailyCompletionPercent, stats, tasks, nutritionScore, sleepScore]);
 
   const animatedScore = useCountUp(score);
   const animatedCompletion = useCountUp(completionPct);
@@ -105,17 +143,16 @@ const DisciplineScore = () => {
   const now = getNowInIsrael();
 
   return (
-    <Card className={`bg-card border-border/50 shadow-lg ${getGlowColor(score)}`}>
+    <Card className={`bg-card/80 backdrop-blur-md border-border/50 shadow-2xl ${getGlowColor(score)} transition-all duration-500`}>
       <CardContent className="pt-4 pb-3 sm:pt-5 sm:pb-4 px-3 sm:px-6">
-        {/* Header with rank */}
         <div className="flex items-center justify-between mb-2 sm:mb-3">
           <div className="flex items-center gap-2">
             <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-            <span className="text-[10px] sm:text-xs font-bold tracking-[0.2em] text-muted-foreground">
-              ציון משמעת
+            <span className="text-[10px] sm:text-xs font-bold tracking-[0.2em] text-muted-foreground uppercase">
+              ציון משמעת כולל
             </span>
           </div>
-          <div className="flex items-center gap-1 text-[10px] sm:text-xs">
+          <div className="flex items-center gap-1 text-[10px] sm:text-xs font-bold">
             {trend > 5 ? (
               <><TrendingUp className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-green-400" /><span className="text-green-400">עולה</span></>
             ) : trend < -5 ? (
@@ -126,53 +163,55 @@ const DisciplineScore = () => {
           </div>
         </div>
 
-        {/* Big score */}
-        <div className="text-center mb-3 sm:mb-4">
+        <div className="text-center mb-3 sm:mb-4 relative">
           <div
-            className={`text-6xl sm:text-7xl font-black tracking-tight transition-all duration-500 ${getScoreColor(score)}`}
+            className={`text-7xl sm:text-8xl font-black tracking-tighter transition-all duration-500 ${getScoreColor(score)}`}
             style={score >= 80 ? {
-              textShadow: '0 0 20px hsl(142 70% 45% / 0.6), 0 0 40px hsl(142 70% 45% / 0.3), 0 0 60px hsl(142 70% 45% / 0.15)',
-              filter: 'brightness(1.15)',
+              textShadow: '0 0 30px currentColor, 0 0 60px currentColor',
+              filter: 'brightness(1.2)',
             } : undefined}
           >
             {animatedScore}
           </div>
-          <div className="text-[10px] sm:text-xs font-bold tracking-[0.3em] text-muted-foreground mt-1 uppercase">
+          <div className="text-[11px] sm:text-sm font-black tracking-[0.4em] text-muted-foreground mt-2 uppercase">
             {getRank(score)}
           </div>
         </div>
 
-        {/* Breakdown */}
-        <div className="grid grid-cols-3 gap-1.5 sm:gap-2 mb-3 sm:mb-4">
-          <div className="bg-muted/30 rounded-lg p-2 text-center">
-            <Target className="w-3.5 h-3.5 sm:w-4 sm:h-4 mx-auto mb-0.5 sm:mb-1 text-primary" />
-            <div className="text-base sm:text-lg font-bold">{animatedCompletion}%</div>
-            <div className="text-[9px] sm:text-[10px] text-muted-foreground">השלמה</div>
+        <div className="grid grid-cols-4 gap-1.5 sm:gap-2 mb-3 sm:mb-4">
+          <div className="bg-background/50 border border-border/50 rounded-xl p-2 text-center hover:bg-background/80 transition-colors">
+            <Target className="w-3.5 h-3.5 sm:w-4 sm:h-4 mx-auto mb-1 text-primary" />
+            <div className="text-sm sm:text-base font-black">{animatedCompletion}%</div>
+            <div className="text-[8px] sm:text-[9px] text-muted-foreground font-bold uppercase">משימות</div>
           </div>
-          <div className="bg-muted/30 rounded-lg p-2 text-center">
-            <Flame className="w-3.5 h-3.5 sm:w-4 sm:h-4 mx-auto mb-0.5 sm:mb-1 text-orange-400" />
-            <div className="text-base sm:text-lg font-bold">{streak}</div>
-            <div className="text-[9px] sm:text-[10px] text-muted-foreground">סטריק</div>
+          <div className="bg-background/50 border border-border/50 rounded-xl p-2 text-center hover:bg-background/80 transition-colors">
+            <Swords className="w-3.5 h-3.5 sm:w-4 sm:h-4 mx-auto mb-1 text-accent" />
+            <div className="text-sm sm:text-base font-black">{animatedHard}%</div>
+            <div className="text-[8px] sm:text-[9px] text-muted-foreground font-bold uppercase">קשות</div>
           </div>
-          <div className="bg-muted/30 rounded-lg p-2 text-center">
-            <Swords className="w-3.5 h-3.5 sm:w-4 sm:h-4 mx-auto mb-0.5 sm:mb-1 text-accent" />
-            <div className="text-base sm:text-lg font-bold">{animatedHard}%</div>
-            <div className="text-[9px] sm:text-[10px] text-muted-foreground">משימות קשות</div>
+          <div className="bg-background/50 border border-border/50 rounded-xl p-2 text-center hover:bg-background/80 transition-colors">
+            <Flame className="w-3.5 h-3.5 sm:w-4 sm:h-4 mx-auto mb-1 text-orange-400" />
+            <div className="text-sm sm:text-base font-black">{nutritionScore}%</div>
+            <div className="text-[8px] sm:text-[9px] text-muted-foreground font-bold uppercase">תזונה</div>
+          </div>
+          <div className="bg-background/50 border border-border/50 rounded-xl p-2 text-center hover:bg-background/80 transition-colors">
+            <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4 mx-auto mb-1 text-indigo-400" />
+            <div className="text-sm sm:text-base font-black">{sleepScore}%</div>
+            <div className="text-[8px] sm:text-[9px] text-muted-foreground font-bold uppercase">שינה</div>
           </div>
         </div>
 
-        {/* Week mini chart */}
-        <div className="flex items-end justify-between gap-1 h-14">
+        <div className="flex items-end justify-between gap-1 h-16 pt-2 border-t border-border/30">
           {weekScores.map((s, i) => (
-            <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
-              <div className="text-[9px] text-muted-foreground">{s > 0 ? s : ''}</div>
+            <div key={i} className="flex-1 flex flex-col items-center gap-1 group">
+              <div className="text-[8px] sm:text-[9px] text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity font-bold">{s > 0 ? s : ''}</div>
               <div
-                className={`w-full rounded-t transition-all ${
-                  s >= 80 ? 'bg-green-500/70' : s >= 60 ? 'bg-accent/70' : s >= 40 ? 'bg-orange-500/70' : 'bg-destructive/70'
+                className={`w-full rounded-md transition-all duration-500 hover:brightness-125 ${
+                  s >= 80 ? 'bg-green-500' : s >= 60 ? 'bg-accent' : s >= 40 ? 'bg-orange-500' : 'bg-destructive'
                 }`}
-                style={{ height: `${Math.max(2, s * 0.35)}px` }}
+                style={{ height: `${Math.max(4, s * 0.4)}px` }}
               />
-              <div className="text-[10px] text-muted-foreground">
+              <div className="text-[9px] sm:text-[10px] text-muted-foreground font-bold">
                 {days[new Date(new Date(now).setDate(now.getDate() - 6 + i)).getDay()]}
               </div>
             </div>
