@@ -396,7 +396,16 @@ ${todayTasks.map(t => `- ${t.completions[todayStr] ? '✅' : '⬜'} ${t.name} ($
             }`}>
               {m.role === 'assistant' ? (
                 <div className="prose prose-sm prose-invert max-w-none">
-                  <ReactMarkdown>{m.content}</ReactMarkdown>
+                  <ReactMarkdown>{m.content.replace('[CREATE_PLAN]', '')}</ReactMarkdown>
+                  {m.content.includes('[CREATE_PLAN]') && (
+                    <Button 
+                      size="sm" 
+                      className="mt-2 w-full gap-2" 
+                      onClick={() => { setPlanText(m.content); setShowPlanDialog(true); }}
+                    >
+                      <Brain className="w-4 h-4" /> צור תוכנית באפליקציה
+                    </Button>
+                  )}
                 </div>
               ) : m.content}
             </div>
