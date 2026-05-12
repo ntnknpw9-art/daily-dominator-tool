@@ -2,7 +2,7 @@ import { useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { Capacitor } from '@capacitor/core';
-import { CapacitorHealthkit, SampleNames, OtherData, SleepData } from '@perfood/capacitor-healthkit';
+import { Health, type HealthSample } from '@capgo/capacitor-health';
 import { toast } from 'sonner';
 
 export const useHealthSync = () => {
@@ -19,10 +19,14 @@ export const useHealthSync = () => {
     setIsSyncing(true);
     try {
       // 1. Request Authorization
-      await CapacitorHealthkit.requestAuthorization({
-        all: [''],
-        read: [SampleNames.STEP_COUNT, SampleNames.SLEEP_ANALYSIS, SampleNames.ACTIVE_ENERGY_BURNED, SampleNames.APPLE_EXERCISE_TIME],
-        write: [''],
+      const availability = await Health.isAvailable();
+      if (!availability.available) {
+        toast.error('HealthKit לא זמין במכשיר הזה.');
+        return;
+      }
+
+      await Health.requestAuthorization({
+        read: ['steps', 'sleep', 'calories', 'exerciseTime'],
       });
 
       // 2. Fetch last 7 days
@@ -32,35 +36,35 @@ export const useHealthSync = () => {
       startDate.setHours(0, 0, 0, 0);
 
       // Steps
-      const stepsRes = await CapacitorHealthkit.queryHKitSampleType<OtherData>({
-        sampleName: SampleNames.STEP_COUNT,
+      const stepsRes = await Health.readSamples({
+        dataType: 'steps',
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
-        limit: 0,
+        limit: 10000,
       });
 
       // Sleep
-      const sleepRes = await CapacitorHealthkit.queryHKitSampleType<SleepData>({
-        sampleName: SampleNames.SLEEP_ANALYSIS,
+      const sleepRes = await Health.readSamples({
+        dataType: 'sleep',
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
-        limit: 0,
+        limit: 10000,
       });
 
       // Active Calories
-      const activeCalsRes = await CapacitorHealthkit.queryHKitSampleType<OtherData>({
-        sampleName: SampleNames.ACTIVE_ENERGY_BURNED,
+      const activeCalsRes = await Health.readSamples({
+        dataType: 'calories',
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
-        limit: 0,
+        limit: 10000,
       });
 
       // Exercise Time
-      const exerciseRes = await CapacitorHealthkit.queryHKitSampleType<OtherData>({
-        sampleName: SampleNames.APPLE_EXERCISE_TIME,
+      const exerciseRes = await Health.readSamples({
+        dataType: 'exerciseTime',
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
-        limit: 0,
+        limit: 10000,
       });
 
       // Aggregate data by date
@@ -78,8 +82,8 @@ export const useHealthSync = () => {
       };
 
       // Aggregate Steps
-      if (stepsRes && stepsRes.resultData) {
-        stepsRes.resultData.forEach((s) => {
+      if (stepsRes?.samples) {
+        stepsRes.samples.forEach((s: HealthSample) => {
           const date = getLocalDateStr(s.startDate);
           initDate(date);
           aggregatedData[date].steps += s.value;
@@ -87,9 +91,9 @@ export const useHealthSync = () => {
       }
 
       // Aggregate Sleep (Only count actual sleep: Asleep/InBed)
-      if (sleepRes && sleepRes.resultData) {
-        sleepRes.resultData.forEach((s) => {
-          if (s.sleepState === 'asleep' || s.sleepState === 'inBed' || s.sleepState?.toLowerCase().includes('asleep')) {
+      if (sleepRes?.samples) {
+        sleepRes.samples.forEach((s: HealthSample) => {
+          if (s.sleepState === 'asleep' || s.sleepState === 'inBed' || s.sleepState === 'deep' || s.sleepState === 'light' || s.sleepState === 'rem') {
              const date = getLocalDateStr(s.endDate); // Use end date for sleep (waking up day)
              initDate(date);
              const start = new Date(s.startDate).getTime();
@@ -103,8 +107,8 @@ export const useHealthSync = () => {
       }
 
       // Aggregate Active Calories
-      if (activeCalsRes && activeCalsRes.resultData) {
-        activeCalsRes.resultData.forEach((s) => {
+      if (activeCalsRes?.samples) {
+        activeCalsRes.samples.forEach((s: HealthSample) => {
           const date = getLocalDateStr(s.startDate);
           initDate(date);
           aggregatedData[date].activeCalories += s.value;
@@ -112,8 +116,8 @@ export const useHealthSync = () => {
       }
 
       // Aggregate Exercise Time
-      if (exerciseRes && exerciseRes.resultData) {
-        exerciseRes.resultData.forEach((s) => {
+      if (exerciseRes?.samples) {
+        exerciseRes.samples.forEach((s: HealthSample) => {
           const date = getLocalDateStr(s.startDate);
           initDate(date);
           aggregatedData[date].exerciseMinutes += s.value;
