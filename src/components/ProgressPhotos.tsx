@@ -291,6 +291,15 @@ const ProgressPhotos = () => {
               <SlidersHorizontal className="w-3 h-3 ml-1" />
               השוואה
             </Button>
+            <Button
+              size="sm"
+              variant={viewMode === 'timeline' ? 'default' : 'outline'}
+              onClick={() => setViewMode('timeline')}
+              disabled={photos.length === 0}
+            >
+              <History className="w-3 h-3 ml-1" />
+              טיימליין
+            </Button>
           </div>
         </div>
       </CardHeader>
