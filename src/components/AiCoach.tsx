@@ -30,6 +30,28 @@ const AiCoach = () => {
   const scrollRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const { tasks, stats, getTotalCompletions, getTodayTasks, getDailyCompletionPercent, getCategoryStats, getFailureAnalysis } = useTaskContext();
+  const [voiceMode, setVoiceMode] = useState(false);
+  const [nutrition, setNutrition] = useState({ calories: 0, target: 0, protein: 0 });
+  const [sleep, setSleep] = useState({ done: false, target: 7 });
+
+  useEffect(() => {
+    if (!user) return;
+    const fetchExtraContext = async () => {
+      const todayStr = getTodayStr();
+      const [logsRes, profileRes, habitRes, targetsRes] = await Promise.all([
+        supabase.from('nutrition_logs').select('calories, protein').eq('user_id', user.id).eq('log_date', todayStr),
+        supabase.from('nutrition_profiles').select('daily_calories').eq('user_id', user.id).maybeSingle(),
+        supabase.from('habits').select('completed').eq('user_id', user.id).eq('habit_date', todayStr).eq('habit_id', 'sleep').maybeSingle(),
+        supabase.from('user_targets').select('sleep_hours').eq('user_id', user.id).maybeSingle()
+      ]);
+
+      const cals = logsRes.data?.reduce((sum, log) => sum + (log.calories || 0), 0) || 0;
+      const prot = logsRes.data?.reduce((sum, log) => sum + Number(log.protein || 0), 0) || 0;
+      setNutrition({ calories: cals, target: profileRes.data?.daily_calories || 0, protein: prot });
+      setSleep({ done: habitRes.data?.completed || false, target: Number(targetsRes.data?.sleep_hours) || 7 });
+    };
+    fetchExtraContext();
+  }, [user]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
