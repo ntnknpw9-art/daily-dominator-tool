@@ -185,12 +185,9 @@ const AppContent = () => {
           </div>
         </nav>
       </div>
-    </SidebarProvider>
-  );
-
       <AiCoach />
       <SmartNotifications />
-    </div>
+    </SidebarProvider>
   );
 };
 
