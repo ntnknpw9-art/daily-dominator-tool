@@ -136,7 +136,9 @@ export type Database = {
       }
       daily_health_logs: {
         Row: {
+          active_calories: number | null
           created_at: string | null
+          exercise_minutes: number | null
           id: string
           log_date: string
           screen_time_minutes: number | null
@@ -146,7 +148,9 @@ export type Database = {
           water_liters: number | null
         }
         Insert: {
+          active_calories?: number | null
           created_at?: string | null
+          exercise_minutes?: number | null
           id?: string
           log_date: string
           screen_time_minutes?: number | null
@@ -156,7 +160,9 @@ export type Database = {
           water_liters?: number | null
         }
         Update: {
+          active_calories?: number | null
           created_at?: string | null
+          exercise_minutes?: number | null
           id?: string
           log_date?: string
           screen_time_minutes?: number | null
