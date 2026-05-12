@@ -69,16 +69,16 @@ const AppContent = () => {
         <div className="flex-1 flex flex-col min-w-0">
           {/* Header */}
           <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-40 safe-top">
-            <div className="max-w-4xl mx-auto px-3 sm:px-4 py-2 sm:py-4 flex items-center justify-between gap-1">
+            <div className="max-w-4xl mx-auto px-3 sm:px-4 py-2 flex items-center justify-between gap-1">
               <div className="flex items-center gap-2">
                 <SidebarTrigger className="hidden md:flex ml-2" />
-                <h1 className="text-sm sm:text-xl font-bold text-foreground whitespace-nowrap truncate">🎯 <span className="hidden sm:inline">מערכת </span>המעקב שלך</h1>
+                <h1 className="text-xl sm:text-2xl font-black text-foreground whitespace-nowrap tracking-tight">המעקב שלך 🎯</h1>
               </div>
               <div className="flex gap-1 sm:gap-2 shrink-0 items-center">
-                <Button variant="ghost" size="sm" asChild title="קהילה" className="gap-1 h-8 text-xs sm:text-sm">
+                <Button variant="ghost" size="sm" asChild title="קהילה" className="gap-1.5 h-8 sm:h-9 px-2 sm:px-3 text-xs sm:text-sm font-medium">
                   <a href="https://chat.whatsapp.com/EJcWCuUd50U4t4KSu7pmrf" target="_blank" rel="noopener noreferrer">
                     <Users className="w-4 h-4" />
-                    <span className="hidden sm:inline">קהילה</span>
+                    <span>קהילה</span>
                   </a>
                 </Button>
                 <Button variant="ghost" size="icon" onClick={() => setActiveTab('settings')} title="הגדרות" className="h-8 w-8 sm:h-9 sm:w-9">
