@@ -2,14 +2,18 @@ import { useState, useEffect } from 'react';
 import { useTaskContext } from '@/context/TaskContext';
 import { getNowInIsrael, getTodayStr, formatFullHebrew, getHebrewDayFromDate, timeToMinutes, isNowBetween } from '@/lib/dateUtils';
 import { DayOfWeek } from '@/types/task';
-import { Check, Clock, Timer, AlertTriangle } from 'lucide-react';
+import { Check, Clock, Timer, AlertTriangle, Footprints } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { playSuccessSound, playWarningSound, createParticleBurst, vibrate } from '@/lib/sounds';
 
 const TodayTab = () => {
+  const { user } = useAuth();
   const { getTodayTasks, toggleCompletion } = useTaskContext();
   const [now, setNow] = useState(getNowInIsrael());
+  const [steps, setSteps] = useState<number>(0);
   const todayStr = getTodayStr();
   const todayTasks = getTodayTasks();
   const hebrewDay = getHebrewDayFromDate(now) as DayOfWeek;
@@ -19,6 +23,22 @@ const TodayTab = () => {
     const timer = setInterval(() => setNow(getNowInIsrael()), 30000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    if (!user) return;
+    const fetchSteps = async () => {
+      const { data } = await supabase
+        .from('daily_health_logs')
+        .select('steps')
+        .eq('user_id', user.id)
+        .eq('log_date', todayStr)
+        .maybeSingle();
+      if (data) {
+        setSteps(data.steps || 0);
+      }
+    };
+    fetchSteps();
+  }, [user, todayStr]);
 
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
 
@@ -183,6 +203,20 @@ const TodayTab = () => {
           </div>
         );
       })}
+
+      {/* Steps Widget */}
+      <div className="glass-card p-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="bg-green-500/20 p-2 rounded-full">
+            <Footprints className="w-5 h-5 text-green-400" />
+          </div>
+          <div>
+            <h3 className="font-bold text-sm text-foreground">צעדים היום</h3>
+            <p className="text-xs text-muted-foreground">מתעדכן אוטומטית מהטלפון</p>
+          </div>
+        </div>
+        <div className="text-2xl font-black">{steps.toLocaleString()}</div>
+      </div>
     </div>
   );
 };
