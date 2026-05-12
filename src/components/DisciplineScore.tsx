@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect, useRef } from 'react';
 import { useTaskContext } from '@/context/TaskContext';
 import { getNowInIsrael } from '@/lib/dateUtils';
 import { Card, CardContent } from '@/components/ui/card';
-import { Shield, TrendingUp, TrendingDown, Minus, Flame, Target, Swords } from 'lucide-react';
+import { Shield, TrendingUp, TrendingDown, Minus, Flame, Target, Swords, Footprints, Droplets } from 'lucide-react';
 import { DayOfWeek } from '@/types/task';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
