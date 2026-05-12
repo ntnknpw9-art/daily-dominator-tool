@@ -576,6 +576,33 @@ const ProgressPhotos = () => {
           </div>
         )}
 
+        {viewMode === 'timeline' && (
+          <div className="space-y-6">
+            <h3 className="text-lg font-bold text-center mb-4">טיימליין של השינוי שלך</h3>
+            {photos.length === 0 ? (
+              <p className="text-center text-muted-foreground">אין תמונות עדיין.</p>
+            ) : (
+              <div className="relative border-r-2 border-primary/50 pr-4 space-y-8">
+                {photos.slice().sort((a, b) => new Date(b.photo_date).getTime() - new Date(a.photo_date).getTime()).map((p, i) => (
+                  <div key={p.id} className="relative">
+                    <div className="absolute -right-[25px] top-4 w-4 h-4 rounded-full bg-primary border-4 border-background" />
+                    <div className="glass-card p-3 animate-fade-in" style={{ animationDelay: `${i * 100}ms` }}>
+                      <div className="flex justify-between items-center mb-2">
+                        <Badge variant={p.photo_type === 'after' ? 'default' : 'secondary'}>
+                          {p.photo_type === 'after' ? '💪 אחרי' : '📷 לפני'}
+                        </Badge>
+                        <span className="text-xs font-bold text-muted-foreground">{p.photo_date}</span>
+                      </div>
+                      <img src={p.image_url} alt="" className="w-full h-auto max-h-[300px] object-cover rounded-lg mb-2" />
+                      {p.caption && <p className="text-sm italic text-foreground bg-muted/30 p-2 rounded">"{p.caption}"</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {viewMode === 'community' && (
           <div>
             {communityPhotos.length === 0 ? (
