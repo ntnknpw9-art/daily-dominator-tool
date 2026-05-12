@@ -21,7 +21,7 @@ export const useHealthSync = () => {
       // 1. Request Authorization
       await CapacitorHealthkit.requestAuthorization({
         all: [''],
-        read: [SampleNames.STEP_COUNT, SampleNames.SLEEP_ANALYSIS],
+        read: [SampleNames.STEP_COUNT, SampleNames.SLEEP_ANALYSIS, SampleNames.ACTIVE_ENERGY_BURNED, SampleNames.APPLE_EXERCISE_TIME],
         write: [''],
       });
 
