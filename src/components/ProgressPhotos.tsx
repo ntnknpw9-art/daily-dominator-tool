@@ -34,7 +34,7 @@ const ProgressPhotos = () => {
   const [uploadType, setUploadType] = useState<'before' | 'after'>('after');
   const [isPublic, setIsPublic] = useState(false);
   const [caption, setCaption] = useState('');
-  const [viewMode, setViewMode] = useState<'mine' | 'community' | 'compare'>('mine');
+  const [viewMode, setViewMode] = useState<'mine' | 'community' | 'compare' | 'timeline'>('mine');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [compareBefore, setCompareBefore] = useState<ProgressPhoto | null>(null);
