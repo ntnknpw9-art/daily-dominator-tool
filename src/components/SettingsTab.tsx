@@ -266,7 +266,13 @@ const SettingsTab = () => {
                 variant={connectedWearables.includes(wearable) ? "default" : "outline"}
                 size="sm"
                 className="gap-2"
-                onClick={() => toggleWearable(wearable)}
+                onClick={() => {
+                  if (connectedWearables.includes(wearable)) {
+                    toggleWearable(wearable);
+                  } else {
+                    setWearableToConnect(wearable);
+                  }
+                }}
               >
                 {connectedWearables.includes(wearable) ? (
                   <><CheckCircle2 className="w-4 h-4" /> מחובר</>
@@ -274,6 +280,30 @@ const SettingsTab = () => {
               </Button>
             </div>
           ))}
+          
+          <AlertDialog open={!!wearableToConnect} onOpenChange={(open) => !open && setWearableToConnect(null)}>
+            <AlertDialogContent dir="rtl">
+              <AlertDialogHeader>
+                <AlertDialogTitle>חיבור {wearableToConnect}</AlertDialogTitle>
+                <AlertDialogDescription asChild>
+                  {wearableToConnect && getWearableInstructions(wearableToConnect)}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter className="flex-row gap-2 justify-end sm:justify-start">
+                <AlertDialogCancel className="mt-0">ביטול</AlertDialogCancel>
+                <AlertDialogAction onClick={() => {
+                  if (wearableToConnect) {
+                    toggleWearable(wearableToConnect);
+                    if (wearableToConnect.includes('Apple')) {
+                      syncHealthData(); // Trigger the actual prompt
+                    }
+                  }
+                }}>
+                  הבנתי, סמן כמחובר
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </CardContent>
       </Card>
 
