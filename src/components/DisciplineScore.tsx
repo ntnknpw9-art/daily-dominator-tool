@@ -4,6 +4,8 @@ import { getNowInIsrael } from '@/lib/dateUtils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Shield, TrendingUp, TrendingDown, Minus, Flame, Target, Swords } from 'lucide-react';
 import { DayOfWeek } from '@/types/task';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
 
 const useCountUp = (target: number, duration = 1200) => {
   const [current, setCurrent] = useState(0);
