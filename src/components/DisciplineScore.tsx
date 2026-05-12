@@ -259,7 +259,10 @@ const DisciplineScore = () => {
               ציון משמעת כולל
             </span>
           </div>
-          <div className="flex items-center gap-1 text-[10px] sm:text-xs font-bold">
+          <div className="flex items-center gap-2 text-[10px] sm:text-xs font-bold">
+            <button onClick={shareScore} className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-1 bg-secondary/50 px-2 py-1 rounded-full">
+              <Instagram className="w-3 h-3" /> <span className="hidden sm:inline">שתף</span>
+            </button>
             {trend > 5 ? (
               <><TrendingUp className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-green-400" /><span className="text-green-400">עולה</span></>
             ) : trend < -5 ? (
