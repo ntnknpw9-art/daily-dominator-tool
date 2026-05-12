@@ -3,7 +3,9 @@ import { getNowInIsrael, timeToMinutes, isNowBetween } from '@/lib/dateUtils';
 import { useMemo, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
-import { Flame, Zap, Moon, Apple, Target, Timer, Trophy } from 'lucide-react';
+import { Flame, Zap, Moon, Apple, Target, Timer, Trophy, Droplets, Smartphone, Footprints, Plus, Minus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 const DashboardTab = () => {
   const { user } = useAuth();
@@ -12,6 +14,7 @@ const DashboardTab = () => {
   
   const [nutrition, setNutrition] = useState({ calories: 0, target: 0 });
   const [sleepHabit, setSleepHabit] = useState(false);
+  const [healthLogs, setHealthLogs] = useState({ water_liters: 0, steps: 0, screen_time_minutes: 0 });
 
   useEffect(() => {
     if (!user) return;
