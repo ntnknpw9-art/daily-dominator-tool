@@ -198,7 +198,7 @@ const DashboardTab = () => {
           {chartData.map((d, i) => (
             <div key={i} className="text-center" style={{ width: `${100 / chartData.length}%` }}>
               <div className={`text-[8px] sm:text-[9px] ${hoveredBar === i ? 'text-foreground font-bold scale-110 transition-transform' : 'text-muted-foreground'}`}>
-                {d.dayName}
+                {d.date}
               </div>
             </div>
           ))}
