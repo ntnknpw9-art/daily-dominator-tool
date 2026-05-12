@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { getNowInIsrael, getTodayStr, formatDateHebrew } from '@/lib/dateUtils';
 import ReactMarkdown from 'react-markdown';
+import ApplyPlanDialog from './ApplyPlanDialog';
 
 type Msg = { role: 'user' | 'assistant'; content: string };
 
