@@ -10,6 +10,7 @@ import { getHebrewDayFromDate } from '@/lib/dateUtils';
 const AdvancedTab = () => {
   const ctx = useTaskContext();
   const { tasks, stats, getTodayTasks, toggleCompletion, getDailyCompletionPercent, getCategoryStats, getFailureAnalysis, timerTaskId, setTimerTaskId } = ctx;
+  const [warMode, setWarMode] = useState(() => document.body.classList.contains('war-mode-active'));
 
   const today = getNowInIsrael();
   const todayStr = getTodayStr();
