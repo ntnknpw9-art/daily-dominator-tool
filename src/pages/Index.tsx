@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { TaskProvider } from '@/context/TaskContext';
 import AuthPage from '@/pages/AuthPage';
@@ -53,6 +53,10 @@ const AppContent = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showSplash, setShowSplash] = useState(true);
   const { fire: fireConfetti, particles } = useConfetti();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [activeTab]);
 
   if (showSplash) {
     return <MotivationalSplash onDismiss={() => setShowSplash(false)} />;
