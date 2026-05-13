@@ -54,6 +54,10 @@ const AppContent = () => {
   const [showSplash, setShowSplash] = useState(true);
   const { fire: fireConfetti, particles } = useConfetti();
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [activeTab]);
+
   if (showSplash) {
     return <MotivationalSplash onDismiss={() => setShowSplash(false)} />;
   }
