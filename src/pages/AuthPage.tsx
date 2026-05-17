@@ -224,7 +224,10 @@ const AuthPage = () => {
     } else {
       const { error } = await signUp(email, password, displayName);
       if (error) setError(error.message);
-      else setSuccessMsg('נרשמת בהצלחה! בדוק את המייל לאימות.');
+      else {
+        setOtpStep(true);
+        setSuccessMsg('שלחנו קוד בן 6 ספרות למייל שלך');
+      }
     }
     setLoading(false);
   };
