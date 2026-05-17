@@ -232,6 +232,67 @@ const AuthPage = () => {
     setLoading(false);
   };
 
+  if (otpStep) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="glass-card p-8 w-full max-w-md animate-scale-in" dir="rtl">
+          <div className="text-center mb-6">
+            <div className="text-5xl mb-3">📧</div>
+            <h1 className="text-2xl font-bold">בדוק את המייל שלך</h1>
+            <p className="text-sm text-muted-foreground mt-2">
+              שלחנו קוד בן 6 ספרות אל
+              <br />
+              <strong className="text-foreground" dir="ltr">{email}</strong>
+            </p>
+          </div>
+
+          <form onSubmit={handleVerifyOtp} className="space-y-4">
+            <div>
+              <Label className="text-center block mb-2">קוד אימות</Label>
+              <Input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={6}
+                value={otpCode}
+                onChange={e => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                placeholder="000000"
+                className="text-center text-3xl font-bold tracking-[0.5em] h-16"
+                dir="ltr"
+                autoFocus
+              />
+            </div>
+
+            {error && <div className="text-destructive text-sm bg-destructive/10 rounded-lg p-3 text-center">{error}</div>}
+            {successMsg && <div className="text-success text-sm bg-success/10 rounded-lg p-3 text-center">{successMsg}</div>}
+
+            <Button type="submit" className="w-full h-12 text-base font-bold" disabled={loading || otpCode.length !== 6}>
+              {loading ? '...' : 'אמת קוד'}
+            </Button>
+
+            <div className="flex flex-col gap-2 pt-2">
+              <button
+                type="button"
+                onClick={handleResendOtp}
+                disabled={loading}
+                className="text-sm text-primary hover:underline"
+              >
+                לא קיבלת? שלח קוד חדש
+              </button>
+              <button
+                type="button"
+                onClick={() => { setOtpStep(false); setOtpCode(''); setError(''); setSuccessMsg(''); }}
+                className="text-xs text-muted-foreground hover:text-foreground"
+              >
+                ← חזור להרשמה
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="glass-card p-8 w-full max-w-md animate-scale-in">
