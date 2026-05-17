@@ -10,34 +10,37 @@ import {
   Heading,
   Html,
   Preview,
+  Section,
   Text,
 } from 'npm:@react-email/components@0.0.22'
 
 interface MagicLinkEmailProps {
   siteName: string
+  siteUrl: string
+  recipient: string
   confirmationUrl: string
+  token?: string
 }
 
-export const MagicLinkEmail = ({
-  siteName,
-  confirmationUrl,
-}: MagicLinkEmailProps) => (
-  <Html lang="en" dir="ltr">
+export const MagicLinkEmail = ({ siteName, confirmationUrl, token }: MagicLinkEmailProps) => (
+  <Html lang="he" dir="rtl">
     <Head />
-    <Preview>Your login link for {siteName}</Preview>
+    <Preview>קישור התחברות ל-{siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>Your login link</Heading>
-        <Text style={text}>
-          Click the button below to log in to {siteName}. This link will expire
-          shortly.
-        </Text>
+        <Heading style={brand}>Daily Dominator</Heading>
+        <Heading style={h1}>התחבר ל-{siteName}</Heading>
+        <Text style={text}>הזן את הקוד הבא כדי להתחבר:</Text>
+        {token && (
+          <Section style={codeBox}>
+            <Text style={code}>{token}</Text>
+          </Section>
+        )}
+        <Text style={text}>או לחץ על הכפתור:</Text>
         <Button style={button} href={confirmationUrl}>
-          Log In
+          התחבר עכשיו
         </Button>
-        <Text style={footer}>
-          If you didn't request this link, you can safely ignore this email.
-        </Text>
+        <Text style={footer}>אם לא ביקשת התחברות, התעלם מהמייל. הקוד תקף ל-15 דקות.</Text>
       </Container>
     </Body>
   </Html>
@@ -45,26 +48,41 @@ export const MagicLinkEmail = ({
 
 export default MagicLinkEmail
 
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
-const container = { padding: '20px 25px' }
-const h1 = {
-  fontSize: '22px',
-  fontWeight: 'bold' as const,
-  color: '#000000',
-  margin: '0 0 20px',
-}
-const text = {
+const main = { backgroundColor: '#ffffff', fontFamily: 'Heebo, Arial, sans-serif' }
+const container = { padding: '32px 28px', maxWidth: '480px', textAlign: 'right' as const }
+const brand = {
   fontSize: '14px',
-  color: '#55575d',
-  lineHeight: '1.5',
-  margin: '0 0 25px',
+  fontWeight: 800 as const,
+  color: 'hsl(0, 72%, 51%)',
+  letterSpacing: '2px',
+  textTransform: 'uppercase' as const,
+  margin: '0 0 24px',
+}
+const h1 = { fontSize: '24px', fontWeight: 700 as const, color: '#0a0a0a', margin: '0 0 20px' }
+const text = { fontSize: '15px', color: '#404040', lineHeight: '1.6', margin: '0 0 20px' }
+const codeBox = {
+  backgroundColor: '#0a0a0a',
+  borderRadius: '12px',
+  padding: '20px',
+  margin: '0 0 24px',
+  textAlign: 'center' as const,
+}
+const code = {
+  fontSize: '32px',
+  fontWeight: 800 as const,
+  color: 'hsl(38, 92%, 50%)',
+  letterSpacing: '8px',
+  margin: 0,
+  fontFamily: 'monospace',
 }
 const button = {
-  backgroundColor: '#000000',
+  backgroundColor: 'hsl(0, 72%, 51%)',
   color: '#ffffff',
-  fontSize: '14px',
-  borderRadius: '8px',
-  padding: '12px 20px',
+  fontSize: '15px',
+  fontWeight: 600 as const,
+  borderRadius: '12px',
+  padding: '14px 28px',
   textDecoration: 'none',
+  display: 'inline-block',
 }
-const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
+const footer = { fontSize: '12px', color: '#999999', margin: '32px 0 0', lineHeight: '1.5' }
