@@ -36,6 +36,36 @@ const AuthPage = () => {
   const [successMsg, setSuccessMsg] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [mode, setMode] = useState<'login' | 'signup' | 'forgot'>('login');
+  const [otpStep, setOtpStep] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(''); setSuccessMsg('');
+    if (otpCode.length !== 6) {
+      setError('הזן קוד בן 6 ספרות');
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.verifyOtp({
+      email,
+      token: otpCode,
+      type: 'signup',
+    });
+    setLoading(false);
+    if (error) setError('קוד שגוי או שפג תוקפו. נסה שוב.');
+    // success → onAuthStateChange ייכנס למשתמש אוטומטית
+  };
+
+  const handleResendOtp = async () => {
+    setError(''); setSuccessMsg('');
+    setLoading(true);
+    const { error } = await supabase.auth.resend({ type: 'signup', email });
+    setLoading(false);
+    if (error) setError(error.message);
+    else setSuccessMsg('קוד חדש נשלח למייל שלך');
+  };
+
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -194,10 +224,74 @@ const AuthPage = () => {
     } else {
       const { error } = await signUp(email, password, displayName);
       if (error) setError(error.message);
-      else setSuccessMsg('נרשמת בהצלחה! בדוק את המייל לאימות.');
+      else {
+        setOtpStep(true);
+        setSuccessMsg('שלחנו קוד בן 6 ספרות למייל שלך');
+      }
     }
     setLoading(false);
   };
+
+  if (otpStep) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="glass-card p-8 w-full max-w-md animate-scale-in" dir="rtl">
+          <div className="text-center mb-6">
+            <div className="text-5xl mb-3">📧</div>
+            <h1 className="text-2xl font-bold">בדוק את המייל שלך</h1>
+            <p className="text-sm text-muted-foreground mt-2">
+              שלחנו קוד בן 6 ספרות אל
+              <br />
+              <strong className="text-foreground" dir="ltr">{email}</strong>
+            </p>
+          </div>
+
+          <form onSubmit={handleVerifyOtp} className="space-y-4">
+            <div>
+              <Label className="text-center block mb-2">קוד אימות</Label>
+              <Input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={6}
+                value={otpCode}
+                onChange={e => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                placeholder="000000"
+                className="text-center text-3xl font-bold tracking-[0.5em] h-16"
+                dir="ltr"
+                autoFocus
+              />
+            </div>
+
+            {error && <div className="text-destructive text-sm bg-destructive/10 rounded-lg p-3 text-center">{error}</div>}
+            {successMsg && <div className="text-success text-sm bg-success/10 rounded-lg p-3 text-center">{successMsg}</div>}
+
+            <Button type="submit" className="w-full h-12 text-base font-bold" disabled={loading || otpCode.length !== 6}>
+              {loading ? '...' : 'אמת קוד'}
+            </Button>
+
+            <div className="flex flex-col gap-2 pt-2">
+              <button
+                type="button"
+                onClick={handleResendOtp}
+                disabled={loading}
+                className="text-sm text-primary hover:underline"
+              >
+                לא קיבלת? שלח קוד חדש
+              </button>
+              <button
+                type="button"
+                onClick={() => { setOtpStep(false); setOtpCode(''); setError(''); setSuccessMsg(''); }}
+                className="text-xs text-muted-foreground hover:text-foreground"
+              >
+                ← חזור להרשמה
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
