@@ -216,4 +216,115 @@ const OnboardingFlow = ({ onComplete }: Props) => {
         'כושר כללי ובריאות';
 
       const splitHint = a.location === 'קליסטניקס'
-        ? 'תוכנית קליסטניקס טהורה — תרגילי משקל גוף בלבד: מתח, מקבילים, ש
+        ? 'תוכנית קליסטניקס טהורה — רק תרגילי משקל גוף: מתח, מקבילים, שכיבות סמיכה, סקוואט, פלאנק, מאדאפ, פיסטול סקוואט, ארצ׳ר פושאפס וכו. ללא משקולות. התאם פרוגרסיות לפי רמת המתאמן.'
+        : a.location === 'בית בלי ציוד'
+        ? 'תוכנית משקל גוף ביתית — שכיבות סמיכה, סקוואט, מתפרצים, פלאנק, ברפיז, וכו.'
+        : a.location === 'בית עם משקולות'
+        ? 'תוכנית עם דמבלים וגומיות בלבד.'
+        : 'תוכנית חדר כושר מלאה.';
+
+      const text = `פרופיל משתמש:
+- מגדר: ${a.gender}, גיל: ${a.age}, גובה: ${a.height} ס"מ, משקל: ${a.weight} ק"ג
+- מטרה: ${goalText}
+- ניסיון: ${a.experience}
+- ${a.daysPerWeek} ימי אימון בשבוע, בשעות ${a.trainingTime}
+- מקום אימון: ${a.location}
+- רמת פעילות יומית: ${a.activity}
+- העדפת תזונה: ${a.diet}
+
+${splitHint}
+
+חשב BMR וצרכי קלוריות לפי משקל/גובה/גיל/מין/פעילות והתאם למטרה (גירעון של 400 קק"ל לחיטוב, עודף של 300 קק"ל למסה, איזון ל-recomp/כללי).
+חלבון: 1.8-2.2 גרם לק"ג. מים: 35 מ"ל לק"ג משקל. שינה: 7-8 שעות.
+פצל את ${a.daysPerWeek} ימי האימון לימי השבוע (התחל מיום ראשון). לכל יום תן focus ותרגילים מלאים (שם, סטים×חזרות, מופרדים בפסיק).`;
+
+      const { data, error } = await supabase.functions.invoke('ai-plan-extract', {
+        body: { analysisText: text },
+      });
+      if (error) throw error;
+      setPlan(data?.plan || {});
+      setShowApply(true);
+    } catch (e) {
+      console.error(e);
+      toast.error('שגיאה ביצירת התוכנית');
+      setGenerating(false);
+    }
+  };
+
+  const finish = () => {
+    if (user) localStorage.setItem(`onboarding_done_${user.id}`, '1');
+    onComplete();
+  };
+
+  if (generating && !showApply) {
+    return (
+      <div className="fixed inset-0 z-50 bg-background flex items-center justify-center p-6">
+        <div className="text-center space-y-6 max-w-sm">
+          <div className="relative inline-block">
+            <div className="text-7xl animate-pulse">🔥</div>
+            <Sparkles className="absolute -top-2 -right-2 w-6 h-6 text-accent animate-spin" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-black mb-2">בונה לך תוכנית מותאמת...</h2>
+            <p className="text-sm text-muted-foreground">ה-AI מחשב קלוריות, מאקרו, ומפצל לך אימונים לפי המטרה</p>
+          </div>
+          <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 bg-background overflow-y-auto" dir="rtl">
+      {/* Progress bar */}
+      <div className="sticky top-0 bg-background/95 backdrop-blur-sm z-10 px-4 pt-6 pb-3 safe-top">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs text-muted-foreground">שלב {step + 1} מתוך {total}</span>
+          <span className="text-xs text-primary font-bold">{Math.round(progress)}%</span>
+        </div>
+        <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-all duration-500 shadow-[0_0_10px_hsl(var(--primary))]"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Question */}
+      <div className="px-5 py-8 max-w-md mx-auto">
+        <div key={step} className="animate-fade-in space-y-6">
+          <div className="text-center">
+            <h2 className="text-2xl font-black mb-2">{cur.title}</h2>
+            {cur.sub && <p className="text-sm text-muted-foreground">{cur.sub}</p>}
+          </div>
+          <div>{cur.render()}</div>
+        </div>
+      </div>
+
+      {/* Footer buttons */}
+      <div className="sticky bottom-0 bg-background/95 backdrop-blur-sm border-t border-border/30 p-4 safe-bottom">
+        <div className="max-w-md mx-auto flex gap-2">
+          {step > 0 && (
+            <Button variant="outline" onClick={back} className="gap-1">
+              <ChevronRight className="w-4 h-4" />
+              חזור
+            </Button>
+          )}
+          <Button onClick={next} disabled={!cur.valid} className="flex-1 gap-1 h-12 text-base font-bold">
+            {step === total - 1 ? (<><Sparkles className="w-5 h-5" /> בנה לי תוכנית</>) : (<>הבא <ChevronLeft className="w-4 h-4" /></>)}
+          </Button>
+        </div>
+      </div>
+
+      {plan && (
+        <ApplyPlanDialog
+          open={showApply}
+          onOpenChange={(v) => { setShowApply(v); if (!v) finish(); }}
+          initialPlan={plan}
+        />
+      )}
+    </div>
+  );
+};
+
+export default OnboardingFlow;
