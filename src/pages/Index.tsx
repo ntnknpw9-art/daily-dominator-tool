@@ -34,6 +34,7 @@ import ProgressMap from '@/components/ProgressMap';
 import AchievementShowcase from '@/components/AchievementShowcase';
 import AdvancedAnalytics from '@/components/AdvancedAnalytics';
 import MotivationalSplash from '@/components/MotivationalSplash';
+import OnboardingFlow from '@/components/OnboardingFlow';
 import { ConfettiOverlay, useConfetti } from '@/components/CinematicEffects';
 import { LayoutDashboard, CheckSquare, TrendingUp, BarChart3, Settings, LogOut, Users, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -213,9 +214,16 @@ const Index = () => {
 
   return (
     <TaskProvider>
-      <AppContent />
+      <OnboardingGate />
     </TaskProvider>
   );
+};
+
+const OnboardingGate = () => {
+  const { user } = useAuth();
+  const [done, setDone] = useState(() => !!localStorage.getItem(`onboarding_done_${user!.id}`));
+  if (!done) return <OnboardingFlow onComplete={() => setDone(true)} />;
+  return <AppContent />;
 };
 
 export default Index;
