@@ -36,6 +36,36 @@ const AuthPage = () => {
   const [successMsg, setSuccessMsg] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [mode, setMode] = useState<'login' | 'signup' | 'forgot'>('login');
+  const [otpStep, setOtpStep] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(''); setSuccessMsg('');
+    if (otpCode.length !== 6) {
+      setError('הזן קוד בן 6 ספרות');
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.verifyOtp({
+      email,
+      token: otpCode,
+      type: 'signup',
+    });
+    setLoading(false);
+    if (error) setError('קוד שגוי או שפג תוקפו. נסה שוב.');
+    // success → onAuthStateChange ייכנס למשתמש אוטומטית
+  };
+
+  const handleResendOtp = async () => {
+    setError(''); setSuccessMsg('');
+    setLoading(true);
+    const { error } = await supabase.auth.resend({ type: 'signup', email });
+    setLoading(false);
+    if (error) setError(error.message);
+    else setSuccessMsg('קוד חדש נשלח למייל שלך');
+  };
+
 
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault();
