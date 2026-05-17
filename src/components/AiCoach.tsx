@@ -64,6 +64,15 @@ const AiCoach = () => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
   }, [messages]);
 
+  // Scroll to bottom when chat opens (show latest messages)
+  useEffect(() => {
+    if (open) {
+      requestAnimationFrame(() => {
+        scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'auto' });
+      });
+    }
+  }, [open, historyLoaded]);
+
   // Load history from DB
   useEffect(() => {
     if (!user || historyLoaded) return;
