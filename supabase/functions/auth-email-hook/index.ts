@@ -17,12 +17,12 @@ const corsHeaders = {
 }
 
 const EMAIL_SUBJECTS: Record<string, string> = {
-  signup: 'Confirm your email',
-  invite: "You've been invited",
-  magiclink: 'Your login link',
-  recovery: 'Reset your password',
-  email_change: 'Confirm your new email',
-  reauthentication: 'Your verification code',
+  signup: 'אימות מייל - Daily Dominator',
+  invite: 'הוזמנת ל-Daily Dominator',
+  magiclink: 'קישור התחברות',
+  recovery: 'איפוס סיסמה - Daily Dominator',
+  email_change: 'אישור מייל חדש',
+  reauthentication: 'קוד אימות זהות',
 }
 
 // Template mapping
