@@ -32,10 +32,10 @@ export const MagicLinkEmail = ({ token }: MagicLinkEmailProps) => (
       <meta httpEquiv="Content-Type" content="text/html; charset=utf-8" />
     </Head>
     <Preview>קישור התחברות - Daily Dominator</Preview>
-    <Body style={main}>
-      <table width="100%" cellPadding={0} cellSpacing={0} border={0} style={outerTable}>
+    <Body style={main} bgcolor="#05070F">
+      <table width="100%" cellPadding={0} cellSpacing={0} border={0} bgcolor="#05070F" style={outerTable}>
         <tr>
-          <td align="center">
+          <td align="center" bgcolor="#05070F">
             <Container style={card}>
               <Section style={topGlow} />
 
