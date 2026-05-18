@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Volume2, VolumeX, Sun, Moon, Bell, BellOff, Skull, Trash2, Watch, CheckCircle2, RefreshCw } from 'lucide-react';
+import { Volume2, VolumeX, Sun, Moon, Bell, BellOff, Skull, Trash2, Watch, CheckCircle2, RefreshCw, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -21,7 +21,7 @@ export const isNoMercyMode = () => {
 };
 
 const SettingsTab = () => {
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const { syncHealthData, isSyncing } = useHealthSync();
   const [deleting, setDeleting] = useState(false);
   const [soundOn, setSoundOn] = useState(isSoundEnabled);
@@ -304,6 +304,50 @@ const SettingsTab = () => {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
+        </CardContent>
+      </Card>
+
+      <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-card/50 backdrop-blur-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-accent" />
+            תוכנית אימון אישית
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <div className="text-sm font-medium">עדכן את התוכנית שלך</div>
+              <div className="text-xs text-muted-foreground">ענה שוב על השאלון כדי לבנות תוכנית חדשה לפי המטרות העדכניות שלך.</div>
+            </div>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="default" size="sm" className="gap-2 shrink-0">
+                  <RefreshCw className="w-4 h-4" />
+                  עדכן תוכנית
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent dir="rtl">
+                <AlertDialogHeader>
+                  <AlertDialogTitle>למלא את השאלון מחדש?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    תועבר לשאלון ההתאמה האישית כדי לבנות תוכנית אימון חדשה. התוכנית הקיימת תוחלף בתוכנית החדשה.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter className="flex-row gap-2 justify-end sm:justify-start">
+                  <AlertDialogCancel className="mt-0">ביטול</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => {
+                      if (user) localStorage.removeItem(`onboarding_done_${user.id}`);
+                      window.location.reload();
+                    }}
+                  >
+                    כן, בוא נתחיל
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </CardContent>
       </Card>
 
