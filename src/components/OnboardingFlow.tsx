@@ -301,7 +301,7 @@ ${splitHint}
       </div>
 
       {/* Progress bar */}
-      <div className="sticky top-0 z-20 bg-background/70 backdrop-blur-xl border-b border-border/30 px-4 pt-6 pb-4 safe-top">
+      <div className="relative z-10 shrink-0 bg-background/70 backdrop-blur-xl border-b border-border/30 px-4 pt-6 pb-4 safe-top">
         <div className="max-w-md mx-auto">
           <div className="flex items-center justify-between mb-2.5">
             <span className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground font-semibold">
