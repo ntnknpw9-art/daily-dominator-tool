@@ -1,6 +1,6 @@
 /// <reference lib="deno.ns" />
 import { assert, assertEquals, assertStringIncludes } from 'https://deno.land/std@0.224.0/assert/mod.ts'
-import { render } from 'npm:@react-email/render@0.0.17'
+import { renderAsync as render } from 'npm:@react-email/components@0.0.22'
 import * as React from 'npm:react@18.3.1'
 import { RecoveryEmail } from './recovery.tsx'
 
