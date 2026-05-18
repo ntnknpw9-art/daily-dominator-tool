@@ -62,7 +62,7 @@ export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => 
 
               <Section style={footerWrap}>
                 <Text style={footerText}>
-                  אם לא ביקשת לאמת את זהותך,<br />
+                  אם ל‌א ביקשת ל‌אמת את זהותך,<br />
                   אפשר להתעלם מהמייל הזה בבטחה.
                 </Text>
               </Section>
