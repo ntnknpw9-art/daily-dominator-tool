@@ -334,27 +334,44 @@ const ApplyPlanDialog = ({ open, onOpenChange, analysisText, initialPlan }: Prop
                     )}
                   </div>
                 )}
-                <div className="space-y-1 pr-6 max-h-64 overflow-y-auto">
-                  <div className="text-xs text-muted-foreground mb-1">ניתן לשנות יום לכל אימון:</div>
+                <div className="space-y-2 pr-6 max-h-80 overflow-y-auto">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] uppercase tracking-[0.18em] font-bold text-accent">פירוט אימון לפי יום</span>
+                    <span className="text-[10px] text-muted-foreground">ניתן לשנות יום</span>
+                  </div>
                   {plan.training.schedule.map((s, i) => {
                     const currentDay = dayRemap[i] ?? s.day;
+                    const exercises = (s.description || '').split(/\s*,\s*/).filter(Boolean);
                     return (
-                      <div key={i} className="text-xs bg-background/50 rounded p-2 space-y-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-accent flex-1">{s.focus}</span>
-                          <Select
-                            value={currentDay}
-                            onValueChange={(v) => setDayRemap(prev => ({ ...prev, [i]: v as DayOfWeek }))}
-                          >
-                            <SelectTrigger className="h-7 w-24 text-xs"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                              {ALL_DAYS.map(d => (
-                                <SelectItem key={d} value={d} className="text-xs">{d}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                      <div key={i} className="rounded-lg border border-border/40 bg-background/50 p-2.5 space-y-2">
+                        <div className="flex items-center justify-between gap-2 pb-1.5 border-b border-border/30">
+                          <div className="flex items-center gap-2">
+                            <Select
+                              value={currentDay}
+                              onValueChange={(v) => setDayRemap(prev => ({ ...prev, [i]: v as DayOfWeek }))}
+                            >
+                              <SelectTrigger className="h-7 w-24 text-xs font-black"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                {ALL_DAYS.map(d => (
+                                  <SelectItem key={d} value={d} className="text-xs">{d}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          {s.focus && (
+                            <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/30">
+                              {s.focus}
+                            </span>
+                          )}
                         </div>
-                        <div className="text-muted-foreground">{s.description}</div>
+                        <ul className="space-y-1">
+                          {exercises.map((ex, j) => (
+                            <li key={j} className="flex items-start gap-2 text-xs text-muted-foreground leading-relaxed">
+                              <span className="mt-1.5 h-1 w-1 rounded-full bg-primary/60 shrink-0" />
+                              <span>{ex}</span>
+                            </li>
+                          ))}
+                        </ul>
                       </div>
                     );
                   })}
