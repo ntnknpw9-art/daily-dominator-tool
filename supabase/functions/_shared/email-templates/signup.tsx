@@ -68,7 +68,7 @@ export const SignupEmail = ({ token }: SignupEmailProps) => (
 
               <Section style={footerWrap}>
                 <Text style={footerText}>
-                  אם ל‌א נרשמת לחשבון,<br />
+                  אם לא נרשמת לחשבון,<br />
                   אפשר להתעלם מהמייל הזה בבטחה.
                 </Text>
               </Section>

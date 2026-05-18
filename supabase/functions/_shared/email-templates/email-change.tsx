@@ -63,7 +63,7 @@ export const EmailChangeEmail = ({
 
               <Section style={footerWrap}>
                 <Text style={footerText}>
-                  אם ל‌א ביקשת את השינוי הזה,<br />
+                  אם לא ביקשת את השינוי הזה,<br />
                   אבטח את החשבון שלך באופן מיידי.
                 </Text>
               </Section>
