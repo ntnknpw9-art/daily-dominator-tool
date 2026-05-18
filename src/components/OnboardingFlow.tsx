@@ -325,7 +325,7 @@ ${splitHint}
       </div>
 
       {/* Question */}
-      <div className="relative z-10 flex-1 flex w-full">
+      <div className="relative z-10 flex-1 min-h-0 overflow-y-auto w-full">
         <div className="w-full max-w-md mx-auto px-5 pt-8 pb-28 flex flex-col justify-center">
           <div key={step} className="animate-fade-in space-y-8">
             <div className="text-center space-y-3">
