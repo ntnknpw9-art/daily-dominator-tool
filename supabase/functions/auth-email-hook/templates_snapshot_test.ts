@@ -26,8 +26,10 @@ const inviteProps = {
 const stripPreviewBlock = (html: string) =>
   html.replace(/<div style="display:none[^"]*"[^>]*>[\s\S]*?<\/div><\/div>/, '')
 
-// Strip every zero-width / bidi formatting char that has no visible meaning.
-const ZERO_WIDTH = /[\u200B-\u200F\u2028\u2029\u202A-\u202E\u2060\uFEFF]/g
+// Strip zero-width / bidi formatting chars that have no visible meaning.
+// Note: U+200B is preserved because React Email's <Button> uses it for
+// legitimate Outlook layout fixes.
+const ZERO_WIDTH = /[\u200C-\u200F\u2028\u2029\u202A-\u202E\u2060\uFEFF]/g
 
 const sanitize = (html: string) => stripPreviewBlock(html).replace(ZERO_WIDTH, '')
 
