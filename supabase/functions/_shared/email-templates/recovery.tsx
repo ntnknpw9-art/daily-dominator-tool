@@ -54,9 +54,13 @@ export const RecoveryEmail = ({ token }: RecoveryEmailProps) => (
               {/* TITLE */}
               <Section style={titleWrap}>
                 <Heading style={h1}>איפוס סיסמה</Heading>
-                <Text style={subtitle}>
-                  השתמש בקוד האימות החד פעמי כדי לאפס את הסיסמה שלך בצורה מאובטחת.
-                </Text>
+                <Text
+                  style={subtitle}
+                  dangerouslySetInnerHTML={{
+                    __html:
+                      '&#1492;&#1513;&#1514;&#1502;&#1513; &#1489;&#1511;&#1493;&#1491; &#1492;&#1488;&#1497;&#1502;&#1493;&#1514; &#1492;&#1495;&#1491; &#1508;&#1506;&#1502;&#1497; &#1499;&#1491;&#1497; &#1500;&#1488;&#1508;&#1505; &#1488;&#1514; &#1492;&#1505;&#1497;&#1505;&#1502;&#1492; &#1513;&#1500;&#1498; &#1489;&#1510;&#1493;&#1512;&#1492; &#1502;&#1488;&#1493;&#1489;&#1496;&#1495;&#1514;.',
+                  }}
+                />
               </Section>
 
               {/* CODE BOX */}
@@ -79,7 +83,13 @@ export const RecoveryEmail = ({ token }: RecoveryEmailProps) => (
 
               {/* FOOTER */}
               <Section style={footerWrap}>
-                <Text style={footerText}>אם לא ביקשת לאפס את הסיסמה,</Text>
+                <Text
+                  style={footerText}
+                  dangerouslySetInnerHTML={{
+                    __html:
+                      '&#1488;&#1501; &#1500;&#1488; &#1489;&#1497;&#1511;&#1513;&#1514; &#1500;&#1488;&#1508;&#1505; &#1488;&#1514; &#1492;&#1505;&#1497;&#1505;&#1502;&#1492;,',
+                  }}
+                />
                 <Text style={footerText}>אפשר להתעלם מהמייל הזה בבטחה.</Text>
               </Section>
             </Container>
