@@ -419,6 +419,81 @@ const SettingsTab = () => {
         </CardContent>
       </Card>
 
+      <Card className="border-accent/30 bg-gradient-to-br from-accent/5 to-card/50 backdrop-blur-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Heart className="w-5 h-5 text-accent" />
+            תמיכה באפליקציה
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between bg-background/40 border border-border/40 rounded-lg p-3">
+            <div className="text-sm">
+              <div className="font-medium">סטטוס</div>
+              <div className="text-xs text-muted-foreground">
+                {isPremium ? 'תומך פעיל — תודה!' : 'משתמש חינמי'}
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5">
+              {isPremium && <Crown className="w-4 h-4 text-accent" />}
+              <span className={`text-xs font-bold px-2 py-1 rounded-full border ${isPremium ? 'bg-accent/10 text-accent border-accent/30' : 'bg-muted text-muted-foreground border-border'}`}>
+                {isPremium ? 'תומך' : 'חינמי'}
+              </span>
+            </div>
+          </div>
+
+          <div className="text-xs text-muted-foreground leading-relaxed">
+            המנוי הוא אופציונלי לחלוטין. אפשר להשתמש בכל האפליקציה בחינם — כל הפיצ׳רים, ללא הגבלות וללא הבדל בין משתמשים. התמיכה היא דרך להגיד תודה ולעזור לפיתוח להמשיך.
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-col h-auto py-3 gap-1"
+              disabled={!!purchasing || isPremium}
+              onClick={() => handlePurchase(PRODUCT_MONTHLY)}
+            >
+              <span className="text-xs text-muted-foreground">חודשי</span>
+              <span className="font-bold">
+                {purchasing === PRODUCT_MONTHLY ? 'רוכש...' : (findPackage(PRODUCT_MONTHLY)?.product?.priceString || 'תמיכה חודשית')}
+              </span>
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
+              className="flex-col h-auto py-3 gap-1"
+              disabled={!!purchasing || isPremium}
+              onClick={() => handlePurchase(PRODUCT_YEARLY)}
+            >
+              <span className="text-xs opacity-80">שנתי</span>
+              <span className="font-bold">
+                {purchasing === PRODUCT_YEARLY ? 'רוכש...' : (findPackage(PRODUCT_YEARLY)?.product?.priceString || 'תמיכה שנתית')}
+              </span>
+            </Button>
+          </div>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full gap-2"
+            onClick={handleRestore}
+            disabled={restoring}
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${restoring ? 'animate-spin' : ''}`} />
+            {restoring ? 'משחזר...' : 'שחזר רכישות'}
+          </Button>
+
+          {!isIOSNative() && (
+            <div className="text-[11px] text-muted-foreground text-center">
+              רכישות זמינות באפליקציה על iPhone בלבד
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+
+
       <Card className="border-destructive/40 bg-card/50 backdrop-blur-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg text-destructive">⚠️ אזור מסוכן</CardTitle>
