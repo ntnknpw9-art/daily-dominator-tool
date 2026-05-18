@@ -344,7 +344,7 @@ ${splitHint}
       </div>
 
       {/* Footer buttons */}
-      <div className="sticky bottom-0 z-20 bg-background/70 backdrop-blur-xl border-t border-border/30 p-4 safe-bottom">
+      <div className="relative z-20 shrink-0 bg-background/90 backdrop-blur-xl border-t border-border/30 p-4 safe-bottom">
         <div className="max-w-md mx-auto flex gap-2">
           {step > 0 && (
             <Button variant="outline" onClick={back} className="gap-1 h-12 border-border/50 bg-card/50 backdrop-blur-sm hover:bg-card hover:border-primary/40">
