@@ -65,13 +65,16 @@ function Card({ active, onClick, row, children }: any) {
   return (
     <button
       onClick={onClick}
-      className={`w-full p-4 rounded-2xl border-2 transition-all duration-200 active:scale-95 ${
+      className={`group relative w-full p-4 rounded-2xl border transition-all duration-300 active:scale-[0.97] overflow-hidden ${
         active
-          ? 'border-primary bg-primary/15 shadow-[0_0_20px_hsl(var(--primary)/0.3)]'
-          : 'border-border/40 bg-card/50 hover:border-primary/50'
+          ? 'border-primary/80 bg-gradient-to-br from-primary/20 via-primary/5 to-accent/10 shadow-[0_0_30px_hsl(var(--primary)/0.35),inset_0_1px_0_hsl(var(--primary)/0.4)]'
+          : 'border-border/30 bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-sm hover:border-primary/40 hover:shadow-[0_0_20px_hsl(var(--primary)/0.15)]'
       } ${row ? 'flex items-center gap-3 text-right' : 'flex flex-col items-center justify-center text-center'}`}
     >
-      {children}
+      {active && (
+        <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent" />
+      )}
+      <span className="relative z-10 contents">{children}</span>
     </button>
   );
 }
