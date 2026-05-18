@@ -133,3 +133,53 @@ Deno.test('invite email: declares utf-8 charset and RTL', async () => {
   const { raw } = await renderTemplate(InviteEmail, inviteProps)
   assertCharsetAndRtl(raw)
 })
+
+// ────────────────────────── preview-text isolation ──────────────────────────
+// The hidden React Email <Preview> block must not leak into the visible body
+// and the visible body must not contain the zero-width padding chars React
+// Email injects after the preview text.
+
+const previewCases: Array<{ name: string; Component: any; props: any; previewText: string }> = [
+  {
+    name: 'signup',
+    Component: SignupEmail,
+    props: baseProps,
+    previewText: 'קוד אימות המייל שלך - Daily Dominator',
+  },
+  {
+    name: 'magic-link',
+    Component: MagicLinkEmail,
+    props: baseProps,
+    previewText: 'קישור התחברות - Daily Dominator',
+  },
+  {
+    name: 'invite',
+    Component: InviteEmail,
+    props: inviteProps,
+    previewText: 'הוזמנת ל-Daily Dominator',
+  },
+]
+
+for (const { name, Component, props, previewText } of previewCases) {
+  Deno.test(`${name} email: preview text exists only in hidden block`, async () => {
+    const { raw, visible } = await renderTemplate(Component, props)
+
+    // The preview text must appear somewhere in the raw HTML (hidden block).
+    assertStringIncludes(decodeEntities(raw), previewText, 'preview block missing from raw HTML')
+
+    // But it must NOT appear in the visible body (after stripping the hidden block).
+    assert(
+      !decodeEntities(stripPreview(raw)).includes(previewText),
+      `${name}: preview text leaked into visible body: "${previewText}"`,
+    )
+
+    // Visible body must not contain React Email's zero-width padding garbage.
+    for (const ch of ['\u200C', '\u200B', '\u200D', '\u200E', '\u200F', '\uFEFF']) {
+      assert(
+        !visible.includes(ch),
+        `${name}: visible body contains zero-width char U+${ch.charCodeAt(0).toString(16)}`,
+      )
+    }
+  })
+}
+
