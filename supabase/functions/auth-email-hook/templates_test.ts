@@ -37,7 +37,7 @@ const renderTemplate = async (Component: any, props: any) => {
 
 const signupFields = {
   TITLE: 'אימות חשבון',
-  SUBTITLE: 'השתמש בקוד האימות החד פעמי כדי להתחבר בצורה מאובטחת לחשבון שלך.',
+  SUBTITLE: 'השתמש בקוד האימות החד פעמי כדי להיכנס בצורה מאובטחת לחשבון שלך.',
   EXPIRE_TEXT: 'הקוד תקף למשך 15 דקות בלבד',
   FOOTER_TEXT_1: 'אם לא נרשמת לחשבון,',
   FOOTER_TEXT_2: 'אפשר להתעלם מהמייל הזה בבטחה.',
@@ -63,7 +63,7 @@ Deno.test('signup email: declares utf-8 charset and RTL', async () => {
 
 const magicLinkFields = {
   TITLE: 'התחברות לחשבון',
-  SUBTITLE: 'השתמש בקוד האימות החד פעמי כדי להתחבר בצורה מאובטחת לחשבון שלך.',
+  SUBTITLE: 'השתמש בקוד האימות החד פעמי כדי להיכנס בצורה מאובטחת לחשבון שלך.',
   EXPIRE_TEXT: 'הקוד תקף למשך 15 דקות בלבד',
   FOOTER_TEXT_1: 'אם לא ביקשת להתחבר לחשבון שלך,',
   FOOTER_TEXT_2: 'אפשר להתעלם מהמייל הזה בבטחה.',
@@ -95,7 +95,7 @@ const inviteProps = {
 
 const inviteFields = {
   TITLE: 'הוזמנת להצטרף',
-  SUBTITLE: 'הוזמנת להצטרף ל-Daily Dominator. לחץ על הכפתור כדי לקבל את ההזמנה וליצור חשבון.',
+  SUBTITLE: 'הוזמנת להצטרף ל-Daily Dominator. לחץ כאן כדי לקבל את ההזמנה וליצור חשבון.',
   CTA_BUTTON: 'קבל הזמנה',
   FOOTER_TEXT_1: 'אם לא ציפית להזמנה זו,',
   FOOTER_TEXT_2: 'אפשר להתעלם מהמייל הזה בבטחה.',

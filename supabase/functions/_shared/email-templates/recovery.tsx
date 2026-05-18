@@ -27,8 +27,8 @@ const LOGO_URL =
 
 const PREVIEW_TEXT = '\u05e7\u05d5\u05d3 \u05d0\u05d9\u05e4\u05d5\u05e1 \u05e1\u05d9\u05e1\u05de\u05d4 - Daily Dominator'
 const TITLE = '\u05d0\u05d9\u05e4\u05d5\u05e1 \u05e1\u05d9\u05e1\u05de\u05d4'
-const SUBTITLE = '\u05d4\u05e9\u05ea\u05de\u05e9 \u05d1\u05e7\u05d5\u05d3 \u05d4\u05d0\u05d9\u05de\u05d5\u05ea \u05d4\u05d7\u05d3 \u05e4\u05e2\u05de\u05d9 \u05db\u05d3\u05d9 \u05dc\u05d0\u05e4\u05e1 \u05d0\u05ea \u05d4\u05e1\u05d9\u05e1\u05de\u05d4 \u05e9\u05dc\u05da \u05d1\u05e6\u05d5\u05e8\u05d4 \u05de\u05d0\u05d5\u05d1\u05d8\u05d7\u05ea.'
-const EXPIRE_TEXT = '\u05d4\u05e7\u05d5\u05d3 \u05ea\u05e7\u05e3 \u05dc\u05de\u05e9\u05da 15 \u05d3\u05e7\u05d5\u05ea \u05d1\u05dc\u05d1\u05d3'
+const SUBTITLE = '&#x05D4;&#x05E9;&#x05EA;&#x05DE;&#x05E9; &#x05D1;&#x05E7;&#x05D5;&#x05D3; &#x05D4;&#x05D0;&#x05D9;&#x05DE;&#x05D5;&#x05EA; &#x05D4;&#x05D7;&#x05D3; &#x05E4;&#x05E2;&#x05DE;&#x05D9; &#x05DB;&#x05D3;&#x05D9; &#x05DC;&#x05D0;&#x05E4;&#x05E1; &#x05D0;&#x05EA; &#x05D4;&#x05E1;&#x05D9;&#x05E1;&#x05DE;&#x05D4; &#x05E9;&#x05DC;&#x05DA; &#x05D1;&#x05E6;&#x05D5;&#x05E8;&#x05D4; &#x05DE;&#x05D0;&#x05D5;&#x05D1;&#x05D8;&#x05D7;&#x05EA;.'
+const EXPIRE_TEXT = '&#x05D4;&#x05E7;&#x05D5;&#x05D3; &#x05EA;&#x05E7;&#x05E3; &#x05DC;&#x05DE;&#x05E9;&#x05DA; 15 &#x05D3;&#x05E7;&#x05D5;&#x05EA; &#x05D1;&#x05DC;&#x05D1;&#x05D3;'
 const FOOTER_TEXT_1 = '\u05d0\u05dd \u05dc\u05d0 \u05d1\u05d9\u05e7\u05e9\u05ea \u05dc\u05d0\u05e4\u05e1 \u05d0\u05ea \u05d4\u05e1\u05d9\u05e1\u05de\u05d4,'
 const FOOTER_TEXT_2 = '\u05d0\u05e4\u05e9\u05e8 \u05dc\u05d4\u05ea\u05e2\u05dc\u05dd \u05de\u05d4\u05de\u05d9\u05d9\u05dc \u05d4\u05d6\u05d4 \u05d1\u05d1\u05d8\u05d7\u05d4.'
 
@@ -50,9 +50,9 @@ export const RecoveryEmail = ({ token }: RecoveryEmailProps) => (
       >
         <tr>
           <td align="center" bgcolor="#05070F">
-            <Container style={card}>
+            <Container style={card} bgcolor="#0B0D14">
               {/* TOP GLOW */}
-              <Section style={topGlow} />
+              <Section style={topGlow} bgcolor="#1A120D" />
 
               {/* LOGO */}
               <Section style={logoWrap}>
@@ -62,7 +62,7 @@ export const RecoveryEmail = ({ token }: RecoveryEmailProps) => (
               {/* TITLE */}
               <Section style={titleWrap}>
                 <Heading style={h1}>{TITLE}</Heading>
-                <Text style={subtitle}>{SUBTITLE}</Text>
+                <Text style={subtitle} dangerouslySetInnerHTML={{ __html: SUBTITLE }} />
               </Section>
 
               {/* CODE BOX */}
@@ -80,7 +80,7 @@ export const RecoveryEmail = ({ token }: RecoveryEmailProps) => (
 
               {/* EXPIRE */}
               <Section style={expireWrap}>
-                <Text style={expireText}>{EXPIRE_TEXT}</Text>
+                <Text style={expireText} dangerouslySetInnerHTML={{ __html: EXPIRE_TEXT }} />
               </Section>
 
               {/* FOOTER */}
@@ -107,10 +107,12 @@ const main = {
 
 const outerTable = {
   padding: '50px 18px',
+  backgroundColor: '#05070F',
   background: '#05070F',
 }
 
 const card = {
+  backgroundColor: '#0B0D14',
   maxWidth: '650px',
   width: '100%',
   borderRadius: '36px',
@@ -125,6 +127,7 @@ const card = {
 
 const topGlow = {
   height: '180px',
+  backgroundColor: '#1A120D',
   background:
     'radial-gradient(circle at top, rgba(255,140,0,0.35), rgba(0,0,0,0))',
 }

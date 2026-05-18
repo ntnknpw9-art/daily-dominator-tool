@@ -24,6 +24,8 @@ interface InviteEmailProps {
 const LOGO_URL =
   'https://jtdxblauyfhfvszlbppz.supabase.co/storage/v1/object/public/email-assets/daily-dominator-logo.png'
 
+const SUBTITLE = '&#x05D4;&#x05D5;&#x05D6;&#x05DE;&#x05E0;&#x05EA; &#x05DC;&#x05D4;&#x05E6;&#x05D8;&#x05E8;&#x05E3; &#x05DC;-Daily Dominator. &#x05DC;&#x05D7;&#x05E5; &#x05DB;&#x05D0;&#x05DF; &#x05DB;&#x05D3;&#x05D9; &#x05DC;&#x05E7;&#x05D1;&#x05DC; &#x05D0;&#x05EA; &#x05D4;&#x05D4;&#x05D6;&#x05DE;&#x05E0;&#x05D4; &#x05D5;&#x05DC;&#x05D9;&#x05E6;&#x05D5;&#x05E8; &#x05D7;&#x05E9;&#x05D1;&#x05D5;&#x05DF;.'
+
 export const InviteEmail = ({ confirmationUrl }: InviteEmailProps) => (
   <Html lang="he" dir="rtl">
     <Head>
@@ -35,8 +37,8 @@ export const InviteEmail = ({ confirmationUrl }: InviteEmailProps) => (
       <table width="100%" cellPadding={0} cellSpacing={0} border={0} bgcolor="#05070F" style={outerTable}>
         <tr>
           <td align="center" bgcolor="#05070F">
-            <Container style={card}>
-              <Section style={topGlow} />
+            <Container style={card} bgcolor="#0B0D14">
+              <Section style={topGlow} bgcolor="#1A120D" />
 
               <Section style={logoWrap}>
                 <Img src={LOGO_URL} width="110" height="110" alt="Daily Dominator" style={logoImg} />
@@ -44,9 +46,7 @@ export const InviteEmail = ({ confirmationUrl }: InviteEmailProps) => (
 
               <Section style={titleWrap}>
                 <Heading style={h1}>הוזמנת להצטרף</Heading>
-                <Text style={subtitle}>
-                  הוזמנת להצטרף ל-Daily Dominator. לחץ על הכפתור כדי לקבל את ההזמנה וליצור חשבון.
-                </Text>
+                <Text style={subtitle} dangerouslySetInnerHTML={{ __html: SUBTITLE }} />
               </Section>
 
               <Section style={buttonWrap}>
@@ -72,8 +72,9 @@ export const InviteEmail = ({ confirmationUrl }: InviteEmailProps) => (
 export default InviteEmail
 
 const main = { margin: 0, padding: 0, backgroundColor: '#05070F', fontFamily: 'Heebo, Arial, sans-serif' }
-const outerTable = { padding: '50px 18px', background: '#05070F' }
+const outerTable = { padding: '50px 18px', backgroundColor: '#05070F', background: '#05070F' }
 const card = {
+  backgroundColor: '#0B0D14',
   maxWidth: '650px',
   width: '100%',
   borderRadius: '36px',
@@ -83,7 +84,7 @@ const card = {
   boxShadow: '0 0 60px rgba(255,140,0,0.12), 0 30px 80px rgba(0,0,0,0.55)',
   margin: '0 auto',
 }
-const topGlow = { height: '180px', background: 'radial-gradient(circle at top, rgba(255,140,0,0.35), rgba(0,0,0,0))' }
+const topGlow = { height: '180px', backgroundColor: '#1A120D', background: 'radial-gradient(circle at top, rgba(255,140,0,0.35), rgba(0,0,0,0))' }
 const logoWrap = { textAlign: 'center' as const, padding: '0 40px' }
 const logoImg = {
   display: 'inline-block',
