@@ -79,10 +79,8 @@ export const RecoveryEmail = ({ token }: RecoveryEmailProps) => (
 
               {/* FOOTER */}
               <Section style={footerWrap}>
-                <Text style={footerText}>
-                  אם לא ביקשת לאפס את הסיסמה,<br />
-                  אפשר להתעלם מהמייל הזה בבטחה.
-                </Text>
+                <Text style={footerText}>אם לא ביקשת לאפס את הסיסמה,</Text>
+                <Text style={footerText}>אפשר להתעלם מהמייל הזה בבטחה.</Text>
               </Section>
             </Container>
           </td>
