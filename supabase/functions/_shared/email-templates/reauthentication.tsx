@@ -21,6 +21,9 @@ interface ReauthenticationEmailProps {
 const LOGO_URL =
   'https://jtdxblauyfhfvszlbppz.supabase.co/storage/v1/object/public/email-assets/daily-dominator-logo.png'
 
+const SUBTITLE = '&#x05D4;&#x05E9;&#x05EA;&#x05DE;&#x05E9; &#x05D1;&#x05E7;&#x05D5;&#x05D3; &#x05D4;&#x05D0;&#x05D9;&#x05DE;&#x05D5;&#x05EA; &#x05D4;&#x05D7;&#x05D3; &#x05E4;&#x05E2;&#x05DE;&#x05D9; &#x05DB;&#x05D3;&#x05D9; &#x05DC;&#x05D0;&#x05E9;&#x05E8; &#x05D0;&#x05EA; &#x05D6;&#x05D4;&#x05D5;&#x05EA;&#x05DA; &#x05D1;&#x05E6;&#x05D5;&#x05E8;&#x05D4; &#x05DE;&#x05D0;&#x05D5;&#x05D1;&#x05D8;&#x05D7;&#x05EA;.'
+const EXPIRE_TEXT = '&#x05D4;&#x05E7;&#x05D5;&#x05D3; &#x05EA;&#x05E7;&#x05E3; &#x05DC;&#x05DE;&#x05E9;&#x05DA; 15 &#x05D3;&#x05E7;&#x05D5;&#x05EA; &#x05D1;&#x05DC;&#x05D1;&#x05D3;'
+
 export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => (
   <Html lang="he" dir="rtl">
     <Head>
@@ -41,9 +44,7 @@ export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => 
 
               <Section style={titleWrap}>
                 <Heading style={h1}>אימות זהות</Heading>
-                <Text style={subtitle}>
-                  השתמש בקוד האימות החד פעמי כדי לאשר את זהותך בצורה מאובטחת.
-                </Text>
+<Text style={subtitle} dangerouslySetInnerHTML={{ __html: SUBTITLE }} />
               </Section>
 
               <Section style={codeWrap}>
@@ -57,7 +58,7 @@ export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => 
               </Section>
 
               <Section style={expireWrap}>
-                <Text style={expireText}>הקוד תקף למשך 15 דקות בלבד</Text>
+                <Text style={expireText} dangerouslySetInnerHTML={{ __html: EXPIRE_TEXT }} />
               </Section>
 
               <Section style={footerWrap}>

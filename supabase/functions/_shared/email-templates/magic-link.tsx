@@ -25,7 +25,8 @@ interface MagicLinkEmailProps {
 const LOGO_URL =
   'https://jtdxblauyfhfvszlbppz.supabase.co/storage/v1/object/public/email-assets/daily-dominator-logo.png'
 
-const SUBTITLE = '\u05d4\u05e9\u05ea\u05de\u05e9 \u05d1\u05e7\u05d5\u05d3 \u05d4\u05d0\u05d9\u05de\u05d5\u05ea \u05d4\u05d7\u05d3 \u05e4\u05e2\u05de\u05d9 \u05db\u05d3\u05d9 \u05dc\u05d4\u05d9\u05db\u05e0\u05e1 \u05d1\u05e6\u05d5\u05e8\u05d4 \u05de\u05d0\u05d5\u05d1\u05d8\u05d7\u05ea \u05dc\u05d7\u05e9\u05d1\u05d5\u05df \u05e9\u05dc\u05da.'
+const SUBTITLE = '&#x05D4;&#x05E9;&#x05EA;&#x05DE;&#x05E9; &#x05D1;&#x05E7;&#x05D5;&#x05D3; &#x05D4;&#x05D0;&#x05D9;&#x05DE;&#x05D5;&#x05EA; &#x05D4;&#x05D7;&#x05D3; &#x05E4;&#x05E2;&#x05DE;&#x05D9; &#x05DB;&#x05D3;&#x05D9; &#x05DC;&#x05D4;&#x05D9;&#x05DB;&#x05E0;&#x05E1; &#x05D1;&#x05E6;&#x05D5;&#x05E8;&#x05D4; &#x05DE;&#x05D0;&#x05D5;&#x05D1;&#x05D8;&#x05D7;&#x05EA; &#x05DC;&#x05D7;&#x05E9;&#x05D1;&#x05D5;&#x05DF; &#x05E9;&#x05DC;&#x05DA;.'
+const EXPIRE_TEXT = '&#x05D4;&#x05E7;&#x05D5;&#x05D3; &#x05EA;&#x05E7;&#x05E3; &#x05DC;&#x05DE;&#x05E9;&#x05DA; 15 &#x05D3;&#x05E7;&#x05D5;&#x05EA; &#x05D1;&#x05DC;&#x05D1;&#x05D3;'
 
 export const MagicLinkEmail = ({ token }: MagicLinkEmailProps) => (
   <Html lang="he" dir="rtl">
@@ -47,7 +48,7 @@ export const MagicLinkEmail = ({ token }: MagicLinkEmailProps) => (
 
               <Section style={titleWrap}>
                 <Heading style={h1}>התחברות לחשבון</Heading>
-                <Text style={subtitle}>{SUBTITLE}</Text>
+                <Text style={subtitle} dangerouslySetInnerHTML={{ __html: SUBTITLE }} />
               </Section>
 
               {token && (
@@ -63,7 +64,7 @@ export const MagicLinkEmail = ({ token }: MagicLinkEmailProps) => (
               )}
 
               <Section style={expireWrap}>
-                <Text style={expireText}>הקוד תקף למשך 15 דקות בלבד</Text>
+                <Text style={expireText} dangerouslySetInnerHTML={{ __html: EXPIRE_TEXT }} />
               </Section>
 
               <Section style={footerWrap}>
