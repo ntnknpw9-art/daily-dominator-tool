@@ -40,10 +40,6 @@ export const RecoveryEmail = ({
             <Text style={code}>{token}</Text>
           </Section>
         )}
-        <Text style={text}>או לחץ כאן כדי לאפס את הסיסמה:</Text>
-        <Button style={button} href={confirmationUrl}>
-          אפס סיסמה
-        </Button>
         <Text style={footer}>
           אם לא ביקשת איפוס, התעלם מהמייל. הקוד תקף ל-15 דקות.
         </Text>
