@@ -67,12 +67,19 @@ function Card({ active, onClick, row, children }: any) {
       onClick={onClick}
       className={`group relative w-full p-4 rounded-2xl border transition-all duration-300 active:scale-[0.97] overflow-hidden ${
         active
-          ? 'border-primary/80 bg-gradient-to-br from-primary/20 via-primary/5 to-accent/10 shadow-[0_0_30px_hsl(var(--primary)/0.35),inset_0_1px_0_hsl(var(--primary)/0.4)]'
-          : 'border-border/30 bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-sm hover:border-primary/40 hover:shadow-[0_0_20px_hsl(var(--primary)/0.15)]'
+          ? 'border-primary/70 bg-gradient-to-br from-primary/25 via-primary/8 to-accent/15 shadow-[0_8px_32px_-8px_hsl(var(--primary)/0.5),inset_0_1px_0_hsl(var(--primary)/0.5)] scale-[1.02]'
+          : 'border-border/30 bg-gradient-to-br from-card/70 to-card/30 backdrop-blur-sm hover:border-primary/40 hover:shadow-[0_8px_24px_-8px_hsl(var(--primary)/0.25)] hover:-translate-y-0.5'
       } ${row ? 'flex items-center gap-3 text-right' : 'flex flex-col items-center justify-center text-center'}`}
     >
+      {/* Shine sweep on hover */}
+      <span className="pointer-events-none absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-white/5 to-transparent" />
+      {/* Top highlight when active */}
       {active && (
-        <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent" />
+        <>
+          <span className="pointer-events-none absolute inset-x-4 top-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent" />
+          <span className="pointer-events-none absolute -inset-px rounded-2xl border border-primary/30" />
+          <span className="pointer-events-none absolute top-2 left-2 w-2 h-2 rounded-full bg-accent shadow-[0_0_8px_hsl(var(--accent))]" />
+        </>
       )}
       <span className="relative z-10 contents">{children}</span>
     </button>
