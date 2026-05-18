@@ -8,6 +8,7 @@ import {
   Head,
   Heading,
   Html,
+  Img,
   Preview,
   Section,
   Text,
@@ -21,45 +22,57 @@ interface SignupEmailProps {
   token?: string
 }
 
-export const SignupEmail = ({ recipient, token }: SignupEmailProps) => (
+const LOGO_URL =
+  'https://jtdxblauyfhfvszlbppz.supabase.co/storage/v1/object/public/email-assets/daily-dominator-logo.png'
+
+export const SignupEmail = ({ token }: SignupEmailProps) => (
   <Html lang="he" dir="rtl">
     <Head />
     <Preview>קוד אימות המייל שלך - Daily Dominator</Preview>
     <Body style={main}>
-      <Container style={container}>
-        <Section style={card}>
-          <div style={badge}>
-            <Text style={badgeText}>DAILY DOMINATOR</Text>
-          </div>
+      <table width="100%" cellPadding={0} cellSpacing={0} border={0} style={outerTable}>
+        <tr>
+          <td align="center">
+            <Container style={card}>
+              <Section style={topGlow} />
 
-          <Heading style={h1}>ברוך הבא! 🔥</Heading>
-          <Text style={subtitle}>
-            הזן את הקוד הבא באפליקציה כדי לאמת את <strong style={emailStyle} dir="ltr">{recipient}</strong>
-          </Text>
+              <Section style={logoWrap}>
+                <Img src={LOGO_URL} width="110" height="110" alt="Daily Dominator" style={logoImg} />
+              </Section>
 
-          {token && (
-            <Section style={codeBox}>
-              <Text style={codeLabel}>קוד אימות</Text>
-              <Text style={code}>{token}</Text>
-            </Section>
-          )}
+              <Section style={titleWrap}>
+                <Heading style={h1}>אימות חשבון</Heading>
+                <Text style={subtitle}>
+                  השתמש בקוד האימות החד פעמי כדי להתחבר בצורה מאובטחת לחשבון שלך.
+                </Text>
+              </Section>
 
-          <Section style={infoBox}>
-            <Text style={infoText}>
-              ⏱️ הקוד תקף ל-15 דקות בלבד
-            </Text>
-          </Section>
+              {token && (
+                <Section style={codeWrap}>
+                  <table cellPadding={0} cellSpacing={0} border={0} align="center">
+                    <tr>
+                      <td style={codeBox}>
+                        <span style={code}>{token}</span>
+                      </td>
+                    </tr>
+                  </table>
+                </Section>
+              )}
 
-          <Text style={footer}>
-            לא נרשמת? אפשר פשוט להתעלם מהמייל הזה.
-          </Text>
+              <Section style={expireWrap}>
+                <Text style={expireText}>הקוד תקף למשך 15 דקות בלבד</Text>
+              </Section>
 
-          <Section style={brandFooter}>
-            <Text style={brandText}>Daily Dominator</Text>
-            <Text style={brandTagline}>השליטה היומיומית שלך</Text>
-          </Section>
-        </Section>
-      </Container>
+              <Section style={footerWrap}>
+                <Text style={footerText}>
+                  אם לא נרשמת לחשבון,<br />
+                  אפשר להתעלם מהמייל הזה בבטחה.
+                </Text>
+              </Section>
+            </Container>
+          </td>
+        </tr>
+      </table>
     </Body>
   </Html>
 )
@@ -67,121 +80,86 @@ export const SignupEmail = ({ recipient, token }: SignupEmailProps) => (
 export default SignupEmail
 
 const main = {
-  backgroundColor: '#ffffff',
-  fontFamily: 'Heebo, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif',
   margin: 0,
-  padding: '40px 16px',
+  padding: 0,
+  backgroundColor: '#05070F',
+  fontFamily: 'Heebo, Arial, sans-serif',
 }
 
-const container = { maxWidth: '520px', margin: '0 auto' }
+const outerTable = { padding: '50px 18px', background: '#05070F' }
 
 const card = {
-  background: 'linear-gradient(180deg, #ffffff 0%, #fafafa 100%)',
-  border: '1px solid #ececec',
-  borderRadius: '24px',
-  padding: '40px 32px',
-  textAlign: 'right' as const,
-  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.06)',
+  maxWidth: '650px',
+  width: '100%',
+  borderRadius: '36px',
+  overflow: 'hidden',
+  background: 'linear-gradient(145deg, rgba(255,255,255,0.08), rgba(255,255,255,0.03))',
+  border: '1px solid rgba(255,255,255,0.10)',
+  boxShadow: '0 0 60px rgba(255,140,0,0.12), 0 30px 80px rgba(0,0,0,0.55)',
+  margin: '0 auto',
 }
 
-const badge = {
+const topGlow = {
+  height: '180px',
+  background: 'radial-gradient(circle at top, rgba(255,140,0,0.35), rgba(0,0,0,0))',
+}
+
+const logoWrap = { textAlign: 'center' as const, padding: '0 40px' }
+
+const logoImg = {
   display: 'inline-block',
-  backgroundColor: '#0a0a0a',
-  borderRadius: '999px',
-  padding: '6px 14px',
-  marginBottom: '24px',
+  width: '110px',
+  height: '110px',
+  borderRadius: '32px',
+  marginTop: '-80px',
+  border: '1px solid rgba(255,255,255,0.10)',
+  boxShadow: 'inset 0 0 25px rgba(255,255,255,0.04), 0 0 40px rgba(255,140,0,0.25)',
 }
 
-const badgeText = {
-  fontSize: '11px',
-  fontWeight: 800 as const,
-  color: 'hsl(38, 92%, 50%)',
-  letterSpacing: '2px',
-  margin: 0,
-}
+const titleWrap = { textAlign: 'center' as const, padding: '35px 45px 0' }
 
 const h1 = {
-  fontSize: '28px',
-  fontWeight: 800 as const,
-  color: '#0a0a0a',
-  margin: '0 0 12px',
-  lineHeight: '1.3',
+  margin: 0,
+  color: '#FFFFFF',
+  fontSize: '40px',
+  fontWeight: 900 as const,
+  letterSpacing: '-1px',
 }
 
 const subtitle = {
-  fontSize: '15px',
-  color: '#666666',
-  lineHeight: '1.6',
-  margin: '0 0 28px',
+  margin: '22px auto 0',
+  color: '#B7C2D9',
+  fontSize: '17px',
+  lineHeight: '1.9',
+  maxWidth: '470px',
 }
 
-const emailStyle = { color: '#0a0a0a' }
+const codeWrap = { textAlign: 'center' as const, padding: '50px 30px 25px' }
 
 const codeBox = {
-  background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)',
-  borderRadius: '20px',
-  padding: '24px 20px',
-  margin: '0 0 20px',
-  textAlign: 'center' as const,
-  border: '1px solid hsl(38, 92%, 50%)',
-}
-
-const codeLabel = {
-  fontSize: '11px',
-  color: 'hsl(38, 92%, 50%)',
-  letterSpacing: '3px',
-  fontWeight: 700 as const,
-  margin: '0 0 12px',
-  textTransform: 'uppercase' as const,
+  padding: '28px 42px',
+  borderRadius: '30px',
+  background: 'linear-gradient(145deg, rgba(255,255,255,0.09), rgba(255,255,255,0.03))',
+  border: '1px solid rgba(255,255,255,0.10)',
+  boxShadow: 'inset 0 0 25px rgba(255,255,255,0.03), 0 0 45px rgba(255,140,0,0.15)',
 }
 
 const code = {
-  fontSize: '40px',
+  color: '#FFFFFF',
+  fontSize: '54px',
   fontWeight: 900 as const,
-  color: '#ffffff',
-  letterSpacing: '10px',
-  margin: 0,
+  letterSpacing: '14px',
   fontFamily: 'SF Mono, Menlo, Monaco, monospace',
-  lineHeight: '1.1',
 }
 
-const infoBox = {
-  backgroundColor: 'hsl(38, 92%, 95%)',
-  borderRadius: '12px',
-  padding: '12px 16px',
-  margin: '0 0 28px',
+const expireWrap = { textAlign: 'center' as const, padding: '0 40px 55px' }
+
+const expireText = { color: '#7E8AA8', fontSize: '14px', lineHeight: '1.8', margin: 0 }
+
+const footerWrap = {
   textAlign: 'center' as const,
+  borderTop: '1px solid rgba(255,255,255,0.08)',
+  padding: '32px 35px 40px',
 }
 
-const infoText = {
-  fontSize: '13px',
-  color: 'hsl(38, 92%, 30%)',
-  fontWeight: 600 as const,
-  margin: 0,
-}
-
-const footer = {
-  fontSize: '13px',
-  color: '#999999',
-  lineHeight: '1.6',
-  margin: '0 0 32px',
-  paddingTop: '20px',
-  borderTop: '1px solid #f0f0f0',
-}
-
-const brandFooter = { textAlign: 'center' as const, paddingTop: '8px' }
-
-const brandText = {
-  fontSize: '14px',
-  fontWeight: 800 as const,
-  color: 'hsl(0, 72%, 51%)',
-  margin: '0 0 4px',
-  letterSpacing: '0.5px',
-}
-
-const brandTagline = {
-  fontSize: '11px',
-  color: '#bbbbbb',
-  margin: 0,
-  letterSpacing: '1px',
-}
+const footerText = { margin: 0, color: '#66708C', fontSize: '13px', lineHeight: '1.9' }
