@@ -319,19 +319,21 @@ ${splitHint}
       </div>
 
       {/* Question */}
-      <div className="relative flex-1 px-5 py-10 max-w-md w-full mx-auto">
-        <div key={step} className="animate-fade-in space-y-8">
-          <div className="text-center space-y-3">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-primary/30 bg-primary/5 backdrop-blur-sm">
-              <Sparkles className="w-3 h-3 text-accent" />
-              <span className="text-[10px] uppercase tracking-[0.25em] font-bold text-accent">בניית פרופיל</span>
+      <div className="relative z-10 flex-1 flex w-full">
+        <div className="w-full max-w-md mx-auto px-5 pt-8 pb-28 flex flex-col justify-center">
+          <div key={step} className="animate-fade-in space-y-8">
+            <div className="text-center space-y-3">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-primary/30 bg-primary/5 backdrop-blur-sm">
+                <Sparkles className="w-3 h-3 text-accent" />
+                <span className="text-[10px] uppercase tracking-[0.25em] font-bold text-accent">בניית פרופיל</span>
+              </div>
+              <h2 className="text-3xl font-black tracking-tight bg-gradient-to-b from-foreground to-foreground/70 bg-clip-text text-transparent">
+                {cur.title}
+              </h2>
+              {cur.sub && <p className="text-sm text-muted-foreground/90">{cur.sub}</p>}
             </div>
-            <h2 className="text-3xl font-black tracking-tight bg-gradient-to-b from-foreground to-foreground/70 bg-clip-text text-transparent">
-              {cur.title}
-            </h2>
-            {cur.sub && <p className="text-sm text-muted-foreground/90">{cur.sub}</p>}
+            <div className="relative">{cur.render()}</div>
           </div>
-          <div className="relative">{cur.render()}</div>
         </div>
       </div>
 
