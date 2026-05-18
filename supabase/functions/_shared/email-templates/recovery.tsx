@@ -45,6 +45,7 @@ export const RecoveryEmail = ({ token }: RecoveryEmailProps) => (
         cellPadding={0}
         cellSpacing={0}
         border={0}
+        bgcolor="#05070F"
         style={outerTable}
       >
         <tr>
