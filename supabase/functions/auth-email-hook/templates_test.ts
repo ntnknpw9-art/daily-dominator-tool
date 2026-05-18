@@ -5,13 +5,12 @@ import * as React from 'npm:react@18.3.1'
 import { SignupEmail } from '../_shared/email-templates/signup.tsx'
 import { MagicLinkEmail } from '../_shared/email-templates/magic-link.tsx'
 import { InviteEmail } from '../_shared/email-templates/invite.tsx'
+import { assertAllFieldsRender, assertCleanVisibleHtml } from './_diagnostics.ts'
 
 const decodeEntities = (s: string) =>
   s.replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)))
    .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCodePoint(parseInt(n, 16)))
 
-// React Email's <Preview> pads with U+200C zero-width chars in a hidden div.
-// Strip it so it does not pollute the regression checks.
 const stripPreview = (html: string) =>
   html.replace(/<div style="display:none[^"]*"[^>]*>[\s\S]*?<\/div><\/div>/, '')
 
@@ -19,16 +18,6 @@ const assertCharsetAndRtl = (raw: string) => {
   assertStringIncludes(raw.toLowerCase(), 'charset=utf-8')
   assertStringIncludes(raw, 'dir="rtl"')
   assertStringIncludes(raw, 'lang="he"')
-}
-
-const assertNoReplacementChars = (visible: string) => {
-  for (const ch of ['\uFFFD', '\u200C']) {
-    assert(
-      !visible.includes(ch),
-      `Visible HTML contains forbidden char U+${ch.charCodeAt(0).toString(16)}`,
-    )
-  }
-  assert(!/\?\?/.test(visible), 'Visible HTML contains "??" sequence')
 }
 
 const baseProps = {
@@ -46,25 +35,23 @@ const renderTemplate = async (Component: any, props: any) => {
 
 // ────────────────────────── signup ──────────────────────────
 
-const signupExpected = [
-  'אימות חשבון',
-  'השתמש בקוד האימות החד פעמי כדי להתחבר בצורה מאובטחת לחשבון שלך.',
-  'הקוד תקף למשך 15 דקות בלבד',
-  'אם לא נרשמת לחשבון,',
-  'אפשר להתעלם מהמייל הזה בבטחה.',
-  '123456',
-]
+const signupFields = {
+  TITLE: 'אימות חשבון',
+  SUBTITLE: 'השתמש בקוד האימות החד פעמי כדי להתחבר בצורה מאובטחת לחשבון שלך.',
+  EXPIRE_TEXT: 'הקוד תקף למשך 15 דקות בלבד',
+  FOOTER_TEXT_1: 'אם לא נרשמת לחשבון,',
+  FOOTER_TEXT_2: 'אפשר להתעלם מהמייל הזה בבטחה.',
+  TOKEN: '123456',
+}
 
 Deno.test('signup email: no replacement characters in visible HTML', async () => {
   const { visible } = await renderTemplate(SignupEmail, baseProps)
-  assertNoReplacementChars(visible)
+  assertCleanVisibleHtml('signup', visible)
 })
 
 Deno.test('signup email: all Hebrew copy renders correctly', async () => {
   const { visible } = await renderTemplate(SignupEmail, baseProps)
-  for (const text of signupExpected) {
-    assertStringIncludes(visible, text, `signup missing: ${text}`)
-  }
+  assertAllFieldsRender('signup', visible, signupFields)
 })
 
 Deno.test('signup email: declares utf-8 charset and RTL', async () => {
@@ -74,25 +61,23 @@ Deno.test('signup email: declares utf-8 charset and RTL', async () => {
 
 // ────────────────────────── magic-link ──────────────────────────
 
-const magicLinkExpected = [
-  'התחברות לחשבון',
-  'השתמש בקוד האימות החד פעמי כדי להתחבר בצורה מאובטחת לחשבון שלך.',
-  'הקוד תקף למשך 15 דקות בלבד',
-  'אם לא ביקשת להתחבר לחשבון שלך,',
-  'אפשר להתעלם מהמייל הזה בבטחה.',
-  '123456',
-]
+const magicLinkFields = {
+  TITLE: 'התחברות לחשבון',
+  SUBTITLE: 'השתמש בקוד האימות החד פעמי כדי להתחבר בצורה מאובטחת לחשבון שלך.',
+  EXPIRE_TEXT: 'הקוד תקף למשך 15 דקות בלבד',
+  FOOTER_TEXT_1: 'אם לא ביקשת להתחבר לחשבון שלך,',
+  FOOTER_TEXT_2: 'אפשר להתעלם מהמייל הזה בבטחה.',
+  TOKEN: '123456',
+}
 
 Deno.test('magic-link email: no replacement characters in visible HTML', async () => {
   const { visible } = await renderTemplate(MagicLinkEmail, baseProps)
-  assertNoReplacementChars(visible)
+  assertCleanVisibleHtml('magic-link', visible)
 })
 
 Deno.test('magic-link email: all Hebrew copy renders correctly', async () => {
   const { visible } = await renderTemplate(MagicLinkEmail, baseProps)
-  for (const text of magicLinkExpected) {
-    assertStringIncludes(visible, text, `magic-link missing: ${text}`)
-  }
+  assertAllFieldsRender('magic-link', visible, magicLinkFields)
 })
 
 Deno.test('magic-link email: declares utf-8 charset and RTL', async () => {
@@ -108,25 +93,23 @@ const inviteProps = {
   confirmationUrl: 'https://dailydominator.org/invite',
 }
 
-const inviteExpected = [
-  'הוזמנת להצטרף',
-  'הוזמנת להצטרף ל-Daily Dominator. לחץ על הכפתור כדי לקבל את ההזמנה וליצור חשבון.',
-  'קבל הזמנה',
-  'אם לא ציפית להזמנה זו,',
-  'אפשר להתעלם מהמייל הזה בבטחה.',
-]
+const inviteFields = {
+  TITLE: 'הוזמנת להצטרף',
+  SUBTITLE: 'הוזמנת להצטרף ל-Daily Dominator. לחץ על הכפתור כדי לקבל את ההזמנה וליצור חשבון.',
+  CTA_BUTTON: 'קבל הזמנה',
+  FOOTER_TEXT_1: 'אם לא ציפית להזמנה זו,',
+  FOOTER_TEXT_2: 'אפשר להתעלם מהמייל הזה בבטחה.',
+  CONFIRMATION_URL: inviteProps.confirmationUrl,
+}
 
 Deno.test('invite email: no replacement characters in visible HTML', async () => {
   const { visible } = await renderTemplate(InviteEmail, inviteProps)
-  assertNoReplacementChars(visible)
+  assertCleanVisibleHtml('invite', visible)
 })
 
 Deno.test('invite email: all Hebrew copy renders correctly', async () => {
   const { visible } = await renderTemplate(InviteEmail, inviteProps)
-  for (const text of inviteExpected) {
-    assertStringIncludes(visible, text, `invite missing: ${text}`)
-  }
-  assertStringIncludes(visible, inviteProps.confirmationUrl)
+  assertAllFieldsRender('invite', visible, inviteFields)
 })
 
 Deno.test('invite email: declares utf-8 charset and RTL', async () => {
