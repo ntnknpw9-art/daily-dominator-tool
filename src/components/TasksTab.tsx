@@ -63,11 +63,37 @@ const TaskCard = ({ task }: { task: Task }) => {
       </div>
 
       {task.workoutDetails && (
-        <div className="bg-secondary/50 rounded-lg p-3 space-y-1">
-          <span className="text-xs font-semibold text-accent">פירוט אימון:</span>
-          {task.workoutDetails.map(wd => (
-            <div key={wd.day} className="text-xs text-muted-foreground">{wd.day} — {wd.description}</div>
-          ))}
+        <div className="rounded-xl border border-border/60 bg-gradient-to-br from-secondary/40 to-card/60 p-3 space-y-3">
+          <div className="flex items-center gap-2">
+            <span className="h-1 w-1 rounded-full bg-accent shadow-[0_0_6px_hsl(var(--accent))]" />
+            <span className="text-[11px] uppercase tracking-[0.18em] font-bold text-accent">פירוט אימון</span>
+          </div>
+          {task.workoutDetails.map(wd => {
+            const parts = (wd.description || '').split(/\s*—\s*/);
+            const focus = parts.length > 1 ? parts[0] : '';
+            const rest = parts.length > 1 ? parts.slice(1).join(' — ') : wd.description;
+            const exercises = (rest || '').split(/\s*,\s*/).filter(Boolean);
+            return (
+              <div key={wd.day} className="rounded-lg border border-border/40 bg-background/40 p-2.5 space-y-2">
+                <div className="flex items-center justify-between gap-2 pb-1.5 border-b border-border/30">
+                  <span className="text-sm font-black text-foreground">{wd.day}</span>
+                  {focus && (
+                    <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/30">
+                      {focus}
+                    </span>
+                  )}
+                </div>
+                <ul className="space-y-1">
+                  {exercises.map((ex, i) => (
+                    <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground leading-relaxed">
+                      <span className="mt-1.5 h-1 w-1 rounded-full bg-primary/60 shrink-0" />
+                      <span>{ex}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })}
         </div>
       )}
 
