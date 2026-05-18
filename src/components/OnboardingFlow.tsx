@@ -278,7 +278,7 @@ ${splitHint}
   }
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-background" dir="rtl">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-background flex flex-col" dir="rtl">
       {/* Ambient background */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -top-32 -right-32 h-96 w-96 rounded-full bg-primary/20 blur-[120px]" />
@@ -319,7 +319,7 @@ ${splitHint}
       </div>
 
       {/* Question */}
-      <div className="relative px-5 py-10 max-w-md mx-auto">
+      <div className="relative flex-1 px-5 py-10 max-w-md w-full mx-auto">
         <div key={step} className="animate-fade-in space-y-8">
           <div className="text-center space-y-3">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-primary/30 bg-primary/5 backdrop-blur-sm">
