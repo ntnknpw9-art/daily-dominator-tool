@@ -326,7 +326,7 @@ ${splitHint}
 
       {/* Question */}
       <div className="relative z-10 flex-1 min-h-0 overflow-y-auto w-full">
-        <div className="w-full max-w-md mx-auto px-5 pt-8 pb-28 flex flex-col justify-center">
+        <div className="w-full max-w-md mx-auto px-5 pt-8 pb-8 flex flex-col justify-center min-h-full">
           <div key={step} className="animate-fade-in space-y-8">
             <div className="text-center space-y-3">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-primary/30 bg-primary/5 backdrop-blur-sm">
