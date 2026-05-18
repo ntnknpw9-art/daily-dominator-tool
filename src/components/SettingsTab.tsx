@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Volume2, VolumeX, Sun, Moon, Bell, BellOff, Skull, Trash2, Watch, CheckCircle2, RefreshCw, Sparkles } from 'lucide-react';
+import { Volume2, VolumeX, Sun, Moon, Bell, BellOff, Skull, Trash2, Watch, CheckCircle2, RefreshCw, Sparkles, Heart, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -12,6 +12,8 @@ import { useAuth } from '@/context/AuthContext';
 import { toast } from 'sonner';
 import { getTheme, applyTheme } from '@/lib/theme';
 import { useHealthSync } from '@/hooks/useHealthSync';
+import { usePremium } from '@/hooks/usePremium';
+import { getOfferings, purchasePackage, restorePurchases, isIOSNative, PRODUCT_MONTHLY, PRODUCT_YEARLY } from '@/lib/revenuecat';
 
 const NO_MERCY_KEY = 'app_no_mercy_mode';
 
@@ -23,6 +25,72 @@ export const isNoMercyMode = () => {
 const SettingsTab = () => {
   const { signOut, user } = useAuth();
   const { syncHealthData, isSyncing } = useHealthSync();
+  const { isPremium, productId, expiresAt, reload: reloadPremium } = usePremium();
+  const [offerings, setOfferings] = useState<any>(null);
+  const [purchasing, setPurchasing] = useState<string | null>(null);
+  const [restoring, setRestoring] = useState(false);
+
+  useEffect(() => {
+    if (isIOSNative()) {
+      getOfferings().then(setOfferings).catch(() => {});
+    }
+  }, []);
+
+  const findPackage = (productKey: string) => {
+    if (!offerings?.availablePackages) return null;
+    return offerings.availablePackages.find((p: any) =>
+      p?.product?.identifier === productKey || p?.identifier === productKey
+    );
+  };
+
+  const handlePurchase = async (productKey: string) => {
+    if (!isIOSNative()) {
+      toast.info('הרכישות זמינות באפליקציה על iPhone בלבד');
+      return;
+    }
+    const pkg = findPackage(productKey);
+    if (!pkg) {
+      toast.error('המוצר לא זמין כרגע. נסה שוב מאוחר יותר.');
+      return;
+    }
+    try {
+      setPurchasing(productKey);
+      const res = await purchasePackage(pkg);
+      if (res.isPremium) {
+        toast.success('תודה רבה על התמיכה! 💜');
+        reloadPremium();
+      }
+    } catch (e: any) {
+      const msg = e?.message || '';
+      if (!msg.toLowerCase().includes('cancel')) {
+        toast.error('הרכישה נכשלה: ' + msg);
+      }
+    } finally {
+      setPurchasing(null);
+    }
+  };
+
+  const handleRestore = async () => {
+    if (!isIOSNative()) {
+      toast.info('שחזור רכישות זמין באפליקציה על iPhone בלבד');
+      return;
+    }
+    try {
+      setRestoring(true);
+      const res = await restorePurchases();
+      if (res.isPremium) {
+        toast.success('הרכישה שוחזרה בהצלחה');
+      } else {
+        toast.info('לא נמצאו רכישות פעילות');
+      }
+      reloadPremium();
+    } catch (e: any) {
+      toast.error('שחזור נכשל: ' + (e?.message || ''));
+    } finally {
+      setRestoring(false);
+    }
+  };
+
   const [deleting, setDeleting] = useState(false);
   const [soundOn, setSoundOn] = useState(isSoundEnabled);
   const [theme, setTheme] = useState<'dark' | 'light'>(getTheme);
@@ -350,6 +418,81 @@ const SettingsTab = () => {
           </div>
         </CardContent>
       </Card>
+
+      <Card className="border-accent/30 bg-gradient-to-br from-accent/5 to-card/50 backdrop-blur-sm">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <Heart className="w-5 h-5 text-accent" />
+            תמיכה באפליקציה
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between bg-background/40 border border-border/40 rounded-lg p-3">
+            <div className="text-sm">
+              <div className="font-medium">סטטוס</div>
+              <div className="text-xs text-muted-foreground">
+                {isPremium ? 'תומך פעיל — תודה!' : 'משתמש חינמי'}
+              </div>
+            </div>
+            <div className="flex items-center gap-1.5">
+              {isPremium && <Crown className="w-4 h-4 text-accent" />}
+              <span className={`text-xs font-bold px-2 py-1 rounded-full border ${isPremium ? 'bg-accent/10 text-accent border-accent/30' : 'bg-muted text-muted-foreground border-border'}`}>
+                {isPremium ? 'תומך' : 'חינמי'}
+              </span>
+            </div>
+          </div>
+
+          <div className="text-xs text-muted-foreground leading-relaxed">
+            המנוי הוא אופציונלי לחלוטין. אפשר להשתמש בכל האפליקציה בחינם — כל הפיצ׳רים, ללא הגבלות וללא הבדל בין משתמשים. התמיכה היא דרך להגיד תודה ולעזור לפיתוח להמשיך.
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-col h-auto py-3 gap-1"
+              disabled={!!purchasing || isPremium}
+              onClick={() => handlePurchase(PRODUCT_MONTHLY)}
+            >
+              <span className="text-xs text-muted-foreground">חודשי</span>
+              <span className="font-bold">
+                {purchasing === PRODUCT_MONTHLY ? 'רוכש...' : (findPackage(PRODUCT_MONTHLY)?.product?.priceString || 'תמיכה חודשית')}
+              </span>
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
+              className="flex-col h-auto py-3 gap-1"
+              disabled={!!purchasing || isPremium}
+              onClick={() => handlePurchase(PRODUCT_YEARLY)}
+            >
+              <span className="text-xs opacity-80">שנתי</span>
+              <span className="font-bold">
+                {purchasing === PRODUCT_YEARLY ? 'רוכש...' : (findPackage(PRODUCT_YEARLY)?.product?.priceString || 'תמיכה שנתית')}
+              </span>
+            </Button>
+          </div>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full gap-2"
+            onClick={handleRestore}
+            disabled={restoring}
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${restoring ? 'animate-spin' : ''}`} />
+            {restoring ? 'משחזר...' : 'שחזר רכישות'}
+          </Button>
+
+          {!isIOSNative() && (
+            <div className="text-[11px] text-muted-foreground text-center">
+              רכישות זמינות באפליקציה על iPhone בלבד
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+
 
       <Card className="border-destructive/40 bg-card/50 backdrop-blur-sm">
         <CardHeader className="pb-3">
