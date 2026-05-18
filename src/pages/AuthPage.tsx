@@ -38,6 +38,10 @@ const AuthPage = () => {
   const [mode, setMode] = useState<'login' | 'signup' | 'forgot'>('login');
   const [otpStep, setOtpStep] = useState(false);
   const [otpCode, setOtpCode] = useState('');
+  const [resetStep, setResetStep] = useState<'none' | 'email' | 'code'>('none');
+  const [resetCode, setResetCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,6 +68,42 @@ const AuthPage = () => {
     setLoading(false);
     if (error) setError(error.message);
     else setSuccessMsg('קוד חדש נשלח למייל שלך');
+  };
+
+  const sendResetCode = async () => {
+    setError(''); setSuccessMsg('');
+    if (!email) { setError('הזן את כתובת המייל שלך'); return; }
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email);
+    setLoading(false);
+    if (error) { setError(error.message); return; }
+    setResetStep('code');
+    setSuccessMsg('שלחנו קוד בן 6 ספרות למייל שלך');
+  };
+
+  const handleResetWithCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(''); setSuccessMsg('');
+    if (resetCode.length !== 6) { setError('הזן קוד בן 6 ספרות'); return; }
+    if (newPassword.length < 6) { setError('הסיסמה חייבת להכיל לפחות 6 תווים'); return; }
+    if (newPassword !== confirmNewPassword) { setError('הסיסמאות אינן תואמות'); return; }
+    setLoading(true);
+    const { error: verifyError } = await supabase.auth.verifyOtp({
+      email,
+      token: resetCode,
+      type: 'recovery',
+    });
+    if (verifyError) {
+      setLoading(false);
+      setError('קוד שגוי או שפג תוקפו. נסה שוב.');
+      return;
+    }
+    const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+    setLoading(false);
+    if (updateError) { setError(updateError.message); return; }
+    setSuccessMsg('הסיסמה עודכנה בהצלחה! מתחבר...');
+    setResetStep('none');
+    setResetCode(''); setNewPassword(''); setConfirmNewPassword('');
   };
 
 
@@ -232,6 +272,91 @@ const AuthPage = () => {
     setLoading(false);
   };
 
+  if (resetStep === 'code') {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="glass-card p-8 w-full max-w-md animate-scale-in" dir="rtl">
+          <div className="text-center mb-6">
+            <div className="text-5xl mb-3">🔑</div>
+            <h1 className="text-2xl font-bold">איפוס סיסמה</h1>
+            <p className="text-sm text-muted-foreground mt-2">
+              שלחנו קוד בן 6 ספרות אל
+              <br />
+              <strong className="text-foreground" dir="ltr">{email}</strong>
+            </p>
+          </div>
+
+          <form onSubmit={handleResetWithCode} className="space-y-4">
+            <div>
+              <Label className="text-center block mb-2">קוד אימות</Label>
+              <Input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={6}
+                value={resetCode}
+                onChange={e => setResetCode(e.target.value.replace(/\D/g, ''))}
+                placeholder="000000"
+                className="text-center text-3xl font-bold tracking-[0.5em] h-16"
+                dir="ltr"
+                autoFocus
+              />
+            </div>
+            <div>
+              <Label>סיסמה חדשה</Label>
+              <Input
+                type="password"
+                value={newPassword}
+                onChange={e => setNewPassword(e.target.value)}
+                placeholder="••••••••"
+                dir="ltr"
+                minLength={6}
+                required
+              />
+            </div>
+            <div>
+              <Label>אימות סיסמה</Label>
+              <Input
+                type="password"
+                value={confirmNewPassword}
+                onChange={e => setConfirmNewPassword(e.target.value)}
+                placeholder="••••••••"
+                dir="ltr"
+                minLength={6}
+                required
+              />
+            </div>
+
+            {error && <div className="text-destructive text-sm bg-destructive/10 rounded-lg p-3 text-center">{error}</div>}
+            {successMsg && <div className="text-success text-sm bg-success/10 rounded-lg p-3 text-center">{successMsg}</div>}
+
+            <Button type="submit" className="w-full h-12 text-base font-bold" disabled={loading}>
+              {loading ? '...' : 'אפס סיסמה'}
+            </Button>
+
+            <div className="flex flex-col gap-2 pt-2">
+              <button
+                type="button"
+                onClick={sendResetCode}
+                disabled={loading}
+                className="text-sm text-primary hover:underline"
+              >
+                לא קיבלת? שלח קוד חדש
+              </button>
+              <button
+                type="button"
+                onClick={() => { setResetStep('none'); setResetCode(''); setNewPassword(''); setConfirmNewPassword(''); setError(''); setSuccessMsg(''); }}
+                className="text-xs text-muted-foreground hover:text-foreground"
+              >
+                ← חזור להתחברות
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   if (otpStep) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -341,15 +466,9 @@ const AuthPage = () => {
               <button
                 type="button"
                 onClick={async () => {
-                  setError(''); setSuccessMsg('');
                   if (!email) { setError('הזן את כתובת המייל שלך כדי לאפס סיסמה'); return; }
-                  setLoading(true);
-                  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                    redirectTo: `${window.location.origin}/reset-password`,
-                  });
-                  setLoading(false);
-                  if (error) setError(error.message);
-                  else setSuccessMsg('נשלח מייל לאיפוס סיסמה. בדוק את תיבת הדואר שלך.');
+                  setResetStep('code');
+                  await sendResetCode();
                 }}
                 className="text-xs text-primary hover:underline mt-1"
               >
