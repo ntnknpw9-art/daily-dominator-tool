@@ -27,7 +27,10 @@ const LOGO_URL =
 
 export const RecoveryEmail = ({ token }: RecoveryEmailProps) => (
   <Html lang="he" dir="rtl">
-    <Head />
+    <Head>
+      <meta charSet="utf-8" />
+      <meta httpEquiv="Content-Type" content="text/html; charset=utf-8" />
+    </Head>
     <Preview>קוד איפוס סיסמה - Daily Dominator</Preview>
     <Body style={main}>
       <table
