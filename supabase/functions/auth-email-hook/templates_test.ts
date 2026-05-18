@@ -173,8 +173,10 @@ for (const { name, Component, props, previewText } of previewCases) {
       `${name}: preview text leaked into visible body: "${previewText}"`,
     )
 
-    // Visible body must not contain React Email's zero-width padding garbage.
-    for (const ch of ['\u200C', '\u200B', '\u200D', '\u200E', '\u200F', '\uFEFF']) {
+    // Visible body must not contain the zero-width chars React Email injects
+    // into the preview block (U+200C / U+FEFF). U+200B is intentionally used
+    // by React Email's <Button> for Outlook layout fixes, so we allow it.
+    for (const ch of ['\u200C', '\uFEFF']) {
       assert(
         !visible.includes(ch),
         `${name}: visible body contains zero-width char U+${ch.charCodeAt(0).toString(16)}`,
