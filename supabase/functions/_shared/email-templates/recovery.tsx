@@ -50,7 +50,7 @@ export const RecoveryEmail = ({ token }: RecoveryEmailProps) => (
       >
         <tr>
           <td align="center" bgcolor="#05070F">
-            <Container style={card}>
+            <Container style={card} bgcolor="#0B0D14">
               {/* TOP GLOW */}
               <Section style={topGlow} />
 
@@ -107,10 +107,12 @@ const main = {
 
 const outerTable = {
   padding: '50px 18px',
+  backgroundColor: '#05070F',
   background: '#05070F',
 }
 
 const card = {
+  backgroundColor: '#0B0D14',
   maxWidth: '650px',
   width: '100%',
   borderRadius: '36px',
@@ -125,6 +127,7 @@ const card = {
 
 const topGlow = {
   height: '180px',
+  backgroundColor: '#1A120D',
   background:
     'radial-gradient(circle at top, rgba(255,140,0,0.35), rgba(0,0,0,0))',
 }

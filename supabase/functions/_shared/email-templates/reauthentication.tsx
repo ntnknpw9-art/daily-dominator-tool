@@ -32,7 +32,7 @@ export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => 
       <table width="100%" cellPadding={0} cellSpacing={0} border={0} bgcolor="#05070F" style={outerTable}>
         <tr>
           <td align="center" bgcolor="#05070F">
-            <Container style={card}>
+            <Container style={card} bgcolor="#0B0D14">
               <Section style={topGlow} />
 
               <Section style={logoWrap}>
@@ -77,8 +77,9 @@ export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => 
 export default ReauthenticationEmail
 
 const main = { margin: 0, padding: 0, backgroundColor: '#05070F', fontFamily: 'Heebo, Arial, sans-serif' }
-const outerTable = { padding: '50px 18px', background: '#05070F' }
+const outerTable = { padding: '50px 18px', backgroundColor: '#05070F', background: '#05070F' }
 const card = {
+  backgroundColor: '#0B0D14',
   maxWidth: '650px',
   width: '100%',
   borderRadius: '36px',
@@ -88,7 +89,7 @@ const card = {
   boxShadow: '0 0 60px rgba(255,140,0,0.12), 0 30px 80px rgba(0,0,0,0.55)',
   margin: '0 auto',
 }
-const topGlow = { height: '180px', background: 'radial-gradient(circle at top, rgba(255,140,0,0.35), rgba(0,0,0,0))' }
+const topGlow = { height: '180px', backgroundColor: '#1A120D', background: 'radial-gradient(circle at top, rgba(255,140,0,0.35), rgba(0,0,0,0))' }
 const logoWrap = { textAlign: 'center' as const, padding: '0 40px' }
 const logoImg = {
   display: 'inline-block',
