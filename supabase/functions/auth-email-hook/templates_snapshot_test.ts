@@ -21,8 +21,20 @@ const inviteProps = {
   confirmationUrl: 'https://dailydominator.org/invite/abc',
 }
 
+// Strip React Email's hidden <Preview> block — its zero-width padding chars
+// are visual noise and not part of the visible email layout we want to track.
+const stripPreviewBlock = (html: string) =>
+  html.replace(/<div style="display:none[^"]*"[^>]*>[\s\S]*?<\/div><\/div>/, '')
+
+// Strip zero-width / bidi formatting chars that have no visible meaning.
+// Note: U+200B is preserved because React Email's <Button> uses it for
+// legitimate Outlook layout fixes.
+const ZERO_WIDTH = /[\u200C-\u200F\u2028\u2029\u202A-\u202E\u2060\uFEFF]/g
+
+const sanitize = (html: string) => stripPreviewBlock(html).replace(ZERO_WIDTH, '')
+
 const renderHtml = async (Component: any, props: any) =>
-  await render(React.createElement(Component, props))
+  sanitize(await render(React.createElement(Component, props)))
 
 Deno.test('snapshot: signup email HTML', async (t) => {
   const html = await renderHtml(SignupEmail, otpProps)
