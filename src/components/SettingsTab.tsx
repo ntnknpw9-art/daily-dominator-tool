@@ -21,7 +21,7 @@ export const isNoMercyMode = () => {
 };
 
 const SettingsTab = () => {
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const { syncHealthData, isSyncing } = useHealthSync();
   const [deleting, setDeleting] = useState(false);
   const [soundOn, setSoundOn] = useState(isSoundEnabled);
