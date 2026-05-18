@@ -381,15 +381,9 @@ const AuthPage = () => {
               <button
                 type="button"
                 onClick={async () => {
-                  setError(''); setSuccessMsg('');
                   if (!email) { setError('הזן את כתובת המייל שלך כדי לאפס סיסמה'); return; }
-                  setLoading(true);
-                  const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                    redirectTo: `${window.location.origin}/reset-password`,
-                  });
-                  setLoading(false);
-                  if (error) setError(error.message);
-                  else setSuccessMsg('נשלח מייל לאיפוס סיסמה. בדוק את תיבת הדואר שלך.');
+                  setResetStep('code');
+                  await sendResetCode();
                 }}
                 className="text-xs text-primary hover:underline mt-1"
               >
