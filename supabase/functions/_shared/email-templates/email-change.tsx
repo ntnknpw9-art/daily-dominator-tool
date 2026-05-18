@@ -32,7 +32,10 @@ export const EmailChangeEmail = ({
   confirmationUrl,
 }: EmailChangeEmailProps) => (
   <Html lang="he" dir="rtl">
-    <Head />
+    <Head>
+      <meta charSet="utf-8" />
+      <meta httpEquiv="Content-Type" content="text/html; charset=utf-8" />
+    </Head>
     <Preview>אישור שינוי כתובת מייל - Daily Dominator</Preview>
     <Body style={main}>
       <table width="100%" cellPadding={0} cellSpacing={0} border={0} style={outerTable}>
