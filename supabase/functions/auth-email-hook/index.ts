@@ -20,7 +20,7 @@ const EMAIL_SUBJECTS: Record<string, string> = {
   signup: 'אימות מייל - Daily Dominator',
   invite: 'הוזמנת ל-Daily Dominator',
   magiclink: 'קישור התחברות',
-  recovery: 'איפוס סיסמה - Daily Dominator',
+  recovery: '\u05d0\u05d9\u05e4\u05d5\u05e1 \u05e1\u05d9\u05e1\u05de\u05d4 - Daily Dominator',
   email_change: 'אישור מייל חדש',
   reauthentication: 'קוד אימות זהות',
 }
