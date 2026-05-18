@@ -25,13 +25,20 @@ interface RecoveryEmailProps {
 const LOGO_URL =
   'https://jtdxblauyfhfvszlbppz.supabase.co/storage/v1/object/public/email-assets/daily-dominator-logo.png'
 
+const PREVIEW_TEXT = '\u05e7\u05d5\u05d3 \u05d0\u05d9\u05e4\u05d5\u05e1 \u05e1\u05d9\u05e1\u05de\u05d4 - Daily Dominator'
+const TITLE = '\u05d0\u05d9\u05e4\u05d5\u05e1 \u05e1\u05d9\u05e1\u05de\u05d4'
+const SUBTITLE = '\u05d4\u05e9\u05ea\u05de\u05e9 \u05d1\u05e7\u05d5\u05d3 \u05d4\u05d0\u05d9\u05de\u05d5\u05ea \u05d4\u05d7\u05d3 \u05e4\u05e2\u05de\u05d9 \u05db\u05d3\u05d9 \u05dc\u05d0\u05e4\u05e1 \u05d0\u05ea \u05d4\u05e1\u05d9\u05e1\u05de\u05d4 \u05e9\u05dc\u05da \u05d1\u05e6\u05d5\u05e8\u05d4 \u05de\u05d0\u05d5\u05d1\u05d8\u05d7\u05ea.'
+const EXPIRE_TEXT = '\u05d4\u05e7\u05d5\u05d3 \u05ea\u05e7\u05e3 \u05dc\u05de\u05e9\u05da 15 \u05d3\u05e7\u05d5\u05ea \u05d1\u05dc\u05d1\u05d3'
+const FOOTER_TEXT_1 = '\u05d0\u05dd \u05dc\u05d0 \u05d1\u05d9\u05e7\u05e9\u05ea \u05dc\u05d0\u05e4\u05e1 \u05d0\u05ea \u05d4\u05e1\u05d9\u05e1\u05de\u05d4,'
+const FOOTER_TEXT_2 = '\u05d0\u05e4\u05e9\u05e8 \u05dc\u05d4\u05ea\u05e2\u05dc\u05dd \u05de\u05d4\u05de\u05d9\u05d9\u05dc \u05d4\u05d6\u05d4 \u05d1\u05d1\u05d8\u05d7\u05d4.'
+
 export const RecoveryEmail = ({ token }: RecoveryEmailProps) => (
   <Html lang="he" dir="rtl">
     <Head>
       <meta charSet="utf-8" />
       <meta httpEquiv="Content-Type" content="text/html; charset=utf-8" />
     </Head>
-    <Preview>קוד איפוס סיסמה - Daily Dominator</Preview>
+    <Preview>{PREVIEW_TEXT}</Preview>
     <Body style={main}>
       <table
         width="100%"
@@ -53,14 +60,8 @@ export const RecoveryEmail = ({ token }: RecoveryEmailProps) => (
 
               {/* TITLE */}
               <Section style={titleWrap}>
-                <Heading style={h1}>איפוס סיסמה</Heading>
-                <Text
-                  style={subtitle}
-                  dangerouslySetInnerHTML={{
-                    __html:
-                      '&#1492;&#1513;&#1514;&#1502;&#1513; &#1489;&#1511;&#1493;&#1491; &#1492;&#1488;&#1497;&#1502;&#1493;&#1514; &#1492;&#1495;&#1491; &#1508;&#1506;&#1502;&#1497; &#1499;&#1491;&#1497; &#1500;&#1488;&#1508;&#1505; &#1488;&#1514; &#1492;&#1505;&#1497;&#1505;&#1502;&#1492; &#1513;&#1500;&#1498; &#1489;&#1510;&#1493;&#1512;&#1492; &#1502;&#1488;&#1493;&#1489;&#1496;&#1495;&#1514;.',
-                  }}
-                />
+                <Heading style={h1}>{TITLE}</Heading>
+                <Text style={subtitle}>{SUBTITLE}</Text>
               </Section>
 
               {/* CODE BOX */}
@@ -78,19 +79,13 @@ export const RecoveryEmail = ({ token }: RecoveryEmailProps) => (
 
               {/* EXPIRE */}
               <Section style={expireWrap}>
-                <Text style={expireText}>הקוד תקף למשך 15 דקות בלבד</Text>
+                <Text style={expireText}>{EXPIRE_TEXT}</Text>
               </Section>
 
               {/* FOOTER */}
               <Section style={footerWrap}>
-                <Text
-                  style={footerText}
-                  dangerouslySetInnerHTML={{
-                    __html:
-                      '&#1488;&#1501; &#1500;&#1488; &#1489;&#1497;&#1511;&#1513;&#1514; &#1500;&#1488;&#1508;&#1505; &#1488;&#1514; &#1492;&#1505;&#1497;&#1505;&#1502;&#1492;,',
-                  }}
-                />
-                <Text style={footerText}>אפשר להתעלם מהמייל הזה בבטחה.</Text>
+                <Text style={footerText}>{FOOTER_TEXT_1}</Text>
+                <Text style={footerText}>{FOOTER_TEXT_2}</Text>
               </Section>
             </Container>
           </td>
