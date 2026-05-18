@@ -25,6 +25,73 @@ export const isNoMercyMode = () => {
 const SettingsTab = () => {
   const { signOut, user } = useAuth();
   const { syncHealthData, isSyncing } = useHealthSync();
+  const { isPremium, productId, expiresAt, reload: reloadPremium } = usePremium();
+  const [offerings, setOfferings] = useState<any>(null);
+  const [purchasing, setPurchasing] = useState<string | null>(null);
+  const [restoring, setRestoring] = useState(false);
+
+  useEffect(() => {
+    if (isIOSNative()) {
+      getOfferings().then(setOfferings).catch(() => {});
+    }
+  }, []);
+
+  const findPackage = (productKey: string) => {
+    if (!offerings?.availablePackages) return null;
+    return offerings.availablePackages.find((p: any) =>
+      p?.product?.identifier === productKey || p?.identifier === productKey
+    );
+  };
+
+  const handlePurchase = async (productKey: string) => {
+    if (!isIOSNative()) {
+      toast.info('הרכישות זמינות באפליקציה על iPhone בלבד');
+      return;
+    }
+    const pkg = findPackage(productKey);
+    if (!pkg) {
+      toast.error('המוצר לא זמין כרגע. נסה שוב מאוחר יותר.');
+      return;
+    }
+    try {
+      setPurchasing(productKey);
+      const res = await purchasePackage(pkg);
+      if (res.isPremium) {
+        toast.success('תודה רבה על התמיכה! 💜');
+        reloadPremium();
+      }
+    } catch (e: any) {
+      const msg = e?.message || '';
+      if (!msg.toLowerCase().includes('cancel')) {
+        toast.error('הרכישה נכשלה: ' + msg);
+      }
+    } finally {
+      setPurchasing(null);
+    }
+  };
+
+  const handleRestore = async () => {
+    if (!isIOSNative()) {
+      toast.info('שחזור רכישות זמין באפליקציה על iPhone בלבד');
+      return;
+    }
+    try {
+      setRestoring(true);
+      const res = await restorePurchases();
+      if (res.isPremium) {
+        toast.success('הרכישה שוחזרה בהצלחה');
+      } else {
+        toast.info('לא נמצאו רכישות פעילות');
+      }
+      reloadPremium();
+    } catch (e: any) {
+      toast.error('שחזור נכשל: ' + (e?.message || ''));
+    } finally {
+      setRestoring(false);
+    }
+  };
+
+  const { syncHealthData, isSyncing } = useHealthSync();
   const [deleting, setDeleting] = useState(false);
   const [soundOn, setSoundOn] = useState(isSoundEnabled);
   const [theme, setTheme] = useState<'dark' | 'light'>(getTheme);
