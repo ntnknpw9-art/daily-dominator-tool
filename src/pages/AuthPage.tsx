@@ -38,6 +38,10 @@ const AuthPage = () => {
   const [mode, setMode] = useState<'login' | 'signup' | 'forgot'>('login');
   const [otpStep, setOtpStep] = useState(false);
   const [otpCode, setOtpCode] = useState('');
+  const [resetStep, setResetStep] = useState<'none' | 'email' | 'code'>('none');
+  const [resetCode, setResetCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,6 +68,42 @@ const AuthPage = () => {
     setLoading(false);
     if (error) setError(error.message);
     else setSuccessMsg('קוד חדש נשלח למייל שלך');
+  };
+
+  const sendResetCode = async () => {
+    setError(''); setSuccessMsg('');
+    if (!email) { setError('הזן את כתובת המייל שלך'); return; }
+    setLoading(true);
+    const { error } = await supabase.auth.resetPasswordForEmail(email);
+    setLoading(false);
+    if (error) { setError(error.message); return; }
+    setResetStep('code');
+    setSuccessMsg('שלחנו קוד בן 6 ספרות למייל שלך');
+  };
+
+  const handleResetWithCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(''); setSuccessMsg('');
+    if (resetCode.length !== 6) { setError('הזן קוד בן 6 ספרות'); return; }
+    if (newPassword.length < 6) { setError('הסיסמה חייבת להכיל לפחות 6 תווים'); return; }
+    if (newPassword !== confirmNewPassword) { setError('הסיסמאות אינן תואמות'); return; }
+    setLoading(true);
+    const { error: verifyError } = await supabase.auth.verifyOtp({
+      email,
+      token: resetCode,
+      type: 'recovery',
+    });
+    if (verifyError) {
+      setLoading(false);
+      setError('קוד שגוי או שפג תוקפו. נסה שוב.');
+      return;
+    }
+    const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+    setLoading(false);
+    if (updateError) { setError(updateError.message); return; }
+    setSuccessMsg('הסיסמה עודכנה בהצלחה! מתחבר...');
+    setResetStep('none');
+    setResetCode(''); setNewPassword(''); setConfirmNewPassword('');
   };
 
 
