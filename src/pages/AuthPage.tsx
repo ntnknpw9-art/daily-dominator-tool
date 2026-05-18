@@ -46,8 +46,8 @@ const AuthPage = () => {
   const handleVerifyOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(''); setSuccessMsg('');
-    if (otpCode.length !== 6) {
-      setError('הזן קוד בן 6 ספרות');
+    if (otpCode.length !== 8) {
+      setError('הזן קוד בן 8 ספרות');
       return;
     }
     setLoading(true);
@@ -78,13 +78,13 @@ const AuthPage = () => {
     setLoading(false);
     if (error) { setError(error.message); return; }
     setResetStep('code');
-    setSuccessMsg('שלחנו קוד בן 6 ספרות למייל שלך');
+    setSuccessMsg('שלחנו קוד בן 8 ספרות למייל שלך');
   };
 
   const handleResetWithCode = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(''); setSuccessMsg('');
-    if (resetCode.length !== 6) { setError('הזן קוד בן 6 ספרות'); return; }
+    if (resetCode.length !== 8) { setError('הזן קוד בן 8 ספרות'); return; }
     if (newPassword.length < 6) { setError('הסיסמה חייבת להכיל לפחות 6 תווים'); return; }
     if (newPassword !== confirmNewPassword) { setError('הסיסמאות אינן תואמות'); return; }
     setLoading(true);
@@ -266,7 +266,7 @@ const AuthPage = () => {
       if (error) setError(error.message);
       else {
         setOtpStep(true);
-        setSuccessMsg('שלחנו קוד בן 6 ספרות למייל שלך');
+        setSuccessMsg('שלחנו קוד בן 8 ספרות למייל שלך');
       }
     }
     setLoading(false);
@@ -280,7 +280,7 @@ const AuthPage = () => {
             <div className="text-5xl mb-3">🔑</div>
             <h1 className="text-2xl font-bold">איפוס סיסמה</h1>
             <p className="text-sm text-muted-foreground mt-2">
-              שלחנו קוד בן 6 ספרות אל
+              שלחנו קוד בן 8 ספרות אל
               <br />
               <strong className="text-foreground" dir="ltr">{email}</strong>
             </p>
@@ -293,11 +293,11 @@ const AuthPage = () => {
                 type="text"
                 inputMode="numeric"
                 pattern="[0-9]*"
-                maxLength={6}
+                maxLength={8}
                 value={resetCode}
                 onChange={e => setResetCode(e.target.value.replace(/\D/g, ''))}
-                placeholder="000000"
-                className="text-center text-3xl font-bold tracking-[0.5em] h-16"
+                placeholder="00000000"
+                className="text-center text-3xl font-bold tracking-[0.35em] h-16"
                 dir="ltr"
                 autoFocus
               />
@@ -365,7 +365,7 @@ const AuthPage = () => {
             <div className="text-5xl mb-3">📧</div>
             <h1 className="text-2xl font-bold">בדוק את המייל שלך</h1>
             <p className="text-sm text-muted-foreground mt-2">
-              שלחנו קוד בן 6 ספרות אל
+              שלחנו קוד בן 8 ספרות אל
               <br />
               <strong className="text-foreground" dir="ltr">{email}</strong>
             </p>
@@ -378,11 +378,11 @@ const AuthPage = () => {
                 type="text"
                 inputMode="numeric"
                 pattern="[0-9]*"
-                maxLength={6}
+                maxLength={8}
                 value={otpCode}
                 onChange={e => setOtpCode(e.target.value.replace(/\D/g, ''))}
-                placeholder="000000"
-                className="text-center text-3xl font-bold tracking-[0.5em] h-16"
+                placeholder="00000000"
+                className="text-center text-3xl font-bold tracking-[0.35em] h-16"
                 dir="ltr"
                 autoFocus
               />
@@ -391,7 +391,7 @@ const AuthPage = () => {
             {error && <div className="text-destructive text-sm bg-destructive/10 rounded-lg p-3 text-center">{error}</div>}
             {successMsg && <div className="text-success text-sm bg-success/10 rounded-lg p-3 text-center">{successMsg}</div>}
 
-            <Button type="submit" className="w-full h-12 text-base font-bold" disabled={loading || otpCode.length !== 6}>
+            <Button type="submit" className="w-full h-12 text-base font-bold" disabled={loading || otpCode.length !== 8}>
               {loading ? '...' : 'אמת קוד'}
             </Button>
 
