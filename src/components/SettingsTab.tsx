@@ -91,7 +91,6 @@ const SettingsTab = () => {
     }
   };
 
-  const { syncHealthData, isSyncing } = useHealthSync();
   const [deleting, setDeleting] = useState(false);
   const [soundOn, setSoundOn] = useState(isSoundEnabled);
   const [theme, setTheme] = useState<'dark' | 'light'>(getTheme);
