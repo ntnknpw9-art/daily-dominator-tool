@@ -65,13 +65,16 @@ function Card({ active, onClick, row, children }: any) {
   return (
     <button
       onClick={onClick}
-      className={`w-full p-4 rounded-2xl border-2 transition-all duration-200 active:scale-95 ${
+      className={`group relative w-full p-4 rounded-2xl border transition-all duration-300 active:scale-[0.97] overflow-hidden ${
         active
-          ? 'border-primary bg-primary/15 shadow-[0_0_20px_hsl(var(--primary)/0.3)]'
-          : 'border-border/40 bg-card/50 hover:border-primary/50'
+          ? 'border-primary/80 bg-gradient-to-br from-primary/20 via-primary/5 to-accent/10 shadow-[0_0_30px_hsl(var(--primary)/0.35),inset_0_1px_0_hsl(var(--primary)/0.4)]'
+          : 'border-border/30 bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-sm hover:border-primary/40 hover:shadow-[0_0_20px_hsl(var(--primary)/0.15)]'
       } ${row ? 'flex items-center gap-3 text-right' : 'flex flex-col items-center justify-center text-center'}`}
     >
-      {children}
+      {active && (
+        <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary to-transparent" />
+      )}
+      <span className="relative z-10 contents">{children}</span>
     </button>
   );
 }
@@ -275,42 +278,77 @@ ${splitHint}
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-background overflow-y-auto" dir="rtl">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-background" dir="rtl">
+      {/* Ambient background */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute -top-32 -right-32 h-96 w-96 rounded-full bg-primary/20 blur-[120px]" />
+        <div className="absolute top-1/3 -left-32 h-96 w-96 rounded-full bg-accent/15 blur-[120px]" />
+        <div className="absolute bottom-0 right-1/4 h-80 w-80 rounded-full bg-primary/10 blur-[100px]" />
+        <div
+          className="absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage:
+              'linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)',
+            backgroundSize: '40px 40px',
+          }}
+        />
+      </div>
+
       {/* Progress bar */}
-      <div className="sticky top-0 bg-background/95 backdrop-blur-sm z-10 px-4 pt-6 pb-3 safe-top">
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-xs text-muted-foreground">שלב {step + 1} מתוך {total}</span>
-          <span className="text-xs text-primary font-bold">{Math.round(progress)}%</span>
-        </div>
-        <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
-          <div
-            className="h-full bg-gradient-to-r from-primary to-accent rounded-full transition-all duration-500 shadow-[0_0_10px_hsl(var(--primary))]"
-            style={{ width: `${progress}%` }}
-          />
+      <div className="sticky top-0 z-20 bg-background/70 backdrop-blur-xl border-b border-border/30 px-4 pt-6 pb-4 safe-top">
+        <div className="max-w-md mx-auto">
+          <div className="flex items-center justify-between mb-2.5">
+            <span className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground font-semibold">
+              שלב <span className="text-foreground">{step + 1}</span> / {total}
+            </span>
+            <span className="text-xs font-black bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              {Math.round(progress)}%
+            </span>
+          </div>
+          <div className="relative h-1 bg-secondary/60 rounded-full overflow-hidden">
+            <div
+              className="absolute inset-y-0 right-0 bg-gradient-to-l from-primary via-primary to-accent rounded-full transition-all duration-700 shadow-[0_0_12px_hsl(var(--primary)/0.8)]"
+              style={{ width: `${progress}%` }}
+            />
+            <div
+              className="absolute top-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full bg-accent shadow-[0_0_12px_hsl(var(--accent))] transition-all duration-700"
+              style={{ right: `calc(${progress}% - 5px)` }}
+            />
+          </div>
         </div>
       </div>
 
       {/* Question */}
-      <div className="px-5 py-8 max-w-md mx-auto">
-        <div key={step} className="animate-fade-in space-y-6">
-          <div className="text-center">
-            <h2 className="text-2xl font-black mb-2">{cur.title}</h2>
-            {cur.sub && <p className="text-sm text-muted-foreground">{cur.sub}</p>}
+      <div className="relative px-5 py-10 max-w-md mx-auto">
+        <div key={step} className="animate-fade-in space-y-8">
+          <div className="text-center space-y-3">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-primary/30 bg-primary/5 backdrop-blur-sm">
+              <Sparkles className="w-3 h-3 text-accent" />
+              <span className="text-[10px] uppercase tracking-[0.25em] font-bold text-accent">בניית פרופיל</span>
+            </div>
+            <h2 className="text-3xl font-black tracking-tight bg-gradient-to-b from-foreground to-foreground/70 bg-clip-text text-transparent">
+              {cur.title}
+            </h2>
+            {cur.sub && <p className="text-sm text-muted-foreground/90">{cur.sub}</p>}
           </div>
-          <div>{cur.render()}</div>
+          <div className="relative">{cur.render()}</div>
         </div>
       </div>
 
       {/* Footer buttons */}
-      <div className="sticky bottom-0 bg-background/95 backdrop-blur-sm border-t border-border/30 p-4 safe-bottom">
+      <div className="sticky bottom-0 z-20 bg-background/70 backdrop-blur-xl border-t border-border/30 p-4 safe-bottom">
         <div className="max-w-md mx-auto flex gap-2">
           {step > 0 && (
-            <Button variant="outline" onClick={back} className="gap-1">
+            <Button variant="outline" onClick={back} className="gap-1 h-12 border-border/50 bg-card/50 backdrop-blur-sm hover:bg-card hover:border-primary/40">
               <ChevronRight className="w-4 h-4" />
               חזור
             </Button>
           )}
-          <Button onClick={next} disabled={!cur.valid} className="flex-1 gap-1 h-12 text-base font-bold">
+          <Button
+            onClick={next}
+            disabled={!cur.valid}
+            className="flex-1 gap-1.5 h-12 text-base font-black tracking-wide bg-gradient-to-l from-primary via-primary to-primary/90 hover:shadow-[0_0_30px_hsl(var(--primary)/0.5)] transition-all duration-300 disabled:opacity-40"
+          >
             {step === total - 1 ? (<><Sparkles className="w-5 h-5" /> בנה לי תוכנית</>) : (<>הבא <ChevronLeft className="w-4 h-4" /></>)}
           </Button>
         </div>
