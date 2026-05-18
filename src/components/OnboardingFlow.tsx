@@ -278,7 +278,7 @@ ${splitHint}
   }
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-background flex flex-col" dir="rtl">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-background flex flex-col min-h-screen" dir="rtl">
       {/* Ambient background */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -top-32 -right-32 h-96 w-96 rounded-full bg-primary/20 blur-[120px]" />
