@@ -284,7 +284,7 @@ ${splitHint}
   }
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-background flex flex-col min-h-screen" dir="rtl">
+    <div className="fixed inset-0 z-50 bg-background flex flex-col" dir="rtl">
       {/* Ambient background */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -top-32 -right-32 h-96 w-96 rounded-full bg-primary/20 blur-[120px]" />
@@ -301,7 +301,7 @@ ${splitHint}
       </div>
 
       {/* Progress bar */}
-      <div className="sticky top-0 z-20 bg-background/70 backdrop-blur-xl border-b border-border/30 px-4 pt-6 pb-4 safe-top">
+      <div className="relative z-10 shrink-0 bg-background/70 backdrop-blur-xl border-b border-border/30 px-4 pt-6 pb-4 safe-top">
         <div className="max-w-md mx-auto">
           <div className="flex items-center justify-between mb-2.5">
             <span className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground font-semibold">
@@ -325,8 +325,8 @@ ${splitHint}
       </div>
 
       {/* Question */}
-      <div className="relative z-10 flex-1 flex w-full">
-        <div className="w-full max-w-md mx-auto px-5 pt-8 pb-28 flex flex-col justify-center">
+      <div className="relative z-10 flex-1 min-h-0 overflow-y-auto w-full">
+        <div className="w-full max-w-md mx-auto px-5 pt-8 pb-8 flex flex-col justify-center min-h-full">
           <div key={step} className="animate-fade-in space-y-8">
             <div className="text-center space-y-3">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-primary/30 bg-primary/5 backdrop-blur-sm">
@@ -344,7 +344,7 @@ ${splitHint}
       </div>
 
       {/* Footer buttons */}
-      <div className="sticky bottom-0 z-20 bg-background/70 backdrop-blur-xl border-t border-border/30 p-4 safe-bottom">
+      <div className="relative z-20 shrink-0 bg-background/90 backdrop-blur-xl border-t border-border/30 p-4 safe-bottom">
         <div className="max-w-md mx-auto flex gap-2">
           {step > 0 && (
             <Button variant="outline" onClick={back} className="gap-1 h-12 border-border/50 bg-card/50 backdrop-blur-sm hover:bg-card hover:border-primary/40">
