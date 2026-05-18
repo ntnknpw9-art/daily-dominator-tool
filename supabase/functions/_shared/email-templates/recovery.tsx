@@ -39,7 +39,7 @@ export const RecoveryEmail = ({ token }: RecoveryEmailProps) => (
       <meta httpEquiv="Content-Type" content="text/html; charset=utf-8" />
     </Head>
     <Preview>{PREVIEW_TEXT}</Preview>
-    <Body style={main}>
+    <Body style={main} bgcolor="#05070F">
       <table
         width="100%"
         cellPadding={0}
@@ -48,7 +48,7 @@ export const RecoveryEmail = ({ token }: RecoveryEmailProps) => (
         style={outerTable}
       >
         <tr>
-          <td align="center">
+          <td align="center" bgcolor="#05070F">
             <Container style={card}>
               {/* TOP GLOW */}
               <Section style={topGlow} />
