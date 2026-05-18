@@ -68,7 +68,7 @@ export const MagicLinkEmail = ({ token }: MagicLinkEmailProps) => (
 
               <Section style={footerWrap}>
                 <Text style={footerText}>
-                  אם ל‌א ביקשת להתחבר לחשבון שלך,<br />
+                  אם לא ביקשת להתחבר לחשבון שלך,<br />
                   אפשר להתעלם מהמייל הזה בבטחה.
                 </Text>
               </Section>

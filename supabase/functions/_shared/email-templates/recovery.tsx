@@ -55,7 +55,7 @@ export const RecoveryEmail = ({ token }: RecoveryEmailProps) => (
               <Section style={titleWrap}>
                 <Heading style={h1}>איפוס סיסמה</Heading>
                 <Text style={subtitle}>
-                  השתמש בקוד האימות החד פעמי כדי ל‌אפס את הסיסמה שלך בצורה מאובטחת.
+                  השתמש בקוד האימות החד פעמי כדי לאפס את הסיסמה שלך בצורה מאובטחת.
                 </Text>
               </Section>
 
@@ -80,7 +80,7 @@ export const RecoveryEmail = ({ token }: RecoveryEmailProps) => (
               {/* FOOTER */}
               <Section style={footerWrap}>
                 <Text style={footerText}>
-                  אם ל‌א ביקשת ל‌אפס את הסיסמה,<br />
+                  אם לא ביקשת לאפס את הסיסמה,<br />
                   אפשר להתעלם מהמייל הזה בבטחה.
                 </Text>
               </Section>

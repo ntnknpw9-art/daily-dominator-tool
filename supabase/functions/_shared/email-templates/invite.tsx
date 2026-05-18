@@ -57,7 +57,7 @@ export const InviteEmail = ({ confirmationUrl }: InviteEmailProps) => (
 
               <Section style={footerWrap}>
                 <Text style={footerText}>
-                  אם ל‌א ציפית להזמנה זו,<br />
+                  אם לא ציפית להזמנה זו,<br />
                   אפשר להתעלם מהמייל הזה בבטחה.
                 </Text>
               </Section>
