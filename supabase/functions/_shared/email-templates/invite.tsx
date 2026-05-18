@@ -24,6 +24,8 @@ interface InviteEmailProps {
 const LOGO_URL =
   'https://jtdxblauyfhfvszlbppz.supabase.co/storage/v1/object/public/email-assets/daily-dominator-logo.png'
 
+const SUBTITLE = '\u05d4\u05d5\u05d6\u05de\u05e0\u05ea \u05dc\u05d4\u05e6\u05d8\u05e8\u05e3 \u05dc-Daily Dominator. \u05dc\u05d7\u05e5 \u05e2\u05dc \u05d4\u05db\u05e4\u05ea\u05d5\u05e8 \u05db\u05d3\u05d9 \u05dc\u05e7\u05d1\u05dc \u05d0\u05ea \u05d4\u05d4\u05d6\u05de\u05e0\u05d4 \u05d5\u05dc\u05d9\u05e6\u05d5\u05e8 \u05d7\u05e9\u05d1\u05d5\u05df.'
+
 export const InviteEmail = ({ confirmationUrl }: InviteEmailProps) => (
   <Html lang="he" dir="rtl">
     <Head>
@@ -44,9 +46,7 @@ export const InviteEmail = ({ confirmationUrl }: InviteEmailProps) => (
 
               <Section style={titleWrap}>
                 <Heading style={h1}>הוזמנת להצטרף</Heading>
-                <Text style={subtitle}>
-                  הוזמנת להצטרף ל-Daily Dominator. לחץ על הכפתור כדי לקבל את ההזמנה וליצור חשבון.
-                </Text>
+                <Text style={subtitle}>{SUBTITLE}</Text>
               </Section>
 
               <Section style={buttonWrap}>
