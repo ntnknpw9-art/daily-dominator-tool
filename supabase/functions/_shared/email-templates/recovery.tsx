@@ -52,7 +52,7 @@ export const RecoveryEmail = ({ token }: RecoveryEmailProps) => (
           <td align="center" bgcolor="#05070F">
             <Container style={card} bgcolor="#0B0D14">
               {/* TOP GLOW */}
-              <Section style={topGlow} />
+              <Section style={topGlow} bgcolor="#1A120D" />
 
               {/* LOGO */}
               <Section style={logoWrap}>

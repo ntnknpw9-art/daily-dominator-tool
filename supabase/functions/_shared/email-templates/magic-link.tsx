@@ -25,7 +25,7 @@ interface MagicLinkEmailProps {
 const LOGO_URL =
   'https://jtdxblauyfhfvszlbppz.supabase.co/storage/v1/object/public/email-assets/daily-dominator-logo.png'
 
-const SUBTITLE = '\u05d4\u05e9\u05ea\u05de\u05e9 \u05d1\u05e7\u05d5\u05d3 \u05d4\u05d0\u05d9\u05de\u05d5\u05ea \u05d4\u05d7\u05d3 \u05e4\u05e2\u05de\u05d9 \u05db\u05d3\u05d9 \u05dc\u05d4\u05ea\u05d7\u05d1\u05e8 \u05d1\u05e6\u05d5\u05e8\u05d4 \u05de\u05d0\u05d5\u05d1\u05d8\u05d7\u05ea \u05dc\u05d7\u05e9\u05d1\u05d5\u05df \u05e9\u05dc\u05da.'
+const SUBTITLE = '\u05d4\u05e9\u05ea\u05de\u05e9 \u05d1\u05e7\u05d5\u05d3 \u05d4\u05d0\u05d9\u05de\u05d5\u05ea \u05d4\u05d7\u05d3 \u05e4\u05e2\u05de\u05d9 \u05db\u05d3\u05d9 \u05dc\u05d4\u05d9\u05db\u05e0\u05e1 \u05d1\u05e6\u05d5\u05e8\u05d4 \u05de\u05d0\u05d5\u05d1\u05d8\u05d7\u05ea \u05dc\u05d7\u05e9\u05d1\u05d5\u05df \u05e9\u05dc\u05da.'
 
 export const MagicLinkEmail = ({ token }: MagicLinkEmailProps) => (
   <Html lang="he" dir="rtl">
@@ -39,7 +39,7 @@ export const MagicLinkEmail = ({ token }: MagicLinkEmailProps) => (
         <tr>
           <td align="center" bgcolor="#05070F">
             <Container style={card} bgcolor="#0B0D14">
-              <Section style={topGlow} />
+              <Section style={topGlow} bgcolor="#1A120D" />
 
               <Section style={logoWrap}>
                 <Img src={LOGO_URL} width="110" height="110" alt="Daily Dominator" style={logoImg} />

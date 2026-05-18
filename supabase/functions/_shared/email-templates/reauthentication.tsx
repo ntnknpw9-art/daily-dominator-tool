@@ -33,7 +33,7 @@ export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => 
         <tr>
           <td align="center" bgcolor="#05070F">
             <Container style={card} bgcolor="#0B0D14">
-              <Section style={topGlow} />
+              <Section style={topGlow} bgcolor="#1A120D" />
 
               <Section style={logoWrap}>
                 <Img src={LOGO_URL} width="110" height="110" alt="Daily Dominator" style={logoImg} />
