@@ -62,18 +62,30 @@ async function syncToSupabase(params: {
   }, { onConflict: 'user_id' });
 }
 
+export const PREMIUM_ENTITLEMENT = 'premium';
+
 function extractActive(customerInfo: any): { isPremium: boolean; productId: string | null; expiresAt: string | null } {
-  const ent = customerInfo?.entitlements?.active || {};
-  const keys = Object.keys(ent);
+  const active = customerInfo?.entitlements?.active || {};
+  // Prefer the explicit "premium" entitlement configured in RevenueCat
+  const premium = active[PREMIUM_ENTITLEMENT];
+  if (premium) {
+    return {
+      isPremium: true,
+      productId: premium?.productIdentifier ?? null,
+      expiresAt: premium?.expirationDate ?? null,
+    };
+  }
+  // Fallback: any active entitlement also counts
+  const keys = Object.keys(active);
   if (keys.length > 0) {
-    const first = ent[keys[0]];
+    const first = active[keys[0]];
     return {
       isPremium: true,
       productId: first?.productIdentifier ?? null,
       expiresAt: first?.expirationDate ?? null,
     };
   }
-  // Fallback: check activeSubscriptions
+  // Final fallback: activeSubscriptions list
   const subs: string[] = customerInfo?.activeSubscriptions || [];
   if (subs.length > 0) {
     return { isPremium: true, productId: subs[0], expiresAt: null };
