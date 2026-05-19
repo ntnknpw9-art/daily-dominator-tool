@@ -8,7 +8,9 @@ export const PRODUCT_MONTHLY = 'com.natanknafo.dailydominator';
 export const PRODUCT_YEARLY = 'com.natanknafo.dailydominatoro';
 
 // Public SDK key from RevenueCat (Apple). Safe to ship in client.
-const REVENUECAT_IOS_API_KEY = (import.meta as any).env?.VITE_REVENUECAT_IOS_API_KEY || '';
+const REVENUECAT_IOS_API_KEY =
+  (import.meta as any).env?.VITE_REVENUECAT_IOS_API_KEY ||
+  'appl_OsIuxnzzmIfeIVgsxDoYxxuxgDF';
 
 let initialized = false;
 
