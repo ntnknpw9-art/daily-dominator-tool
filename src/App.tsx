@@ -10,6 +10,7 @@ import SupportPage from "./pages/SupportPage.tsx";
 import PrivacyPolicy from "./pages/PrivacyPolicy.tsx";
 import TermsOfService from "./pages/TermsOfService.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
+import MusclePreview from "./pages/MusclePreview.tsx";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/muscle-preview" element={<MusclePreview />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
