@@ -11,6 +11,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy.tsx";
 import TermsOfService from "./pages/TermsOfService.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
 import MusclePreview from "./pages/MusclePreview.tsx";
+import WorkoutDemo from "./pages/WorkoutDemo.tsx";
 
 const queryClient = new QueryClient();
 
