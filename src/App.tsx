@@ -31,6 +31,7 @@ const App = () => (
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/muscle-preview" element={<MusclePreview />} />
+            <Route path="/workout-demo" element={<WorkoutDemo />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
