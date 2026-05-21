@@ -88,6 +88,9 @@ const MuscleSelectionStep = () => {
               על איזה שרירים תרצה לעבוד?
             </h2>
             <p className="text-sm text-muted-foreground/90">בחר אחד או יותר, או "כל הגוף" לתוכנית מלאה</p>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-accent/30 bg-accent/5">
+              <span className="text-[11px] font-bold text-accent">♂ ♀ פונה לשני המינים</span>
+            </div>
           </div>
 
           {/* Grid */}
