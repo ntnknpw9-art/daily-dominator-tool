@@ -181,7 +181,21 @@ const TodayTab = () => {
             )}
 
             <p className="text-sm text-muted-foreground">{task.meaning}</p>
-            {detail && <div className="text-sm text-accent bg-secondary/50 rounded px-3 py-1">📋 {detail.description}</div>}
+            {detail && (
+              <div className="text-sm bg-secondary/50 rounded-lg px-3 py-2 space-y-1.5">
+                <div className="flex items-center gap-1.5 text-accent font-bold text-xs">
+                  <span>📋</span><span>תרגילי האימון</span>
+                </div>
+                <ul className="space-y-1">
+                  {detail.description.split(/[,،]\s*/).map(s => s.trim()).filter(Boolean).map((line, i) => (
+                    <li key={i} className="flex gap-2 text-foreground/90 text-[13px] leading-relaxed">
+                      <span className="text-primary mt-1.5 shrink-0">•</span>
+                      <span>{line}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
             <Button
               variant={done ? "default" : "outline"}
               className={`w-full ${done ? 'bg-green-600 hover:bg-green-600/90' : status === 'active' ? 'border-primary text-primary hover:bg-primary hover:text-primary-foreground' : ''}`}
