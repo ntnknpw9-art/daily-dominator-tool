@@ -256,12 +256,13 @@ const OnboardingFlow = ({ onComplete }: Props) => {
 - מקום אימון: ${a.location}
 - רמת פעילות יומית: ${a.activity}
 - העדפת תזונה: ${a.diet}
+- שרירים בפוקוס: ${a.fullBody ? 'כל הגוף (תוכנית מלאה ומאוזנת)' : MUSCLES.filter(m => a.muscles.includes(m.id)).map(m => m.name).join(', ')}
 
 ${splitHint}
 
 חשב BMR וצרכי קלוריות לפי משקל/גובה/גיל/מין/פעילות והתאם למטרה (גירעון של 400 קק"ל לחיטוב, עודף של 300 קק"ל למסה, איזון ל-recomp/כללי).
 חלבון: 1.8-2.2 גרם לק"ג. מים: 35 מ"ל לק"ג משקל. שינה: 7-8 שעות.
-פצל את ${a.daysPerWeek} ימי האימון לימי השבוע (התחל מיום ראשון). לכל יום תן focus ותרגילים מלאים (שם, סטים×חזרות, מופרדים בפסיק).`;
+פצל את ${a.daysPerWeek} ימי האימון לימי השבוע (התחל מיום ראשון). לכל יום תן focus ותרגילים מלאים (שם, סטים×חזרות, מופרדים בפסיק).${a.fullBody ? '' : ' הדגש תרגילים שמתמקדים בקבוצות השרירים שנבחרו.'}`;
 
       const { data, error } = await supabase.functions.invoke('ai-plan-extract', {
         body: { analysisText: text },
