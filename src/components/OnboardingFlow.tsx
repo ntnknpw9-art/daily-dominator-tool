@@ -209,7 +209,20 @@ const OnboardingFlow = ({ onComplete }: Props) => {
         ))}
       </div>
     )},
+    { title: 'על איזה שרירים תרצה לעבוד?', sub: 'בחר אחד או יותר, או "כל הגוף"', valid: a.fullBody || a.muscles.length > 0, render: () => (
+      <MuscleGrid
+        selected={a.muscles}
+        fullBody={a.fullBody}
+        onToggle={(id) => setA(p => ({
+          ...p,
+          fullBody: false,
+          muscles: p.muscles.includes(id) ? p.muscles.filter(x => x !== id) : [...p.muscles, id],
+        }))}
+        onToggleFullBody={() => setA(p => ({ ...p, fullBody: true, muscles: [] }))}
+      />
+    )},
   ];
+
 
   const total = steps.length;
   const cur = steps[step];
