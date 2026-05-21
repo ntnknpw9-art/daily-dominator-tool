@@ -8,6 +8,7 @@ import biceps from '@/assets/muscle-biceps.png';
 import triceps from '@/assets/muscle-triceps.png';
 import backUpper from '@/assets/muscle-back-upper.png';
 import backLower from '@/assets/muscle-back-lower.png';
+import lats from '@/assets/muscle-lats.png';
 import abs from '@/assets/muscle-abs.png';
 import core from '@/assets/muscle-core.png';
 import quads from '@/assets/muscle-quads.png';
@@ -22,6 +23,7 @@ const MUSCLES = [
   { id: 'biceps', name: 'יד קדמית', img: biceps },
   { id: 'triceps', name: 'יד אחורית', img: triceps },
   { id: 'back-upper', name: 'גב עליון', img: backUpper },
+  { id: 'lats', name: 'רחב גבי', img: lats },
   { id: 'back-lower', name: 'גב תחתון', img: backLower },
   { id: 'abs', name: 'בטן', img: abs },
   { id: 'core', name: 'ליבה', img: core },
@@ -30,6 +32,7 @@ const MUSCLES = [
   { id: 'glutes', name: 'ישבן', img: glutes },
   { id: 'calves', name: 'תאומים', img: calves },
 ];
+
 
 const MuscleSelectionStep = () => {
   const [selected, setSelected] = useState<string[]>([]);
