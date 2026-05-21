@@ -7,8 +7,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import ApplyPlanDialog from '@/components/ApplyPlanDialog';
 import { ChevronRight, ChevronLeft, Loader2, Sparkles } from 'lucide-react';
-
-import { ChevronRight, ChevronLeft, Loader2, Sparkles } from 'lucide-react';
 import MuscleGrid, { MUSCLES } from '@/components/MuscleGrid';
 
 interface Props { onComplete: () => void; }
@@ -24,6 +22,7 @@ const initial: A = {
   gender: '', age: 25, height: 175, weight: 75,
   goal: '', experience: '', daysPerWeek: 4,
   location: '', trainingTime: '', activity: '', diet: '',
+  muscles: [], fullBody: false,
 };
 
 const GOALS = [
