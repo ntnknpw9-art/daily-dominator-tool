@@ -38,6 +38,7 @@ const AiCoach = () => {
   const [voiceMode, setVoiceMode] = useState(false);
   const [nutrition, setNutrition] = useState({ calories: 0, target: 0, protein: 0 });
   const [sleep, setSleep] = useState({ done: false, target: 7 });
+  const [workouts, setWorkouts] = useState<string>('');
   const [showPlanDialog, setShowPlanDialog] = useState(false);
   const [planText, setPlanText] = useState('');
 
@@ -45,17 +46,42 @@ const AiCoach = () => {
     if (!user) return;
     const fetchExtraContext = async () => {
       const todayStr = getTodayStr();
-      const [logsRes, profileRes, habitRes, targetsRes] = await Promise.all([
+      const [logsRes, profileRes, habitRes, targetsRes, sessionsRes] = await Promise.all([
         supabase.from('nutrition_logs').select('calories, protein').eq('user_id', user.id).eq('log_date', todayStr),
         supabase.from('nutrition_profiles').select('daily_calories').eq('user_id', user.id).maybeSingle(),
         supabase.from('habits').select('completed').eq('user_id', user.id).eq('habit_date', todayStr).eq('habit_id', 'sleep').maybeSingle(),
-        supabase.from('user_targets').select('sleep_hours').eq('user_id', user.id).maybeSingle()
+        supabase.from('user_targets').select('sleep_hours').eq('user_id', user.id).maybeSingle(),
+        supabase.from('workout_sessions').select('id, session_date, focus, day_name, total_sets, total_volume, duration_seconds').eq('user_id', user.id).order('session_date', { ascending: false }).limit(8),
       ]);
 
       const cals = logsRes.data?.reduce((sum, log) => sum + (log.calories || 0), 0) || 0;
       const prot = logsRes.data?.reduce((sum, log) => sum + Number(log.protein || 0), 0) || 0;
       setNutrition({ calories: cals, target: profileRes.data?.daily_calories || 0, protein: prot });
       setSleep({ done: habitRes.data?.completed || false, target: Number(targetsRes.data?.sleep_hours) || 7 });
+
+      const sessions = sessionsRes.data || [];
+      if (sessions.length === 0) {
+        setWorkouts('אין אימונים שנרשמו עדיין.');
+      } else {
+        const ids = sessions.map(s => s.id);
+        const { data: sets } = await supabase
+          .from('workout_sets')
+          .select('session_id, exercise_name, set_number, reps, weight, weighted, rir')
+          .in('session_id', ids)
+          .order('exercise_order', { ascending: true })
+          .order('set_number', { ascending: true });
+        const lines = sessions.map(s => {
+          const setRows = (sets || []).filter(x => x.session_id === s.id);
+          const byEx: Record<string, typeof setRows> = {};
+          setRows.forEach(r => { (byEx[r.exercise_name] ||= []).push(r); });
+          const exSummary = Object.entries(byEx).map(([name, rs]) => {
+            const parts = rs.map(r => r.weighted ? `${r.weight ?? '?'}ק"ג×${r.reps ?? '?'}` : `${r.reps ?? '?'}`).join('/');
+            return `${name}: ${parts}`;
+          }).join(' | ');
+          return `- ${s.session_date} ${s.focus || s.day_name || ''} (${s.total_sets} סטים, ${Math.round(s.total_volume || 0)}ק"ג נפח): ${exSummary}`;
+        });
+        setWorkouts(lines.join('\n'));
+      }
     };
     fetchExtraContext();
   }, [user]);
@@ -183,6 +209,9 @@ ${todayTasks.map(t => `- ${t.completions[todayStr] ? '✅' : '⬜'} ${t.name} ($
 
 🍎 תזונה היום: ${nutrition.calories} קלוריות מתוך יעד של ${nutrition.target}. חלבון: ${nutrition.protein}g.
 💤 שינה הלילה: ${sleep.done ? 'הושלם (טוב)' : 'לא הושלם או לא נרשם'} מתוך יעד של ${sleep.target} שעות.
+
+🏋️ אימונים אחרונים (סטים, משקלים, חזרות):
+${workouts}
 `;
   };
 

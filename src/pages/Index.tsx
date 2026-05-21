@@ -35,8 +35,9 @@ import AchievementShowcase from '@/components/AchievementShowcase';
 import AdvancedAnalytics from '@/components/AdvancedAnalytics';
 import MotivationalSplash from '@/components/MotivationalSplash';
 import OnboardingFlow from '@/components/OnboardingFlow';
+import WorkoutsTab from '@/components/WorkoutsTab';
 import { ConfettiOverlay, useConfetti } from '@/components/CinematicEffects';
-import { LayoutDashboard, CheckSquare, TrendingUp, BarChart3, Settings, LogOut, Users, Menu } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, TrendingUp, BarChart3, Settings, LogOut, Users, Menu, Dumbbell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AppSidebar } from '@/components/AppSidebar';
 import { QuickActionFAB } from '@/components/QuickActionFAB';
@@ -45,6 +46,7 @@ import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 const mobileBottomTabs = [
   { id: 'dashboard', label: 'ראשי', icon: LayoutDashboard },
   { id: 'action', label: 'פעולות', icon: CheckSquare },
+  { id: 'workouts', label: 'אימונים', icon: Dumbbell },
   { id: 'growth', label: 'צמיחה', icon: TrendingUp },
   { id: 'analytics', label: 'נתונים', icon: BarChart3 },
 ];
@@ -128,6 +130,11 @@ const AppContent = () => {
                   <ProductiveHours />
                   <AdvancedAnalytics />
                   <DisciplineDNA />
+                </div>
+              )}
+              {activeTab === 'workouts' && (
+                <div className="space-y-4 sm:space-y-6 card-stagger">
+                  <WorkoutsTab />
                 </div>
               )}
               {activeTab === 'growth' && (

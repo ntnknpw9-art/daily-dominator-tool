@@ -6,7 +6,8 @@ import {
   Settings, 
   Timer, 
   Apple, 
-  Camera 
+  Camera,
+  Dumbbell
 } from "lucide-react";
 import {
   Sidebar,
@@ -23,6 +24,7 @@ import {
 const items = [
   { id: 'dashboard', label: 'ראשי', icon: LayoutDashboard },
   { id: 'action', label: 'פעולות', icon: CheckSquare },
+  { id: 'workouts', label: 'אימונים', icon: Dumbbell },
   { id: 'growth', label: 'צמיחה', icon: TrendingUp },
   { id: 'analytics', label: 'נתונים', icon: BarChart3 },
 ];
