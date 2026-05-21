@@ -7,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import ApplyPlanDialog from '@/components/ApplyPlanDialog';
 import { ChevronRight, ChevronLeft, Loader2, Sparkles } from 'lucide-react';
+import MuscleGrid, { MUSCLES } from '@/components/MuscleGrid';
 
 interface Props { onComplete: () => void; }
 
@@ -14,12 +15,14 @@ type A = {
   gender: string; age: number; height: number; weight: number;
   goal: string; experience: string; daysPerWeek: number;
   location: string; trainingTime: string; activity: string; diet: string;
+  muscles: string[]; fullBody: boolean;
 };
 
 const initial: A = {
   gender: '', age: 25, height: 175, weight: 75,
   goal: '', experience: '', daysPerWeek: 4,
   location: '', trainingTime: '', activity: '', diet: '',
+  muscles: [], fullBody: false,
 };
 
 const GOALS = [
@@ -206,7 +209,20 @@ const OnboardingFlow = ({ onComplete }: Props) => {
         ))}
       </div>
     )},
+    { title: 'על איזה שרירים תרצה לעבוד?', sub: 'בחר אחד או יותר, או "כל הגוף"', valid: a.fullBody || a.muscles.length > 0, render: () => (
+      <MuscleGrid
+        selected={a.muscles}
+        fullBody={a.fullBody}
+        onToggle={(id) => setA(p => ({
+          ...p,
+          fullBody: false,
+          muscles: p.muscles.includes(id) ? p.muscles.filter(x => x !== id) : [...p.muscles, id],
+        }))}
+        onToggleFullBody={() => setA(p => ({ ...p, fullBody: true, muscles: [] }))}
+      />
+    )},
   ];
+
 
   const total = steps.length;
   const cur = steps[step];
@@ -240,12 +256,13 @@ const OnboardingFlow = ({ onComplete }: Props) => {
 - מקום אימון: ${a.location}
 - רמת פעילות יומית: ${a.activity}
 - העדפת תזונה: ${a.diet}
+- שרירים בפוקוס: ${a.fullBody ? 'כל הגוף (תוכנית מלאה ומאוזנת)' : MUSCLES.filter(m => a.muscles.includes(m.id)).map(m => m.name).join(', ')}
 
 ${splitHint}
 
 חשב BMR וצרכי קלוריות לפי משקל/גובה/גיל/מין/פעילות והתאם למטרה (גירעון של 400 קק"ל לחיטוב, עודף של 300 קק"ל למסה, איזון ל-recomp/כללי).
 חלבון: 1.8-2.2 גרם לק"ג. מים: 35 מ"ל לק"ג משקל. שינה: 7-8 שעות.
-פצל את ${a.daysPerWeek} ימי האימון לימי השבוע (התחל מיום ראשון). לכל יום תן focus ותרגילים מלאים (שם, סטים×חזרות, מופרדים בפסיק).`;
+פצל את ${a.daysPerWeek} ימי האימון לימי השבוע (התחל מיום ראשון). לכל יום תן focus ותרגילים מלאים (שם, סטים×חזרות, מופרדים בפסיק).${a.fullBody ? '' : ' הדגש תרגילים שמתמקדים בקבוצות השרירים שנבחרו.'}`;
 
       const { data, error } = await supabase.functions.invoke('ai-plan-extract', {
         body: { analysisText: text },
