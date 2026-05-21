@@ -8,12 +8,16 @@ import { toast } from 'sonner';
 import ApplyPlanDialog from '@/components/ApplyPlanDialog';
 import { ChevronRight, ChevronLeft, Loader2, Sparkles } from 'lucide-react';
 
+import { ChevronRight, ChevronLeft, Loader2, Sparkles } from 'lucide-react';
+import MuscleGrid, { MUSCLES } from '@/components/MuscleGrid';
+
 interface Props { onComplete: () => void; }
 
 type A = {
   gender: string; age: number; height: number; weight: number;
   goal: string; experience: string; daysPerWeek: number;
   location: string; trainingTime: string; activity: string; diet: string;
+  muscles: string[]; fullBody: boolean;
 };
 
 const initial: A = {
