@@ -965,6 +965,45 @@ export type Database = {
         }
         Relationships: []
       }
+      warrior_portraits: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string
+          level: number | null
+          portrait_date: string
+          prompt: string | null
+          rarity: string | null
+          stats: Json | null
+          streak: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url: string
+          level?: number | null
+          portrait_date: string
+          prompt?: string | null
+          rarity?: string | null
+          stats?: Json | null
+          streak?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string
+          level?: number | null
+          portrait_date?: string
+          prompt?: string | null
+          rarity?: string | null
+          stats?: Json | null
+          streak?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       workout_sessions: {
         Row: {
           created_at: string
