@@ -17,6 +17,17 @@ const PRIZES = [
   { label: '+75 XP', type: 'xp_bonus', value: 75, color: '#10b981', emoji: '⭐' },
 ];
 
+const getJerusalemDate = () => {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Jerusalem',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(new Date());
+  const get = (type: string) => parts.find((part) => part.type === type)?.value;
+  return `${get('year')}-${get('month')}-${get('day')}`;
+};
+
 const DailySpinWheel = () => {
   const { user } = useAuth();
   const [spinning, setSpinning] = useState(false);
@@ -26,7 +37,7 @@ const DailySpinWheel = () => {
   const [showPrize, setShowPrize] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  const today = new Date().toISOString().split('T')[0];
+  const today = getJerusalemDate();
 
   useEffect(() => {
     if (user) checkSpinStatus();
@@ -117,8 +128,22 @@ const DailySpinWheel = () => {
     setSpinning(true);
     setShowPrize(false);
 
-    const prizeIndex = Math.floor(Math.random() * PRIZES.length);
-    const selectedPrize = PRIZES[prizeIndex];
+    const { data, error } = await supabase.functions.invoke('daily-spin', { method: 'POST' });
+    if (error || !data) {
+      setSpinning(false);
+      toast.error('לא הצלחתי לסובב כרגע. נסה שוב עוד רגע.');
+      return;
+    }
+
+    if (data.alreadySpun) {
+      setSpinning(false);
+      setAlreadySpun(true);
+      toast.info('כבר סובבת היום. חזור מחר לסיבוב חדש!');
+      return;
+    }
+
+    const prizeIndex = Number(data.prizeIndex);
+    const selectedPrize = PRIZES[prizeIndex] ?? PRIZES[0];
     const sliceAngle = 360 / PRIZES.length;
     // Spin 5 full rotations + land on the prize
     const targetRotation = 360 * 5 + (360 - prizeIndex * sliceAngle - sliceAngle / 2);
@@ -143,7 +168,6 @@ const DailySpinWheel = () => {
         setShowPrize(true);
         setSpinning(false);
         setAlreadySpun(true);
-        saveSpin(selectedPrize);
         applyPrize(selectedPrize);
       }
     };
@@ -151,30 +175,9 @@ const DailySpinWheel = () => {
     requestAnimationFrame(animate);
   };
 
-  const saveSpin = async (p: typeof PRIZES[0]) => {
-    if (!user) return;
-    await supabase.from('daily_spins').insert({
-      user_id: user.id,
-      spin_date: today,
-      prize_type: p.type,
-      prize_value: p.value,
-    });
-  };
-
   const applyPrize = async (p: typeof PRIZES[0]) => {
     if (!user) return;
     if (p.type === 'xp_bonus') {
-      const { data: stats } = await supabase
-        .from('user_stats')
-        .select('xp')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      if (stats) {
-        await supabase
-          .from('user_stats')
-          .update({ xp: stats.xp + p.value })
-          .eq('user_id', user.id);
-      }
       toast.success(`🎉 זכית ב-${p.value} XP!`);
     } else if (p.type === 'xp_double') {
       toast.success('⚡ XP כפול על כל משימה היום!');
