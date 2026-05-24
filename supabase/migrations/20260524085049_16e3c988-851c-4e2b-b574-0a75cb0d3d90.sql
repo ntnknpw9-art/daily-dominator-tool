@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.enforce_duel_update_rules() FROM PUBLIC, anon, authenticated;
