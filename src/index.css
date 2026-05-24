@@ -195,4 +195,23 @@ body.war-mode-active .glass-card {
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
+
+  /* Prevent iOS rubber-band scrolling from exposing area beneath the fixed bottom nav */
+  html, body {
+    overscroll-behavior-y: none;
+  }
 }
+
+/* Extend the mobile bottom nav background below the safe area
+   so iOS overscroll never reveals the page background underneath. */
+nav.fixed.bottom-0::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: 200px;
+  background: hsl(var(--card) / 0.95);
+  pointer-events: none;
+}
+
