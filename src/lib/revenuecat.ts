@@ -44,21 +44,14 @@ export async function getOfferings() {
   }
 }
 
-async function syncToSupabase(params: {
-  isPremium: boolean;
-  productId?: string | null;
-  expiresAt?: string | null;
-  rcUserId?: string | null;
-}) {
+async function syncToSupabase() {
   const { data: auth } = await supabase.auth.getUser();
   const user = auth.user;
   if (!user) return;
   // Subscriptions are written server-side after verifying with RevenueCat.
   // Clients cannot insert/update user_subscriptions directly.
   try {
-    await supabase.functions.invoke('sync-subscription', {
-      body: { rcUserId: params.rcUserId ?? user.id },
-    });
+    await supabase.functions.invoke('sync-subscription');
   } catch (e) {
     console.warn('sync-subscription failed', e);
   }
@@ -102,10 +95,7 @@ export async function purchasePackage(pkg: any) {
   const result: any = await Purchases.purchasePackage({ aPackage: pkg });
   const info = result.customerInfo;
   const active = extractActive(info);
-  await syncToSupabase({
-    ...active,
-    rcUserId: info?.originalAppUserId ?? null,
-  });
+  await syncToSupabase();
   return active;
 }
 
@@ -116,10 +106,7 @@ export async function restorePurchases() {
   const result: any = await Purchases.restorePurchases();
   const info = result.customerInfo;
   const active = extractActive(info);
-  await syncToSupabase({
-    ...active,
-    rcUserId: info?.originalAppUserId ?? null,
-  });
+  await syncToSupabase();
   return active;
 }
 
@@ -131,10 +118,7 @@ export async function refreshPremiumStatus() {
     const result: any = await Purchases.getCustomerInfo();
     const info = result.customerInfo;
     const active = extractActive(info);
-    await syncToSupabase({
-      ...active,
-      rcUserId: info?.originalAppUserId ?? null,
-    });
+    await syncToSupabase();
     return active;
   } catch {
     return null;
