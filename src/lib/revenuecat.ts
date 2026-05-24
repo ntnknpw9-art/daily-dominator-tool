@@ -53,13 +53,15 @@ async function syncToSupabase(params: {
   const { data: auth } = await supabase.auth.getUser();
   const user = auth.user;
   if (!user) return;
-  await supabase.from('user_subscriptions').upsert({
-    user_id: user.id,
-    is_premium: params.isPremium,
-    product_id: params.productId ?? null,
-    expires_at: params.expiresAt ?? null,
-    revenuecat_user_id: params.rcUserId ?? null,
-  }, { onConflict: 'user_id' });
+  // Subscriptions are written server-side after verifying with RevenueCat.
+  // Clients cannot insert/update user_subscriptions directly.
+  try {
+    await supabase.functions.invoke('sync-subscription', {
+      body: { rcUserId: params.rcUserId ?? user.id },
+    });
+  } catch (e) {
+    console.warn('sync-subscription failed', e);
+  }
 }
 
 export const PREMIUM_ENTITLEMENT = 'premium';
