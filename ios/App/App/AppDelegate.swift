@@ -8,7 +8,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        // Override point for customization after application launch.
+        // Disable the iOS WebView rubber-band bounce so fixed bottom navigation stays pinned.
+        DispatchQueue.main.async { [weak self] in
+            if let bridgeViewController = self?.window?.rootViewController as? CAPBridgeViewController {
+                bridgeViewController.webView?.scrollView.bounces = false
+                bridgeViewController.webView?.scrollView.alwaysBounceVertical = false
+            }
+        }
+
         return true
     }
 
