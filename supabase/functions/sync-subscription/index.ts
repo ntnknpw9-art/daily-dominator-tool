@@ -30,8 +30,10 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    const { rcUserId } = await req.json().catch(() => ({}));
-    const subscriberId = rcUserId || user.id;
+    // Never trust a caller-provided RevenueCat user id. The subscriber id is
+    // derived from the authenticated app user so one user cannot claim another
+    // user's paid entitlement.
+    const subscriberId = user.id;
 
     let isPremium = false;
     let productId: string | null = null;
