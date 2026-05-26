@@ -83,7 +83,7 @@ async function syncToSupabase() {
   }
 }
 
-export const PREMIUM_ENTITLEMENT = 'premium';
+export const PREMIUM_ENTITLEMENT = 'Daily Dominator AI Pro';
 
 function extractActive(customerInfo: any): { isPremium: boolean; productId: string | null; expiresAt: string | null } {
   const active = customerInfo?.entitlements?.active || {};
