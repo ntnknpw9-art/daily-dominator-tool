@@ -4,8 +4,34 @@
 import { Capacitor } from '@capacitor/core';
 import { supabase } from '@/integrations/supabase/client';
 
-export const PRODUCT_MONTHLY = 'com.natanknafo.dailydominator';
-export const PRODUCT_YEARLY = 'com.natanknafo.dailydominatork';
+/**
+ * Central mapping for all in-app purchase products.
+ * Single source of truth — do NOT hardcode product IDs elsewhere.
+ * Keys must match the App Store Connect Product IDs exactly.
+ */
+export const PRODUCTS = {
+  monthly: {
+    id: 'com.natanknafo.dailydominator',
+    label: 'תמיכה חודשית',
+    period: 'month' as const,
+  },
+  yearly: {
+    id: 'com.natanknafo.dailydominatork',
+    label: 'תמיכה שנתית',
+    period: 'year' as const,
+  },
+} as const;
+
+export type ProductKey = keyof typeof PRODUCTS;
+
+export const ALL_PRODUCT_IDS = Object.values(PRODUCTS).map((p) => p.id);
+
+export const getProductById = (id: string | null | undefined) =>
+  Object.values(PRODUCTS).find((p) => p.id === id) ?? null;
+
+// Backward-compatible exports — derived from the central map.
+export const PRODUCT_MONTHLY = PRODUCTS.monthly.id;
+export const PRODUCT_YEARLY = PRODUCTS.yearly.id;
 
 // Public SDK key from RevenueCat (Apple). Safe to ship in client.
 const REVENUECAT_IOS_API_KEY =
