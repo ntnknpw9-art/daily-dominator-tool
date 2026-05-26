@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({ error: "RevenueCat verification failed" }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
       const body = await rcRes.json();
-      const ent = body?.subscriber?.entitlements?.premium;
+      const ent = body?.subscriber?.entitlements?.["Daily Dominator AI Pro"];
       if (ent?.expires_date) {
         const exp = new Date(ent.expires_date).getTime();
         if (exp > Date.now()) {
