@@ -5,7 +5,7 @@ import { Capacitor } from '@capacitor/core';
 import { supabase } from '@/integrations/supabase/client';
 
 export const PRODUCT_MONTHLY = 'com.natanknafo.dailydominator';
-export const PRODUCT_YEARLY = 'com.natanknafo.dailydominatoro';
+export const PRODUCT_YEARLY = 'com.natanknafo.dailydominatork';
 
 // Public SDK key from RevenueCat (Apple). Safe to ship in client.
 const REVENUECAT_IOS_API_KEY =
