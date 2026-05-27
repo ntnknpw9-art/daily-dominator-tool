@@ -299,6 +299,18 @@ const OnboardingFlow = ({ onComplete }: Props) => {
         a.goal === 'מסה' ? 'עלייה במסת שריר ובמשקל (bulking)' :
         'כושר כללי ובריאות';
 
+      // === חישוב תזונה דטרמיניסטי לפי המחקר (לא AI) ===
+      const bfLevel = BODY_FAT_LEVELS.find(l => l.id === a.bodyFatLevel);
+      const nutrition = calculateNutrition({
+        gender: a.gender as any,
+        age: a.age,
+        height: a.height,
+        weight: a.weight,
+        activity: a.activity as any,
+        goal: a.goal as any,
+        bodyFatPercent: bfLevel?.midpoint,
+      });
+
       const splitHint = a.location === 'קליסטניקס'
         ? 'תוכנית קליסטניקס טהורה — רק תרגילי משקל גוף: מתח, מקבילים, שכיבות סמיכה, סקוואט, פלאנק, מאדאפ, פיסטול סקוואט, ארצ׳ר פושאפס וכו. ללא משקולות. התאם פרוגרסיות לפי רמת המתאמן.'
         : a.location === 'בית בלי ציוד'
@@ -308,7 +320,7 @@ const OnboardingFlow = ({ onComplete }: Props) => {
         : 'תוכנית חדר כושר מלאה.';
 
       const text = `פרופיל משתמש:
-- מגדר: ${a.gender}, גיל: ${a.age}, גובה: ${a.height} ס"מ, משקל: ${a.weight} ק"ג
+- מגדר: ${a.gender}, גיל: ${a.age}, גובה: ${a.height} ס"מ, משקל: ${a.weight} ק"ג${bfLevel ? `, אחוז שומן: ~${bfLevel.midpoint}%` : ''}
 - מטרה: ${goalText}
 - ניסיון: ${a.experience}
 - ${a.daysPerWeek} ימי אימון בשבוע, בשעות ${a.trainingTime}
@@ -317,10 +329,12 @@ const OnboardingFlow = ({ onComplete }: Props) => {
 - העדפת תזונה: ${a.diet}
 - שרירים בפוקוס: ${a.fullBody ? 'כל הגוף (תוכנית מלאה ומאוזנת)' : MUSCLES.filter(m => a.muscles.includes(m.id)).map(m => m.name).join(', ')}
 
+יעדים יומיים (כבר חושבו במדויק, אל תשנה אותם, השתמש בהם בלבד):
+- קלוריות: ${nutrition.calories}, חלבון: ${nutrition.protein}g, פחמימות: ${nutrition.carbs}g, שומן: ${nutrition.fat}g
+- מים: ${nutrition.water_liters}L, שינה: ${nutrition.sleep_hours}h
+
 ${splitHint}
 
-חשב BMR וצרכי קלוריות לפי משקל/גובה/גיל/מין/פעילות והתאם למטרה (גירעון של 400 קק"ל לחיטוב, עודף של 300 קק"ל למסה, איזון ל-recomp/כללי).
-חלבון: 1.8-2.2 גרם לק"ג. מים: 35 מ"ל לק"ג משקל. שינה: 7-8 שעות.
 פצל את ${a.daysPerWeek} ימי האימון לימי השבוע (התחל מיום ראשון). לכל יום תן focus ותרגילים מלאים (שם, סטים×חזרות, מופרדים בפסיק).${a.fullBody ? '' : ' הדגש תרגילים שמתמקדים בקבוצות השרירים שנבחרו.'}`;
 
       const { data, error } = await supabase.functions.invoke('ai-plan-extract', {
@@ -339,7 +353,20 @@ ${splitHint}
         setGenerating(false);
         return;
       }
-      setPlan(data?.plan || {});
+      // דרוס את ערכי התזונה של ה-AI עם החישוב הדטרמיניסטי שלנו (מקור אמת יחיד)
+      const aiPlan = data?.plan || {};
+      const finalPlan = {
+        ...aiPlan,
+        water_liters: nutrition.water_liters,
+        sleep_hours: nutrition.sleep_hours,
+        nutrition: {
+          calories: nutrition.calories,
+          protein: nutrition.protein,
+          carbs: nutrition.carbs,
+          fat: nutrition.fat,
+        },
+      };
+      setPlan(finalPlan);
       setShowApply(true);
     } catch (e: any) {
       console.error(e);
