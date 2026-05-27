@@ -426,55 +426,81 @@ const SettingsTab = () => {
       <Card className="border-accent/30 bg-gradient-to-br from-accent/5 to-card/50 backdrop-blur-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center gap-2">
-            <Heart className="w-5 h-5 text-accent" />
-            תמיכה באפליקציה
+            <Crown className="w-5 h-5 text-accent" />
+            מנוי
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-3">
+          <div className="text-xs text-muted-foreground leading-relaxed">
+            כל הפיצ׳רים של האפליקציה פתוחים לכולם בחינם — ללא הבדל בין משתמשים. המנוי הוא דרך לתמוך בפיתוח האפליקציה.
+          </div>
+          <Button
+            variant="default"
+            className="w-full gap-2"
+            onClick={() => setSubOpen(true)}
+          >
+            <Crown className="w-4 h-4" />
+            {isPremium ? 'נהל מנוי' : 'הצטרף כתומך'}
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Dialog open={subOpen} onOpenChange={setSubOpen}>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto" dir="rtl">
+          <DialogHeader className="text-right">
+            <DialogTitle className="flex items-center gap-2">
+              <Crown className="w-5 h-5 text-accent" />
+              מנוי תמיכה
+            </DialogTitle>
+            <DialogDescription className="text-right">
+              כל פיצ׳רי האפליקציה זמינים לכולם בחינם. המנוי הוא דרך אופציונלית לתמוך בפיתוח.
+            </DialogDescription>
+          </DialogHeader>
+
           <div className="flex items-center justify-between bg-background/40 border border-border/40 rounded-lg p-3">
             <div className="text-sm">
               <div className="font-medium">סטטוס</div>
               <div className="text-xs text-muted-foreground">
-                {isPremium ? 'תומך פעיל — תודה!' : 'משתמש חינמי'}
+                {isPremium ? 'תומך פעיל — תודה!' : 'לא רשום'}
               </div>
             </div>
-            <div className="flex items-center gap-1.5">
-              {isPremium && <Crown className="w-4 h-4 text-accent" />}
-              <span className={`text-xs font-bold px-2 py-1 rounded-full border ${isPremium ? 'bg-accent/10 text-accent border-accent/30' : 'bg-muted text-muted-foreground border-border'}`}>
-                {isPremium ? 'תומך' : 'חינמי'}
-              </span>
-            </div>
-          </div>
-
-          <div className="text-xs text-muted-foreground leading-relaxed">
-            המנוי הוא אופציונלי לחלוטין. אפשר להשתמש בכל האפליקציה בחינם — כל הפיצ׳רים, ללא הגבלות וללא הבדל בין משתמשים. התמיכה היא דרך להגיד תודה ולעזור לפיתוח להמשיך.
+            <span className={`text-xs font-bold px-2 py-1 rounded-full border ${isPremium ? 'bg-accent/10 text-accent border-accent/30' : 'bg-muted text-muted-foreground border-border'}`}>
+              {isPremium ? 'תומך' : 'חינמי'}
+            </span>
           </div>
 
           <div className="grid grid-cols-2 gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex-col h-auto py-3 gap-1"
+            <button
+              type="button"
               disabled={!!purchasing || isPremium}
               onClick={() => handlePurchase(PRODUCT_MONTHLY)}
+              className="relative flex flex-col items-center justify-center gap-1 rounded-lg border border-border/60 bg-background/40 p-4 transition hover:border-accent/40 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span className="text-xs text-muted-foreground">חודשי</span>
-              <span className="font-bold">
-                {purchasing === PRODUCT_MONTHLY ? 'רוכש...' : (findPackage(PRODUCT_MONTHLY)?.product?.priceString || 'תמיכה חודשית')}
+              <span className="font-bold text-base">
+                {purchasing === PRODUCT_MONTHLY ? 'רוכש...' : (findPackage(PRODUCT_MONTHLY)?.product?.priceString || '₪39.90')}
               </span>
-            </Button>
-            <Button
-              variant="default"
-              size="sm"
-              className="flex-col h-auto py-3 gap-1"
+              <span className="text-[11px] text-muted-foreground">לחודש</span>
+            </button>
+            <button
+              type="button"
               disabled={!!purchasing || isPremium}
               onClick={() => handlePurchase(PRODUCT_YEARLY)}
+              className="relative flex flex-col items-center justify-center gap-1 rounded-lg border-2 border-accent/50 bg-accent/5 p-4 transition hover:border-accent disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <span className="text-xs opacity-80">שנתי</span>
-              <span className="font-bold">
-                {purchasing === PRODUCT_YEARLY ? 'רוכש...' : (findPackage(PRODUCT_YEARLY)?.product?.priceString || 'תמיכה שנתית')}
+              <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[10px] font-bold bg-accent text-accent-foreground px-2 py-0.5 rounded-full whitespace-nowrap">
+                חיסכון 62%
               </span>
-            </Button>
+              <span className="text-xs text-muted-foreground">שנתי</span>
+              <span className="font-bold text-base text-accent">
+                {purchasing === PRODUCT_YEARLY ? 'רוכש...' : (findPackage(PRODUCT_YEARLY)?.product?.priceString || '₪179.90')}
+              </span>
+              <span className="text-[11px] text-muted-foreground">לשנה</span>
+            </button>
+          </div>
+
+          <div className="text-[11px] text-muted-foreground leading-relaxed bg-background/30 border border-border/30 rounded-lg p-3">
+            התשלום יחויב דרך חשבון ה-Apple ID שלך בעת אישור הרכישה. המנוי מתחדש אוטומטית בסוף כל תקופה (חודשי/שנתי) באותו מחיר, אלא אם בוטל לפחות 24 שעות לפני תום התקופה. ניתן לנהל ולבטל את המנוי בכל עת דרך הגדרות חשבון ה-Apple ID.
           </div>
 
           <Button
@@ -488,13 +514,25 @@ const SettingsTab = () => {
             {restoring ? 'משחזר...' : 'שחזר רכישות'}
           </Button>
 
+          <div className="flex items-center justify-center gap-4 text-[11px] text-muted-foreground pt-1 border-t border-border/30">
+            <a href="/terms" target="_blank" rel="noopener noreferrer" className="hover:text-foreground underline-offset-2 hover:underline">
+              תנאי שימוש (EULA)
+            </a>
+            <span>·</span>
+            <a href="/privacy" target="_blank" rel="noopener noreferrer" className="hover:text-foreground underline-offset-2 hover:underline">
+              מדיניות פרטיות
+            </a>
+          </div>
+
           {!isIOSNative() && (
             <div className="text-[11px] text-muted-foreground text-center">
               רכישות זמינות באפליקציה על iPhone בלבד
             </div>
           )}
-        </CardContent>
-      </Card>
+        </DialogContent>
+      </Dialog>
+
+
 
 
 
