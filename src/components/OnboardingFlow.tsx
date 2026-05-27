@@ -143,6 +143,9 @@ const OnboardingFlow = ({ onComplete }: Props) => {
     )},
     { title: 'מה אחוז השומן שלך?', sub: 'בחר את התמונה הקרובה ביותר אליך (לחישוב מדויק יותר)', valid: true, render: () => (
       <div className="space-y-3">
+        <div className="text-center text-[11px] text-muted-foreground/80 font-semibold bg-muted/30 border border-border/40 rounded-lg py-2 px-3">
+          התמונות פונות לשני המינים — בחר את הקרוב ביותר אליך
+        </div>
         <div className="grid grid-cols-2 gap-2.5">
           {BODY_FAT_LEVELS.map((lvl, i) => (
             <button
