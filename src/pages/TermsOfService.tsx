@@ -1,11 +1,17 @@
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { SeoHead } from '@/components/SeoHead';
 
 const TermsOfService = () => {
   const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-background p-6 md:p-10" dir="rtl">
+      <SeoHead
+        title="תנאי שימוש — Daily Dominator"
+        description="תנאי השימוש של Daily Dominator: זכויות, חובות, מגבלות אחריות והסכם המשתמש המלא לשימוש באפליקציה."
+        path="/terms"
+      />
       <div className="max-w-3xl mx-auto glass-card p-6 md:p-10 space-y-4">
         <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="gap-1 -mr-2">
           <ArrowRight className="w-4 h-4" />
