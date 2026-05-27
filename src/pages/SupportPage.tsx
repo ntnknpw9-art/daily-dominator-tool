@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Mail, HelpCircle, Shield, FileText, ChevronDown, Copy, Check } from 'lucide-react';
+import { SeoHead } from '@/components/SeoHead';
 
 const FAQS = [
   {
