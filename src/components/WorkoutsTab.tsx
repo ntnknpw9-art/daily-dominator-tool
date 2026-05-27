@@ -77,7 +77,7 @@ const ExerciseCard = ({
                 <div className="relative">
                   <input type="number" inputMode="decimal" value={log.weight} onChange={e => update(i, 'weight', e.target.value)}
                     placeholder={prev?.weight != null ? `${prev.weight}` : '0'}
-                    className="w-full h-10 bg-background/60 border border-border/50 rounded-lg text-center font-black text-base focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground/40" />
+                    className="w-full h-10 bg-background/60 border border-border/50 rounded-lg text-center font-black text-base focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/30 placeholder:text-muted-foreground/70" />
                   <div className="absolute inset-y-0 left-1 flex flex-col gap-px justify-center">
                     <button onClick={() => bump(i, 'weight', 2.5)} className="w-5 h-4 rounded bg-primary/15 text-primary text-[10px] flex items-center justify-center active:scale-90"><Plus className="w-2.5 h-2.5" /></button>
                     <button onClick={() => bump(i, 'weight', -2.5)} className="w-5 h-4 rounded bg-primary/15 text-primary text-[10px] flex items-center justify-center active:scale-90"><Minus className="w-2.5 h-2.5" /></button>
@@ -87,7 +87,7 @@ const ExerciseCard = ({
               <div className="relative">
                 <input type="number" inputMode="numeric" value={log.reps} onChange={e => update(i, 'reps', e.target.value)}
                   placeholder={prev?.reps != null ? `${prev.reps}` : `${ex.repsMin}`}
-                  className="w-full h-10 bg-background/60 border border-border/50 rounded-lg text-center font-black text-base focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30 placeholder:text-muted-foreground/40" />
+                  className="w-full h-10 bg-background/60 border border-border/50 rounded-lg text-center font-black text-base focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/30 placeholder:text-muted-foreground/70" />
                 <div className="absolute inset-y-0 left-1 flex flex-col gap-px justify-center">
                   <button onClick={() => bump(i, 'reps', 1)} className="w-5 h-4 rounded bg-accent/15 text-accent text-[10px] flex items-center justify-center active:scale-90"><Plus className="w-2.5 h-2.5" /></button>
                   <button onClick={() => bump(i, 'reps', -1)} className="w-5 h-4 rounded bg-accent/15 text-accent text-[10px] flex items-center justify-center active:scale-90"><Minus className="w-2.5 h-2.5" /></button>

@@ -100,7 +100,7 @@ const ProgressMap = () => {
                   {complete ? (
                     <CheckCircle2 className="w-5 h-5 text-green-400" />
                   ) : isLocked ? (
-                    <Lock className="w-4 h-4 text-muted-foreground/50" />
+                    <Lock className="w-4 h-4 text-muted-foreground/70" />
                   ) : (
                     <span className={isActive ? 'animate-bounce' : 'opacity-50'}>{milestone.icon}</span>
                   )}
