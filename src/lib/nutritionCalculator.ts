@@ -100,8 +100,8 @@ export function calculateNutrition(input: NutritionInput): NutritionResult {
   let proteinPerKg = 2.0;
   if (isCut(goal)) proteinPerKg = 2.3;
   else if (goal === 'recomp') proteinPerKg = 2.2;
-  else if (isBulk(goal)) proteinPerKg = 1.8;
-  else proteinPerKg = 1.8;
+  else if (isBulk(goal)) proteinPerKg = 2.0;
+  else proteinPerKg = 2.0;
 
   const protein = Math.round(weight * proteinPerKg);
 
