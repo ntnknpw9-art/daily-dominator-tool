@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Mail, HelpCircle, Shield, FileText, ChevronDown, Copy, Check } from 'lucide-react';
 
 const FAQS = [
@@ -37,6 +37,25 @@ const SUPPORT_EMAIL = 'ntnknpw9@gmail.com';
 const SupportPage = () => {
   const [open, setOpen] = useState<number | null>(0);
   const [copied, setCopied] = useState(false);
+
+  // Inject FAQPage JSON-LD for rich results
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.text = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: FAQS.map((f) => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    });
+    document.head.appendChild(script);
+    return () => {
+      document.head.removeChild(script);
+    };
+  }, []);
 
   const copyEmail = async () => {
     try {
