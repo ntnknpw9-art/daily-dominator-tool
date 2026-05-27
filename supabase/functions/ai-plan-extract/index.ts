@@ -80,8 +80,18 @@ serve(async (req) => {
     if (!response.ok) {
       const t = await response.text();
       console.error("AI error:", response.status, t);
-      return new Response(JSON.stringify({ error: "שגיאת AI" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      if (response.status === 402) {
+        return new Response(JSON.stringify({ error: "אזלו הקרדיטים של ה-AI", code: 402 }), {
+          status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (response.status === 429) {
+        return new Response(JSON.stringify({ error: "יותר מדי בקשות", code: 429 }), {
+          status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      return new Response(JSON.stringify({ error: "שגיאת AI", code: response.status }), {
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
