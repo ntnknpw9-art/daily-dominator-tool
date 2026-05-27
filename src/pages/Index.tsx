@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { SeoHead } from '@/components/SeoHead';
 import { useAuth } from '@/context/AuthContext';
 import { TaskProvider } from '@/context/TaskContext';
 import AuthPage from '@/pages/AuthPage';
