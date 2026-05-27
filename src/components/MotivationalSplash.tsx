@@ -151,7 +151,7 @@ const MotivationalSplash = ({ onDismiss }: { onDismiss: () => void }) => {
           💪 בוא נתחיל
         </Button>
       </div>
-    </div>
+    </main>
   );
 };
 
