@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { SeoHead } from '@/components/SeoHead';
 import { useAuth } from '@/context/AuthContext';
 import { TaskProvider } from '@/context/TaskContext';
 import AuthPage from '@/pages/AuthPage';
@@ -220,9 +221,16 @@ const Index = () => {
   if (!user) return <AuthPage />;
 
   return (
-    <TaskProvider>
-      <OnboardingGate />
-    </TaskProvider>
+    <>
+      <SeoHead
+        title="Daily Dominator — מעקב משמעת עצמית ופרודוקטיביות"
+        description="עקבו אחרי משימות, הרגלים, אימונים ותזונה בעברית. דוחות שבועיים, הישגים ויעדים יומיים לבניית משמעת עצמית."
+        path="/"
+      />
+      <TaskProvider>
+        <OnboardingGate />
+      </TaskProvider>
+    </>
   );
 };
 

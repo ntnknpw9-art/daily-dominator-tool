@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { SeoHead } from '@/components/SeoHead';
 
 const ResetPassword = () => {
   const navigate = useNavigate();
@@ -41,6 +42,12 @@ const ResetPassword = () => {
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <SeoHead
+        title="איפוס סיסמה — Daily Dominator"
+        description="איפוס סיסמה לחשבון Daily Dominator שלכם."
+        path="/reset-password"
+        noindex
+      />
       <div className="glass-card p-8 w-full max-w-md animate-scale-in">
         <h1 className="text-2xl font-bold text-foreground text-center mb-6">איפוס סיסמה</h1>
         {!ready ? (

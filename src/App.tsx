@@ -10,8 +10,6 @@ import SupportPage from "./pages/SupportPage.tsx";
 import PrivacyPolicy from "./pages/PrivacyPolicy.tsx";
 import TermsOfService from "./pages/TermsOfService.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
-import MusclePreview from "./pages/MusclePreview.tsx";
-import WorkoutDemo from "./pages/WorkoutDemo.tsx";
 
 const queryClient = new QueryClient();
 
@@ -24,14 +22,10 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
-            <Route path="/index" element={<Index />} />
-            <Route path="/index.html" element={<Index />} />
             <Route path="/support" element={<SupportPage />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/muscle-preview" element={<MusclePreview />} />
-            <Route path="/workout-demo" element={<WorkoutDemo />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Mail, HelpCircle, Shield, FileText, ChevronDown, Copy, Check } from 'lucide-react';
+import { SeoHead } from '@/components/SeoHead';
 
 const FAQS = [
   {
@@ -67,12 +68,17 @@ const SupportPage = () => {
 
   return (
     <div dir="rtl" className="min-h-screen bg-[#0a0a0a] text-[#f2f2f2] font-heebo">
+      <SeoHead
+        title="תמיכה ושאלות נפוצות — Daily Dominator"
+        description="מצאו תשובות לשאלות נפוצות על Daily Dominator: הרשמה, מחיקת חשבון, התראות, אבטחה ויצירת קשר עם התמיכה."
+        path="/support"
+      />
       <div className="max-w-3xl mx-auto px-5 py-10 md:py-16">
         {/* Header */}
         <header className="text-center mb-10">
           <div className="text-5xl mb-3">🎯</div>
           <h1 className="text-3xl md:text-4xl font-bold mb-2">תמיכה - Daily Dominator</h1>
-          <p className="text-white/60 text-sm md:text-base">
+          <p className="text-white/80 text-sm md:text-base">
             כאן תמצאו תשובות לשאלות נפוצות ודרך ליצור איתנו קשר
           </p>
         </header>
@@ -137,7 +143,7 @@ const SupportPage = () => {
                 >
                   <span className="font-medium text-sm md:text-base">{item.q}</span>
                   <ChevronDown
-                    className={`w-5 h-5 text-white/50 shrink-0 transition-transform ${
+                    className={`w-5 h-5 text-white/75 shrink-0 transition-transform ${
                       open === i ? 'rotate-180' : ''
                     }`}
                   />
@@ -167,13 +173,13 @@ const SupportPage = () => {
             <li>גללו לתחתית עד <strong>אזור מסוכן</strong></li>
             <li>לחצו על <strong>מחק חשבון</strong> ואשרו</li>
           </ol>
-          <p className="text-white/50 text-xs mt-4">
+          <p className="text-white/75 text-xs mt-4">
             המחיקה מוחקת לצמיתות את החשבון, ההישגים, המשימות וכל הנתונים מהשרת. לא ניתן לשחזר.
           </p>
         </section>
 
         {/* Footer */}
-        <footer className="text-center text-white/40 text-xs pt-6 border-t border-white/10">
+        <footer className="text-center text-white/70 text-xs pt-6 border-t border-white/10">
           <p>© {new Date().getFullYear()} Daily Dominator. כל הזכויות שמורות.</p>
           <p className="mt-1">גרסה 1.0</p>
         </footer>
