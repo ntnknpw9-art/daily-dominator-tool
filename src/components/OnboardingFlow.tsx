@@ -141,7 +141,67 @@ const OnboardingFlow = ({ onComplete }: Props) => {
         </div>
       </div>
     )},
+    { title: 'מה אחוז השומן שלך?', sub: 'בחר את התמונה הקרובה ביותר אליך (לחישוב מדויק יותר)', valid: true, render: () => (
+      <div className="space-y-3">
+        <div className="grid grid-cols-2 gap-2.5">
+          {BODY_FAT_LEVELS.map((lvl, i) => (
+            <button
+              key={lvl.id}
+              onClick={() => upd('bodyFatLevel', lvl.id)}
+              className={`group relative rounded-2xl border-2 overflow-hidden transition-all active:scale-[0.97] ${
+                a.bodyFatLevel === lvl.id
+                  ? 'border-primary shadow-[0_8px_32px_-8px_hsl(var(--primary)/0.7)] scale-[1.02]'
+                  : 'border-border/50 hover:border-primary/50'
+              }`}
+            >
+              <div className="aspect-[3/4] bg-muted overflow-hidden">
+                <img
+                  src={BF_IMAGES[i]}
+                  alt={`רמה ${lvl.id} - ${lvl.range} שומן גוף`}
+                  loading="lazy"
+                  width={768}
+                  height={1024}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className={`p-2 text-center ${a.bodyFatLevel === lvl.id ? 'bg-primary/15' : 'bg-card'}`}>
+                <div className="text-xs font-black text-primary">{lvl.range}</div>
+                <div className="text-[10px] font-semibold mt-0.5">{lvl.label}</div>
+                <div className="text-[9px] text-muted-foreground leading-tight">{lvl.sub}</div>
+              </div>
+              {a.bodyFatLevel === lvl.id && (
+                <span className="absolute top-2 right-2 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-black flex items-center justify-center shadow-lg">
+                  ✓
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={() => upd('bodyFatLevel', 0)}
+          className={`w-full p-3 rounded-xl border-2 text-sm font-semibold transition-all ${
+            a.bodyFatLevel === 0
+              ? 'border-accent bg-accent/10 text-accent'
+              : 'border-border/50 text-muted-foreground hover:border-accent/50'
+          }`}
+        >
+          לא יודע / מעדיף לדלג
+        </button>
+      </div>
+    )},
     { title: 'מה המטרה שלך?', sub: 'נתאים את התוכנית בדיוק לזה', valid: !!a.goal, render: () => (
+      <div className="grid grid-cols-1 gap-2.5">
+        {GOALS.map(g => (
+          <Card key={g.v} active={a.goal===g.v} onClick={()=>upd('goal',g.v)} row>
+            <div className="text-4xl">{g.emoji}</div>
+            <div className="flex-1 text-right">
+              <div className="font-bold">{g.label}</div>
+              <div className="text-xs text-muted-foreground">{g.sub}</div>
+            </div>
+          </Card>
+        ))}
+      </div>
+    )},
       <div className="grid grid-cols-1 gap-2.5">
         {GOALS.map(g => (
           <Card key={g.v} active={a.goal===g.v} onClick={()=>upd('goal',g.v)} row>
