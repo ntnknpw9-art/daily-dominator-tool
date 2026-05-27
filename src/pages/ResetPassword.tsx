@@ -44,7 +44,7 @@ const ResetPassword = () => {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <SeoHead
         title="איפוס סיסמה — Daily Dominator"
-        description="איפוס סיסמה לחשבון Daily Dominator שלכם."
+        description="קבעו סיסמה חדשה לחשבון Daily Dominator שלכם. הזינו סיסמה ואשרו אותה כדי להמשיך לעקוב אחרי המשימות וההתקדמות שלכם."
         path="/reset-password"
         noindex
       />
