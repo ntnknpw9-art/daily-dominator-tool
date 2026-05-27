@@ -32,6 +32,7 @@ const SettingsTab = () => {
   const [offerings, setOfferings] = useState<any>(null);
   const [purchasing, setPurchasing] = useState<string | null>(null);
   const [restoring, setRestoring] = useState(false);
+  const [subOpen, setSubOpen] = useState(false);
 
   useEffect(() => {
     if (isIOSNative()) {
