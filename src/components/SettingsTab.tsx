@@ -193,7 +193,15 @@ const SettingsTab = () => {
     <div className="space-y-4">
       <Card className="border-border/50 bg-card/50 backdrop-blur-sm">
         <CardHeader className="pb-3">
-          <CardTitle className="text-lg">⚙️ הגדרות</CardTitle>
+          <div className="flex items-center justify-between gap-2">
+            <CardTitle className="text-lg">⚙️ הגדרות</CardTitle>
+            {isPremium && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent/15 border border-accent/40">
+                <Crown className="w-3.5 h-3.5 text-accent" fill="currentColor" />
+                <span className="text-xs font-semibold text-accent">תומך</span>
+              </div>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="space-y-5">
           {/* Theme */}
