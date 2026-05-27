@@ -220,9 +220,16 @@ const Index = () => {
   if (!user) return <AuthPage />;
 
   return (
-    <TaskProvider>
-      <OnboardingGate />
-    </TaskProvider>
+    <>
+      <SeoHead
+        title="Daily Dominator — מעקב משמעת עצמית ופרודוקטיביות"
+        description="עקבו אחרי משימות, הרגלים, אימונים ותזונה בעברית. דוחות שבועיים, הישגים ויעדים יומיים לבניית משמעת עצמית."
+        path="/"
+      />
+      <TaskProvider>
+        <OnboardingGate />
+      </TaskProvider>
+    </>
   );
 };
 
