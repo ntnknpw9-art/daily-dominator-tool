@@ -185,11 +185,24 @@ const CalorieTracker = () => {
     }
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('calorie-tracker', {
-        body: { type: 'calculate_needs', data: profile },
+      // חישוב דטרמיניסטי לפי המחקר (Mifflin-St Jeor / Katch-McArdle + PAL)
+      const { calculateNutrition } = await import('@/lib/nutritionCalculator');
+      const result = calculateNutrition({
+        gender: profile.gender as any,
+        age: parseInt(profile.age),
+        height: parseFloat(profile.height),
+        weight: parseFloat(profile.weight),
+        activity: profile.activityLevel as any,
+        goal: profile.goal as any,
       });
-      if (error) throw error;
-      if (data.error) throw new Error(data.error);
+      const data = {
+        calories: result.calories,
+        protein: result.protein,
+        fat: result.fat,
+        carbs: result.carbs,
+        bmr: result.bmr,
+        explanation: `${result.method} · TDEE ${result.tdee} קק"ל × פעילות ${result.pal} ${result.goalAdjustment !== 0 ? `${result.goalAdjustment > 0 ? '+' : ''}${result.goalAdjustment} למטרה` : '(תחזוקה)'}`,
+      };
       setDailyNeeds(data);
 
       // Save profile to DB
