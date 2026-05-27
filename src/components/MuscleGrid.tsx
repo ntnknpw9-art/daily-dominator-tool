@@ -44,6 +44,45 @@ const MuscleGrid = ({ selected, fullBody, onToggle, onToggleFullBody }: Props) =
         <span className="text-[11px] font-bold text-accent">♂ ♀ פונה לשני המינים</span>
       </div>
     </div>
+
+    {/* כל הגוף - למעלה */}
+    <button
+      type="button"
+      onClick={onToggleFullBody}
+      className={`group relative w-full rounded-2xl border-2 overflow-hidden transition-all duration-300 active:scale-[0.98] ${
+        fullBody
+          ? 'border-accent bg-gradient-to-b from-accent/20 via-card to-card shadow-[0_0_30px_-4px_hsl(var(--accent)/0.7)] scale-[1.01]'
+          : 'border-accent/40 bg-card hover:border-accent hover:-translate-y-0.5'
+      }`}
+    >
+      {fullBody && (
+        <span className="absolute top-3 left-3 z-20 w-7 h-7 rounded-full bg-accent flex items-center justify-center shadow-[0_0_12px_hsl(var(--accent))]">
+          <Check className="w-4 h-4 text-accent-foreground" strokeWidth={3} />
+        </span>
+      )}
+      <div className="flex items-center gap-3 p-3">
+        <div className="w-20 h-20 shrink-0 rounded-xl overflow-hidden bg-black">
+          <img src={fullbody} alt="כל הגוף" loading="lazy" width={512} height={512} className="w-full h-full object-cover" />
+        </div>
+        <div className="flex-1 text-right">
+          <div className="flex items-center gap-1.5 justify-end">
+            <span className="text-lg font-black bg-gradient-to-l from-accent to-primary bg-clip-text text-transparent">כל הגוף</span>
+            <span className="text-xl">💪</span>
+          </div>
+          <div className="text-xs text-muted-foreground mt-0.5">תוכנית מלאה לכל קבוצות השרירים</div>
+        </div>
+      </div>
+    </button>
+
+    {/* מפריד "או" */}
+    <div className="flex items-center gap-3 py-1">
+      <div className="flex-1 h-px bg-gradient-to-l from-transparent via-border to-transparent" />
+      <span className="text-xs font-black tracking-[0.3em] text-muted-foreground uppercase px-2">או</span>
+      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+    </div>
+
+    <p className="text-center text-xs text-muted-foreground -mt-1">בחר שרירים ספציפיים להתמקדות</p>
+
     <div className="grid grid-cols-2 gap-3">
       {MUSCLES.map(m => {
         const active = selected.includes(m.id);
@@ -76,34 +115,6 @@ const MuscleGrid = ({ selected, fullBody, onToggle, onToggleFullBody }: Props) =
         );
       })}
     </div>
-
-    <button
-      type="button"
-      onClick={onToggleFullBody}
-      className={`group relative w-full rounded-2xl border-2 overflow-hidden transition-all duration-300 active:scale-[0.98] ${
-        fullBody
-          ? 'border-accent bg-gradient-to-b from-accent/20 via-card to-card shadow-[0_0_30px_-4px_hsl(var(--accent)/0.7)] scale-[1.01]'
-          : 'border-accent/40 bg-card hover:border-accent hover:-translate-y-0.5'
-      }`}
-    >
-      {fullBody && (
-        <span className="absolute top-3 left-3 z-20 w-7 h-7 rounded-full bg-accent flex items-center justify-center shadow-[0_0_12px_hsl(var(--accent))]">
-          <Check className="w-4 h-4 text-accent-foreground" strokeWidth={3} />
-        </span>
-      )}
-      <div className="flex items-center gap-3 p-3">
-        <div className="w-20 h-20 shrink-0 rounded-xl overflow-hidden bg-black">
-          <img src={fullbody} alt="כל הגוף" loading="lazy" width={512} height={512} className="w-full h-full object-cover" />
-        </div>
-        <div className="flex-1 text-right">
-          <div className="flex items-center gap-1.5 justify-end">
-            <span className="text-lg font-black bg-gradient-to-l from-accent to-primary bg-clip-text text-transparent">כל הגוף</span>
-            <span className="text-xl">💪</span>
-          </div>
-          <div className="text-xs text-muted-foreground mt-0.5">תוכנית מלאה לכל קבוצות השרירים</div>
-        </div>
-      </div>
-    </button>
   </div>
 );
 

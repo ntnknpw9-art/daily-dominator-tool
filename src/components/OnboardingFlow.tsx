@@ -268,11 +268,28 @@ ${splitHint}
         body: { analysisText: text },
       });
       if (error) throw error;
+      if (data?.error) {
+        const msg = String(data.error);
+        if (data.code === 402 || msg.toLowerCase().includes('credit')) {
+          toast.error('אזלו הקרדיטים של ה-AI. הוסף קרדיטים בהגדרות כדי לבנות תוכנית.');
+        } else if (data.code === 429) {
+          toast.error('יותר מדי בקשות, נסה שוב בעוד דקה.');
+        } else {
+          toast.error(`שגיאה ביצירת התוכנית: ${msg}`);
+        }
+        setGenerating(false);
+        return;
+      }
       setPlan(data?.plan || {});
       setShowApply(true);
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      toast.error('שגיאה ביצירת התוכנית');
+      const msg = e?.message || '';
+      if (msg.toLowerCase().includes('credit') || msg.includes('402')) {
+        toast.error('אזלו הקרדיטים של ה-AI. הוסף קרדיטים בהגדרות כדי לבנות תוכנית.');
+      } else {
+        toast.error(`שגיאה ביצירת התוכנית${msg ? `: ${msg}` : ''}`);
+      }
       setGenerating(false);
     }
   };
