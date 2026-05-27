@@ -570,7 +570,7 @@ const AuthPage = () => {
           <a href="/privacy" className="text-primary underline mx-1">מדיניות הפרטיות</a>
         </p>
       </div>
-    </div>
+    </main>
   );
 };
 
