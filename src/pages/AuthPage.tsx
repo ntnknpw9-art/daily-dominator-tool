@@ -419,7 +419,7 @@ const AuthPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <main className="min-h-screen bg-background flex items-center justify-center p-4">
       <div className="glass-card p-8 w-full max-w-md animate-scale-in">
         <div className="text-center mb-8">
           <div className="text-4xl mb-3">🎯</div>
