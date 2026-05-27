@@ -202,18 +202,6 @@ const OnboardingFlow = ({ onComplete }: Props) => {
         ))}
       </div>
     )},
-      <div className="grid grid-cols-1 gap-2.5">
-        {GOALS.map(g => (
-          <Card key={g.v} active={a.goal===g.v} onClick={()=>upd('goal',g.v)} row>
-            <div className="text-4xl">{g.emoji}</div>
-            <div className="flex-1 text-right">
-              <div className="font-bold">{g.label}</div>
-              <div className="text-xs text-muted-foreground">{g.sub}</div>
-            </div>
-          </Card>
-        ))}
-      </div>
-    )},
     { title: 'רמת ניסיון באימונים', sub: '', valid: !!a.experience, render: () => (
       <div className="grid grid-cols-1 gap-2.5">
         {EXP.map(e => (
