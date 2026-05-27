@@ -71,7 +71,7 @@ const MotivationalSplash = ({ onDismiss }: { onDismiss: () => void }) => {
   });
 
   return (
-    <div
+    <main
       className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-background transition-opacity duration-300 ${
         visible ? 'opacity-100' : 'opacity-0'
       }`}
@@ -151,7 +151,7 @@ const MotivationalSplash = ({ onDismiss }: { onDismiss: () => void }) => {
           💪 בוא נתחיל
         </Button>
       </div>
-    </div>
+    </main>
   );
 };
 
