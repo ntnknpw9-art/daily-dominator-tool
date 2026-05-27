@@ -8,6 +8,15 @@ import { toast } from 'sonner';
 import ApplyPlanDialog from '@/components/ApplyPlanDialog';
 import { ChevronRight, ChevronLeft, Loader2, Sparkles } from 'lucide-react';
 import MuscleGrid, { MUSCLES } from '@/components/MuscleGrid';
+import { calculateNutrition, BODY_FAT_LEVELS } from '@/lib/nutritionCalculator';
+import bf1 from '@/assets/bodyfat/bf-1.jpg';
+import bf2 from '@/assets/bodyfat/bf-2.jpg';
+import bf3 from '@/assets/bodyfat/bf-3.jpg';
+import bf4 from '@/assets/bodyfat/bf-4.jpg';
+import bf5 from '@/assets/bodyfat/bf-5.jpg';
+import bf6 from '@/assets/bodyfat/bf-6.jpg';
+
+const BF_IMAGES = [bf1, bf2, bf3, bf4, bf5, bf6];
 
 interface Props { onComplete: () => void; }
 
@@ -16,6 +25,7 @@ type A = {
   goal: string; experience: string; daysPerWeek: number;
   location: string; trainingTime: string; activity: string; diet: string;
   muscles: string[]; fullBody: boolean;
+  bodyFatLevel: number; // 0 = לא יודע, 1-6 = רמה
 };
 
 const initial: A = {
@@ -23,6 +33,7 @@ const initial: A = {
   goal: '', experience: '', daysPerWeek: 4,
   location: '', trainingTime: '', activity: '', diet: '',
   muscles: [], fullBody: false,
+  bodyFatLevel: 0,
 };
 
 const GOALS = [
@@ -128,6 +139,54 @@ const OnboardingFlow = ({ onComplete }: Props) => {
           <label className="text-sm font-semibold mb-1 block">משקל בקילו</label>
           <Input type="number" value={a.weight} onChange={e=>upd('weight',+e.target.value)} className="text-2xl text-center font-bold h-14" />
         </div>
+      </div>
+    )},
+    { title: 'מה אחוז השומן שלך?', sub: 'בחר את התמונה הקרובה ביותר אליך (לחישוב מדויק יותר)', valid: true, render: () => (
+      <div className="space-y-3">
+        <div className="grid grid-cols-2 gap-2.5">
+          {BODY_FAT_LEVELS.map((lvl, i) => (
+            <button
+              key={lvl.id}
+              onClick={() => upd('bodyFatLevel', lvl.id)}
+              className={`group relative rounded-2xl border-2 overflow-hidden transition-all active:scale-[0.97] ${
+                a.bodyFatLevel === lvl.id
+                  ? 'border-primary shadow-[0_8px_32px_-8px_hsl(var(--primary)/0.7)] scale-[1.02]'
+                  : 'border-border/50 hover:border-primary/50'
+              }`}
+            >
+              <div className="aspect-[3/4] bg-muted overflow-hidden">
+                <img
+                  src={BF_IMAGES[i]}
+                  alt={`רמה ${lvl.id} - ${lvl.range} שומן גוף`}
+                  loading="lazy"
+                  width={768}
+                  height={1024}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className={`p-2 text-center ${a.bodyFatLevel === lvl.id ? 'bg-primary/15' : 'bg-card'}`}>
+                <div className="text-xs font-black text-primary">{lvl.range}</div>
+                <div className="text-[10px] font-semibold mt-0.5">{lvl.label}</div>
+                <div className="text-[9px] text-muted-foreground leading-tight">{lvl.sub}</div>
+              </div>
+              {a.bodyFatLevel === lvl.id && (
+                <span className="absolute top-2 right-2 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-black flex items-center justify-center shadow-lg">
+                  ✓
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={() => upd('bodyFatLevel', 0)}
+          className={`w-full p-3 rounded-xl border-2 text-sm font-semibold transition-all ${
+            a.bodyFatLevel === 0
+              ? 'border-accent bg-accent/10 text-accent'
+              : 'border-border/50 text-muted-foreground hover:border-accent/50'
+          }`}
+        >
+          לא יודע / מעדיף לדלג
+        </button>
       </div>
     )},
     { title: 'מה המטרה שלך?', sub: 'נתאים את התוכנית בדיוק לזה', valid: !!a.goal, render: () => (
@@ -240,6 +299,18 @@ const OnboardingFlow = ({ onComplete }: Props) => {
         a.goal === 'מסה' ? 'עלייה במסת שריר ובמשקל (bulking)' :
         'כושר כללי ובריאות';
 
+      // === חישוב תזונה דטרמיניסטי לפי המחקר (לא AI) ===
+      const bfLevel = BODY_FAT_LEVELS.find(l => l.id === a.bodyFatLevel);
+      const nutrition = calculateNutrition({
+        gender: a.gender as any,
+        age: a.age,
+        height: a.height,
+        weight: a.weight,
+        activity: a.activity as any,
+        goal: a.goal as any,
+        bodyFatPercent: bfLevel?.midpoint,
+      });
+
       const splitHint = a.location === 'קליסטניקס'
         ? 'תוכנית קליסטניקס טהורה — רק תרגילי משקל גוף: מתח, מקבילים, שכיבות סמיכה, סקוואט, פלאנק, מאדאפ, פיסטול סקוואט, ארצ׳ר פושאפס וכו. ללא משקולות. התאם פרוגרסיות לפי רמת המתאמן.'
         : a.location === 'בית בלי ציוד'
@@ -249,7 +320,7 @@ const OnboardingFlow = ({ onComplete }: Props) => {
         : 'תוכנית חדר כושר מלאה.';
 
       const text = `פרופיל משתמש:
-- מגדר: ${a.gender}, גיל: ${a.age}, גובה: ${a.height} ס"מ, משקל: ${a.weight} ק"ג
+- מגדר: ${a.gender}, גיל: ${a.age}, גובה: ${a.height} ס"מ, משקל: ${a.weight} ק"ג${bfLevel ? `, אחוז שומן: ~${bfLevel.midpoint}%` : ''}
 - מטרה: ${goalText}
 - ניסיון: ${a.experience}
 - ${a.daysPerWeek} ימי אימון בשבוע, בשעות ${a.trainingTime}
@@ -258,10 +329,12 @@ const OnboardingFlow = ({ onComplete }: Props) => {
 - העדפת תזונה: ${a.diet}
 - שרירים בפוקוס: ${a.fullBody ? 'כל הגוף (תוכנית מלאה ומאוזנת)' : MUSCLES.filter(m => a.muscles.includes(m.id)).map(m => m.name).join(', ')}
 
+יעדים יומיים (כבר חושבו במדויק, אל תשנה אותם, השתמש בהם בלבד):
+- קלוריות: ${nutrition.calories}, חלבון: ${nutrition.protein}g, פחמימות: ${nutrition.carbs}g, שומן: ${nutrition.fat}g
+- מים: ${nutrition.water_liters}L, שינה: ${nutrition.sleep_hours}h
+
 ${splitHint}
 
-חשב BMR וצרכי קלוריות לפי משקל/גובה/גיל/מין/פעילות והתאם למטרה (גירעון של 400 קק"ל לחיטוב, עודף של 300 קק"ל למסה, איזון ל-recomp/כללי).
-חלבון: 1.8-2.2 גרם לק"ג. מים: 35 מ"ל לק"ג משקל. שינה: 7-8 שעות.
 פצל את ${a.daysPerWeek} ימי האימון לימי השבוע (התחל מיום ראשון). לכל יום תן focus ותרגילים מלאים (שם, סטים×חזרות, מופרדים בפסיק).${a.fullBody ? '' : ' הדגש תרגילים שמתמקדים בקבוצות השרירים שנבחרו.'}`;
 
       const { data, error } = await supabase.functions.invoke('ai-plan-extract', {
@@ -280,7 +353,20 @@ ${splitHint}
         setGenerating(false);
         return;
       }
-      setPlan(data?.plan || {});
+      // דרוס את ערכי התזונה של ה-AI עם החישוב הדטרמיניסטי שלנו (מקור אמת יחיד)
+      const aiPlan = data?.plan || {};
+      const finalPlan = {
+        ...aiPlan,
+        water_liters: nutrition.water_liters,
+        sleep_hours: nutrition.sleep_hours,
+        nutrition: {
+          calories: nutrition.calories,
+          protein: nutrition.protein,
+          carbs: nutrition.carbs,
+          fat: nutrition.fat,
+        },
+      };
+      setPlan(finalPlan);
       setShowApply(true);
     } catch (e: any) {
       console.error(e);
