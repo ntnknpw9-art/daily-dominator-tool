@@ -68,6 +68,11 @@ const SupportPage = () => {
 
   return (
     <div dir="rtl" className="min-h-screen bg-[#0a0a0a] text-[#f2f2f2] font-heebo">
+      <SeoHead
+        title="תמיכה ושאלות נפוצות — Daily Dominator"
+        description="מצאו תשובות לשאלות נפוצות על Daily Dominator: הרשמה, מחיקת חשבון, התראות, אבטחה ויצירת קשר עם התמיכה."
+        path="/support"
+      />
       <div className="max-w-3xl mx-auto px-5 py-10 md:py-16">
         {/* Header */}
         <header className="text-center mb-10">
