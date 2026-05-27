@@ -139,8 +139,8 @@ export function calculateNutrition(input: NutritionInput): NutritionResult {
 export const BODY_FAT_LEVELS = [
   { id: 1, range: '3-7%', midpoint: 5, label: 'מאוד מחוטב', sub: 'תחרותי / סטייג׳' },
   { id: 2, range: '7-15%', midpoint: 11, label: 'אתלטי', sub: 'מראה ספורטיבי בריא' },
-  { id: 3, range: '15-22%', midpoint: 18, label: 'ממוצע', sub: 'מתאמן באופן קבוע' },
-  { id: 4, range: '22-30%', midpoint: 26, label: 'עודף משקל קל', sub: 'בטן בולטת' },
-  { id: 5, range: '30-40%', midpoint: 35, label: 'עודף משקל', sub: 'אורח חיים יושבני' },
-  { id: 6, range: '40-50%', midpoint: 45, label: 'השמנת יתר', sub: 'ללא פעילות גופנית' },
+  { id: 3, range: '15-20%', midpoint: 17, label: 'רזה-ממוצע', sub: 'בטן שטוחה ללא קוביות' },
+  { id: 4, range: '20-25%', midpoint: 22, label: 'ממוצע', sub: 'מעט שומן באזור הבטן' },
+  { id: 5, range: '25-30%', midpoint: 27, label: 'עודף משקל קל', sub: 'בטן בולטת' },
+  { id: 6, range: '30-35%', midpoint: 32, label: 'עודף משקל', sub: 'שומן ניכר בכל הגוף' },
 ] as const;
