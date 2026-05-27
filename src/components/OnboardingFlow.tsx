@@ -8,6 +8,15 @@ import { toast } from 'sonner';
 import ApplyPlanDialog from '@/components/ApplyPlanDialog';
 import { ChevronRight, ChevronLeft, Loader2, Sparkles } from 'lucide-react';
 import MuscleGrid, { MUSCLES } from '@/components/MuscleGrid';
+import { calculateNutrition, BODY_FAT_LEVELS } from '@/lib/nutritionCalculator';
+import bf1 from '@/assets/bodyfat/bf-1.jpg';
+import bf2 from '@/assets/bodyfat/bf-2.jpg';
+import bf3 from '@/assets/bodyfat/bf-3.jpg';
+import bf4 from '@/assets/bodyfat/bf-4.jpg';
+import bf5 from '@/assets/bodyfat/bf-5.jpg';
+import bf6 from '@/assets/bodyfat/bf-6.jpg';
+
+const BF_IMAGES = [bf1, bf2, bf3, bf4, bf5, bf6];
 
 interface Props { onComplete: () => void; }
 
@@ -16,6 +25,7 @@ type A = {
   goal: string; experience: string; daysPerWeek: number;
   location: string; trainingTime: string; activity: string; diet: string;
   muscles: string[]; fullBody: boolean;
+  bodyFatLevel: number; // 0 = לא יודע, 1-6 = רמה
 };
 
 const initial: A = {
@@ -23,6 +33,7 @@ const initial: A = {
   goal: '', experience: '', daysPerWeek: 4,
   location: '', trainingTime: '', activity: '', diet: '',
   muscles: [], fullBody: false,
+  bodyFatLevel: 0,
 };
 
 const GOALS = [
