@@ -285,9 +285,19 @@ export async function purchasePackage(pkg: RevenueCatPackage) {
         currencyCode: pkg?.product?.currencyCode,
       },
     });
+    // Validate package shape BEFORE calling StoreKit — a malformed package is a
+    // common cause of "unspecified error" rejections from Apple reviewers.
+    if (!pkg || !pkg.identifier || !pkg.product?.identifier) {
+      log('INVALID PACKAGE — missing identifier or product.identifier', {
+        hasPackage: !!pkg,
+        identifier: pkg?.identifier,
+        productIdentifier: pkg?.product?.identifier,
+      });
+      throw new Error('חבילת המנוי אינה תקינה. נסה לרענן ולנסות שוב.');
+    }
     const Purchases = await ensureInit(auth.user?.id);
     if (!Purchases) throw new Error('רכישות זמינות רק באפליקציית iOS');
-    log('calling Purchases.purchasePackage...');
+    log('calling Purchases.purchasePackage...', { productId: pkg.product.identifier });
     const result: RevenueCatPurchaseResult = await Purchases.purchasePackage({ aPackage: pkg as Parameters<typeof Purchases.purchasePackage>[0]['aPackage'] });
     log('purchase result', {
       transactionId: result?.transaction?.transactionIdentifier,
