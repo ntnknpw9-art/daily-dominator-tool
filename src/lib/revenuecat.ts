@@ -189,15 +189,24 @@ export async function getOfferings() {
   }
   try {
     const offerings: RevenueCatOfferings = await Purchases.getOfferings();
+    const current = offerings?.current ?? null;
+    const pkgCount = current?.availablePackages?.length ?? 0;
     rcLog('offerings', 'loaded', {
-      current: summarizeOffering(offerings?.current),
+      currentIdentifier: current?.identifier ?? null,
+      currentPackagesCount: pkgCount,
+      current: summarizeOffering(current),
       allKeys: Object.keys(offerings?.all ?? {}),
       all: Object.fromEntries(
         Object.entries(offerings?.all ?? {}).map(([key, offering]) => [key, summarizeOffering(offering)])
       ),
       expectedProductIds: ALL_PRODUCT_IDS,
     });
-    return offerings.current ?? null;
+    if (!current) {
+      rcLog('offerings', 'WARNING: No CURRENT offering set in RevenueCat dashboard. Mark an offering as "Current" (green tag) in RevenueCat → Offerings.');
+    } else if (pkgCount === 0) {
+      rcLog('offerings', 'WARNING: Current offering has 0 packages. StoreKit did not return the products. Check: (1) Paid Apps Agreement Active, (2) Products attached to the offering in RevenueCat, (3) Bundle ID matches, (4) Sandbox tester signed in on device.');
+    }
+    return current;
   } catch (e) {
     const error = e as RevenueCatError;
     rcLog('offerings', 'ERROR', {
