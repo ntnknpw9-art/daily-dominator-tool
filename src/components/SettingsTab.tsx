@@ -137,11 +137,12 @@ const SettingsTab = () => {
         toast.success('תודה רבה על התמיכה! 💜');
         reloadPremium();
       }
-    } catch (e: any) {
-      const msg = e?.message || '';
-      const code = e?.code ?? e?.readableErrorCode ?? e?.readable_error_code;
-      const underlying = e?.underlyingErrorMessage;
-      if (!msg.toLowerCase().includes('cancel') && !e?.userCancelled) {
+    } catch (e) {
+      const error = e as { message?: string; code?: string | number; readableErrorCode?: string; readable_error_code?: string; underlyingErrorMessage?: string; userCancelled?: boolean };
+      const msg = error?.message || '';
+      const code = error?.code ?? error?.readableErrorCode ?? error?.readable_error_code;
+      const underlying = error?.underlyingErrorMessage;
+      if (!msg.toLowerCase().includes('cancel') && !error?.userCancelled) {
         const details = [msg, code && `code: ${code}`, underlying && `(${underlying})`].filter(Boolean).join(' · ');
         toast.error('הרכישה נכשלה: ' + (details || 'שגיאה לא ידועה'));
       }
@@ -164,8 +165,9 @@ const SettingsTab = () => {
         toast.info('לא נמצאו רכישות פעילות');
       }
       reloadPremium();
-    } catch (e: any) {
-      toast.error('שחזור נכשל: ' + (e?.message || ''));
+    } catch (e) {
+      const error = e as { message?: string };
+      toast.error('שחזור נכשל: ' + (error?.message || ''));
     } finally {
       setRestoring(false);
     }
@@ -250,11 +252,12 @@ const SettingsTab = () => {
     try {
       const { error } = await supabase.functions.invoke('delete-account');
       if (error) throw error;
-      try { localStorage.clear(); } catch {}
+      try { localStorage.clear(); } catch (e) { console.warn('localStorage clear failed', e); }
       toast.success('החשבון נמחק');
       await signOut();
-    } catch (e: any) {
-      toast.error('שגיאה במחיקת החשבון: ' + (e?.message || ''));
+    } catch (e) {
+      const error = e as { message?: string };
+      toast.error('שגיאה במחיקת החשבון: ' + (error?.message || ''));
       setDeleting(false);
     }
   };
