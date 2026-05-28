@@ -260,7 +260,7 @@ export async function purchasePackage(pkg: RevenueCatPackage) {
     const Purchases = await ensureInit(auth.user?.id);
     if (!Purchases) throw new Error('רכישות זמינות רק באפליקציית iOS');
     log('calling Purchases.purchasePackage...');
-    const result: RevenueCatPurchaseResult = await Purchases.purchasePackage({ aPackage: pkg });
+    const result: RevenueCatPurchaseResult = await Purchases.purchasePackage({ aPackage: pkg as Parameters<typeof Purchases.purchasePackage>[0]['aPackage'] });
     log('purchase result', {
       transactionId: result?.transaction?.transactionIdentifier,
       productId: result?.productIdentifier,
