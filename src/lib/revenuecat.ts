@@ -330,14 +330,38 @@ export async function purchasePackage(pkg: RevenueCatPackage) {
 }
 
 export async function restorePurchases() {
-  const { data: auth } = await supabase.auth.getUser();
-  const Purchases = await ensureInit(auth.user?.id);
-  if (!Purchases) throw new Error('שחזור זמין רק באפליקציית iOS');
-  const result: RevenueCatPurchaseResult = await Purchases.restorePurchases();
-  const info = result.customerInfo;
-  const active = extractActive(info);
-  await syncToSupabase();
-  return active;
+  const log = (label: string, data?: unknown) => rcLog('restore', label, data);
+  try {
+    const { data: auth } = await supabase.auth.getUser();
+    log('user', { id: auth.user?.id, email: auth.user?.email });
+    const Purchases = await ensureInit(auth.user?.id);
+    if (!Purchases) throw new Error('שחזור זמין רק באפליקציית iOS');
+    log('calling Purchases.restorePurchases...');
+    const result: RevenueCatPurchaseResult = await Purchases.restorePurchases();
+    log('restore result', {
+      activeEntitlements: Object.keys(result?.customerInfo?.entitlements?.active || {}),
+      activeSubscriptions: result?.customerInfo?.activeSubscriptions,
+    });
+    const info = result.customerInfo;
+    const active = extractActive(info);
+    log('extracted active', active);
+    await syncToSupabase();
+    log('synced to backend');
+    return active;
+  } catch (e) {
+    const error = e as RevenueCatError;
+    log('ERROR', {
+      message: error?.message,
+      code: error?.code,
+      underlyingErrorMessage: error?.underlyingErrorMessage,
+      readableErrorCode: error?.readableErrorCode,
+      readable_error_code: error?.readable_error_code,
+      domain: error?.domain,
+      name: error?.name,
+      raw: typeof error === 'object' ? JSON.stringify(error, Object.getOwnPropertyNames(error)) : String(error),
+    });
+    throw e;
+  }
 }
 
 export async function refreshPremiumStatus() {
