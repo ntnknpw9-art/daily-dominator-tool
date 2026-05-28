@@ -66,8 +66,11 @@ const SettingsTab = () => {
       }
     } catch (e: any) {
       const msg = e?.message || '';
-      if (!msg.toLowerCase().includes('cancel')) {
-        toast.error('הרכישה נכשלה: ' + msg);
+      const code = e?.code ?? e?.readableErrorCode ?? e?.readable_error_code;
+      const underlying = e?.underlyingErrorMessage;
+      if (!msg.toLowerCase().includes('cancel') && !e?.userCancelled) {
+        const details = [msg, code && `code: ${code}`, underlying && `(${underlying})`].filter(Boolean).join(' · ');
+        toast.error('הרכישה נכשלה: ' + (details || 'שגיאה לא ידועה'));
       }
     } finally {
       setPurchasing(null);
