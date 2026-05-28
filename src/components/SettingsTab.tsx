@@ -49,12 +49,16 @@ const SettingsTab = () => {
   const { syncHealthData, isSyncing } = useHealthSync();
   const { isPremium, productId, expiresAt, reload: reloadPremium } = usePremium();
   const [offerings, setOfferings] = useState<RevenueCatOffering | null>(null);
+  const [offeringsLoaded, setOfferingsLoaded] = useState(false);
+  const [offeringsError, setOfferingsError] = useState<string | null>(null);
   const [purchasing, setPurchasing] = useState<string | null>(null);
   const [restoring, setRestoring] = useState(false);
   const [subOpen, setSubOpen] = useState(false);
 
   useEffect(() => {
     if (isIOSNative()) {
+      setOfferingsLoaded(false);
+      setOfferingsError(null);
       getOfferings()
         .then((offering) => {
           console.log('[RC UI] offering set', offering ? {
@@ -67,8 +71,13 @@ const SettingsTab = () => {
             expectedProducts: [PRODUCT_MONTHLY, PRODUCT_YEARLY],
           } : null);
           setOfferings(offering);
+          if (!offering) setOfferingsError('לא התקבלה הצעת מנוי מ-RevenueCat');
         })
-        .catch((e) => console.log('[RC UI] getOfferings failed', e));
+        .catch((e) => {
+          console.log('[RC UI] getOfferings failed', e);
+          setOfferingsError(e?.message || 'טעינת המחירים נכשלה');
+        })
+        .finally(() => setOfferingsLoaded(true));
     }
   }, []);
 
@@ -126,8 +135,10 @@ const SettingsTab = () => {
     let pkg = findPackage(productKey, currentOfferings);
     if (!pkg) {
       console.log('[RC UI] package missing before refresh, reloading offerings', { requestedProductKey: productKey });
+      setOfferingsError(null);
       currentOfferings = await getOfferings();
       setOfferings(currentOfferings);
+      setOfferingsLoaded(true);
       pkg = findPackage(productKey, currentOfferings);
     }
     if (!pkg) {
