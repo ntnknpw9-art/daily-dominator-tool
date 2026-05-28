@@ -146,17 +146,36 @@ const isIOS = () =>
 
 async function ensureInit(userId?: string) {
   if (!isIOS()) return null;
-  if (!REVENUECAT_IOS_API_KEY) return null;
+  if (!REVENUECAT_IOS_API_KEY) {
+    rcLog('init', 'NO API KEY configured');
+    return null;
+  }
   const { Purchases, LOG_LEVEL } = await import('@revenuecat/purchases-capacitor');
   if (!initialized) {
+    const keyPrefix = REVENUECAT_IOS_API_KEY.slice(0, 6);
+    const keyLooksValid = REVENUECAT_IOS_API_KEY.startsWith('appl_');
+    rcLog('init', 'configuring RevenueCat', {
+      platform: Capacitor.getPlatform(),
+      isNative: Capacitor.isNativePlatform(),
+      apiKeyPrefix: keyPrefix,
+      apiKeyLength: REVENUECAT_IOS_API_KEY.length,
+      apiKeyLooksLikeIOS: keyLooksValid,
+      appUserID: userId ?? '(anonymous)',
+      expectedProductIds: ALL_PRODUCT_IDS,
+    });
+    if (!keyLooksValid) {
+      rcLog('init', 'WARNING: API key does NOT start with "appl_" — this may be an Android (goog_) or Web (rcb_) key!');
+    }
     await Purchases.setLogLevel({ level: LOG_LEVEL.VERBOSE });
     await Purchases.configure({ apiKey: REVENUECAT_IOS_API_KEY, appUserID: userId });
     initialized = true;
+    rcLog('init', 'configured OK');
   } else if (userId) {
     try { await Purchases.logIn({ appUserID: userId }); } catch (e) { rcLog('init', 'logIn failed', e); }
   }
   return Purchases;
 }
+
 
 export async function getOfferings() {
   const Purchases = await ensureInit();
