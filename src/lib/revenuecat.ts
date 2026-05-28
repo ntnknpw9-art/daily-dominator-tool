@@ -50,7 +50,7 @@ async function ensureInit(userId?: string) {
   if (!REVENUECAT_IOS_API_KEY) return null;
   const { Purchases, LOG_LEVEL } = await import('@revenuecat/purchases-capacitor');
   if (!initialized) {
-    await Purchases.setLogLevel({ level: LOG_LEVEL.WARN });
+    await Purchases.setLogLevel({ level: LOG_LEVEL.VERBOSE });
     await Purchases.configure({ apiKey: REVENUECAT_IOS_API_KEY, appUserID: userId });
     initialized = true;
   } else if (userId) {
