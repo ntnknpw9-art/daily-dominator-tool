@@ -36,7 +36,20 @@ const SettingsTab = () => {
 
   useEffect(() => {
     if (isIOSNative()) {
-      getOfferings().then(setOfferings).catch(() => {});
+      getOfferings()
+        .then((offering) => {
+          console.log('[RC UI] offering set', offering ? {
+            identifier: offering?.identifier,
+            availablePackages: offering?.availablePackages?.map((p: any) => ({
+              identifier: p?.identifier,
+              productIdentifier: p?.product?.identifier,
+              priceString: p?.product?.priceString,
+            })) ?? [],
+            expectedProducts: [PRODUCT_MONTHLY, PRODUCT_YEARLY],
+          } : null);
+          setOfferings(offering);
+        })
+        .catch((e) => console.log('[RC UI] getOfferings failed', e));
     }
   }, []);
 
@@ -47,6 +60,23 @@ const SettingsTab = () => {
     );
   };
 
+  const logMissingPackage = (productKey: string) => {
+    console.log('[RC UI] package not found', {
+      requestedProductKey: productKey,
+      expectedProducts: [PRODUCT_MONTHLY, PRODUCT_YEARLY],
+      hasOfferings: Boolean(offerings),
+      offeringIdentifier: offerings?.identifier,
+      availablePackages: offerings?.availablePackages?.map((p: any) => ({
+        identifier: p?.identifier,
+        packageType: p?.packageType,
+        offeringIdentifier: p?.offeringIdentifier,
+        productIdentifier: p?.product?.identifier,
+        title: p?.product?.title,
+        priceString: p?.product?.priceString,
+      })) ?? [],
+    });
+  };
+
   const handlePurchase = async (productKey: string) => {
     if (!isIOSNative()) {
       toast.info('הרכישות זמינות באפליקציה על iPhone בלבד');
@@ -54,6 +84,7 @@ const SettingsTab = () => {
     }
     const pkg = findPackage(productKey);
     if (!pkg) {
+      logMissingPackage(productKey);
       toast.error('המוצר לא זמין כרגע. נסה שוב מאוחר יותר.');
       return;
     }
