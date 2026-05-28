@@ -239,8 +239,8 @@ function extractActive(customerInfo?: RevenueCatCustomerInfo): { isPremium: bool
   return { isPremium: false, productId: null, expiresAt: null };
 }
 
-export async function purchasePackage(pkg: any) {
-  const log = (label: string, data?: any) => {
+export async function purchasePackage(pkg: RevenueCatPackage) {
+  const log = (label: string, data?: unknown) => {
     rcLog('purchase', label, data);
   };
   try {
@@ -260,7 +260,7 @@ export async function purchasePackage(pkg: any) {
     const Purchases = await ensureInit(auth.user?.id);
     if (!Purchases) throw new Error('רכישות זמינות רק באפליקציית iOS');
     log('calling Purchases.purchasePackage...');
-    const result: any = await Purchases.purchasePackage({ aPackage: pkg });
+    const result: RevenueCatPurchaseResult = await Purchases.purchasePackage({ aPackage: pkg });
     log('purchase result', {
       transactionId: result?.transaction?.transactionIdentifier,
       productId: result?.productIdentifier,
@@ -273,18 +273,19 @@ export async function purchasePackage(pkg: any) {
     await syncToSupabase();
     log('synced to backend');
     return active;
-  } catch (e: any) {
+  } catch (e) {
+    const error = e as RevenueCatError;
     log('ERROR', {
-      message: e?.message,
-      code: e?.code,
-      underlyingErrorMessage: e?.underlyingErrorMessage,
-      userCancelled: e?.userCancelled,
-      readableErrorCode: e?.readableErrorCode,
-      readable_error_code: e?.readable_error_code,
-      domain: e?.domain,
-      name: e?.name,
-      stack: e?.stack,
-      raw: typeof e === 'object' ? JSON.stringify(e, Object.getOwnPropertyNames(e)) : String(e),
+      message: error?.message,
+      code: error?.code,
+      underlyingErrorMessage: error?.underlyingErrorMessage,
+      userCancelled: error?.userCancelled,
+      readableErrorCode: error?.readableErrorCode,
+      readable_error_code: error?.readable_error_code,
+      domain: error?.domain,
+      name: error?.name,
+      stack: error?.stack,
+      raw: typeof error === 'object' ? JSON.stringify(error, Object.getOwnPropertyNames(error)) : String(error),
     });
     throw e;
   }
@@ -294,7 +295,7 @@ export async function restorePurchases() {
   const { data: auth } = await supabase.auth.getUser();
   const Purchases = await ensureInit(auth.user?.id);
   if (!Purchases) throw new Error('שחזור זמין רק באפליקציית iOS');
-  const result: any = await Purchases.restorePurchases();
+  const result: RevenueCatPurchaseResult = await Purchases.restorePurchases();
   const info = result.customerInfo;
   const active = extractActive(info);
   await syncToSupabase();
@@ -306,7 +307,7 @@ export async function refreshPremiumStatus() {
   const Purchases = await ensureInit(auth.user?.id);
   if (!Purchases) return null;
   try {
-    const result: any = await Purchases.getCustomerInfo();
+    const result: RevenueCatPurchaseResult = await Purchases.getCustomerInfo();
     const info = result.customerInfo;
     const active = extractActive(info);
     await syncToSupabase();
