@@ -117,9 +117,16 @@ const SettingsTab = () => {
       toast.info('הרכישות זמינות באפליקציה על iPhone בלבד');
       return;
     }
-    const pkg = findPackage(productKey);
+    let currentOfferings = offerings;
+    let pkg = findPackage(productKey, currentOfferings);
     if (!pkg) {
-      logMissingPackage(productKey);
+      console.log('[RC UI] package missing before refresh, reloading offerings', { requestedProductKey: productKey });
+      currentOfferings = await getOfferings();
+      setOfferings(currentOfferings);
+      pkg = findPackage(productKey, currentOfferings);
+    }
+    if (!pkg) {
+      logMissingPackage(productKey, currentOfferings);
       toast.error('המוצר לא זמין כרגע. נסה שוב מאוחר יותר.');
       return;
     }
