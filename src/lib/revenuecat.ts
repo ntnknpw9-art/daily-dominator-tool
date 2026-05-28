@@ -189,20 +189,36 @@ export async function getOfferings() {
   }
   try {
     const offerings: RevenueCatOfferings = await Purchases.getOfferings();
-    const current = offerings?.current ?? null;
+    const allOfferings = offerings?.all ?? {};
+    const fallbackOffering = allOfferings.default ?? Object.values(allOfferings)[0] ?? null;
+    const current = offerings?.current ?? fallbackOffering;
+    const selectedSource = offerings?.current
+      ? 'current'
+      : allOfferings.default
+        ? 'all.default fallback'
+        : fallbackOffering
+          ? 'first offering fallback'
+          : 'none';
     const pkgCount = current?.availablePackages?.length ?? 0;
     rcLog('offerings', 'loaded', {
       currentIdentifier: current?.identifier ?? null,
+      selectedSource,
       currentPackagesCount: pkgCount,
       current: summarizeOffering(current),
-      allKeys: Object.keys(offerings?.all ?? {}),
+      allKeys: Object.keys(allOfferings),
       all: Object.fromEntries(
-        Object.entries(offerings?.all ?? {}).map(([key, offering]) => [key, summarizeOffering(offering)])
+        Object.entries(allOfferings).map(([key, offering]) => [key, summarizeOffering(offering)])
       ),
       expectedProductIds: ALL_PRODUCT_IDS,
     });
+    if (!offerings?.current && current) {
+      rcLog('offerings', 'No offerings.current returned; using fallback offering from offerings.all', {
+        selectedSource,
+        identifier: current?.identifier,
+      });
+    }
     if (!current) {
-      rcLog('offerings', 'WARNING: No CURRENT offering set in RevenueCat dashboard. Mark an offering as "Current" (green tag) in RevenueCat → Offerings.');
+      rcLog('offerings', 'WARNING: No default/current offering returned from RevenueCat. Make sure the default offering exists and has packages attached.');
     } else if (pkgCount === 0) {
       rcLog('offerings', 'WARNING: Current offering has 0 packages. StoreKit did not return the products. Check: (1) Paid Apps Agreement Active, (2) Products attached to the offering in RevenueCat, (3) Bundle ID matches, (4) Sandbox tester signed in on device.');
     }
