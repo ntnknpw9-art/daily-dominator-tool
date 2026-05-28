@@ -73,16 +73,21 @@ const SettingsTab = () => {
   }, []);
 
   const findPackage = (productKey: string, source: RevenueCatOffering | null = offerings) => {
+    if (!source) return null;
+    const isMonthly = productKey === PRODUCT_MONTHLY;
+    // PREFERRED: the standard RevenueCat package slots ($rc_monthly / $rc_annual).
+    // This is the recommended way per RevenueCat docs.
+    const standardPackage = isMonthly ? source?.monthly : source?.annual;
+    if (standardPackage) return standardPackage;
+
     const packages = source?.availablePackages ?? [];
+    // Fallback 1: exact match on product or package identifier.
     const exactMatch = packages.find((p) =>
       p?.product?.identifier === productKey || p?.identifier === productKey
     );
     if (exactMatch) return exactMatch;
 
-    const isMonthly = productKey === PRODUCT_MONTHLY;
-    const directPackage = isMonthly ? source?.monthly : source?.annual;
-    if (directPackage) return directPackage;
-
+    // Fallback 2: period-based heuristic.
     const desiredPeriod = isMonthly ? 'month' : 'year';
     return packages.find((p) => {
       const packageText = `${p?.identifier ?? ''} ${p?.packageType ?? ''}`.toLowerCase();
@@ -559,19 +564,21 @@ const SettingsTab = () => {
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
-              disabled={!!purchasing || isPremium}
+              disabled={!!purchasing || isPremium || (isIOSNative() && !findPackage(PRODUCT_MONTHLY))}
               onClick={() => handlePurchase(PRODUCT_MONTHLY)}
               className="relative flex flex-col items-center justify-center gap-1 rounded-lg border border-border/60 bg-background/40 p-4 transition hover:border-accent/40 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span className="text-xs text-muted-foreground">חודשי</span>
               <span className="font-bold text-base">
-                {purchasing === PRODUCT_MONTHLY ? 'רוכש...' : (findPackage(PRODUCT_MONTHLY)?.product?.priceString || '₪39.90')}
+                {purchasing === PRODUCT_MONTHLY
+                  ? 'רוכש...'
+                  : (findPackage(PRODUCT_MONTHLY)?.product?.priceString || (isIOSNative() ? 'טוען...' : '—'))}
               </span>
               <span className="text-[11px] text-muted-foreground">לחודש</span>
             </button>
             <button
               type="button"
-              disabled={!!purchasing || isPremium}
+              disabled={!!purchasing || isPremium || (isIOSNative() && !findPackage(PRODUCT_YEARLY))}
               onClick={() => handlePurchase(PRODUCT_YEARLY)}
               className="relative flex flex-col items-center justify-center gap-1 rounded-lg border border-border/60 bg-background/40 p-4 transition hover:border-accent/40 disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -580,11 +587,19 @@ const SettingsTab = () => {
               </span>
               <span className="text-xs text-muted-foreground">שנתי</span>
               <span className="font-bold text-base">
-                {purchasing === PRODUCT_YEARLY ? 'רוכש...' : (findPackage(PRODUCT_YEARLY)?.product?.priceString || '₪179.90')}
+                {purchasing === PRODUCT_YEARLY
+                  ? 'רוכש...'
+                  : (findPackage(PRODUCT_YEARLY)?.product?.priceString || (isIOSNative() ? 'טוען...' : '—'))}
               </span>
               <span className="text-[11px] text-muted-foreground">לשנה</span>
             </button>
           </div>
+
+          {isIOSNative() && !findPackage(PRODUCT_MONTHLY) && !findPackage(PRODUCT_YEARLY) && (
+            <div className="text-[11px] text-muted-foreground text-center">
+              טוען מחירים מ-App Store...
+            </div>
+          )}
 
           <div className="text-[11px] text-muted-foreground leading-relaxed bg-background/30 border border-border/30 rounded-lg p-3">
             התשלום יחויב דרך חשבון ה-Apple ID שלך בעת אישור הרכישה. המנוי מתחדש אוטומטית בסוף כל תקופה (חודשי/שנתי) באותו מחיר, אלא אם בוטל לפחות 24 שעות לפני תום התקופה. ניתן לנהל ולבטל את המנוי בכל עת דרך הגדרות חשבון ה-Apple ID.
