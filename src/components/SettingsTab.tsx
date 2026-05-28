@@ -20,6 +20,25 @@ import { getOfferings, purchasePackage, restorePurchases, isIOSNative, PRODUCT_M
 
 const NO_MERCY_KEY = 'app_no_mercy_mode';
 
+type RevenueCatPackage = {
+  identifier?: string;
+  packageType?: string;
+  offeringIdentifier?: string;
+  product?: {
+    identifier?: string;
+    title?: string;
+    priceString?: string;
+    subscriptionPeriod?: string | { unit?: string };
+  };
+};
+
+type RevenueCatOffering = {
+  identifier?: string;
+  monthly?: RevenueCatPackage;
+  annual?: RevenueCatPackage;
+  availablePackages?: RevenueCatPackage[];
+};
+
 export const isNoMercyMode = () => {
   if (typeof window === 'undefined') return false;
   return localStorage.getItem(NO_MERCY_KEY) === 'true';
@@ -29,7 +48,7 @@ const SettingsTab = () => {
   const { signOut, user } = useAuth();
   const { syncHealthData, isSyncing } = useHealthSync();
   const { isPremium, productId, expiresAt, reload: reloadPremium } = usePremium();
-  const [offerings, setOfferings] = useState<any>(null);
+  const [offerings, setOfferings] = useState<RevenueCatOffering | null>(null);
   const [purchasing, setPurchasing] = useState<string | null>(null);
   const [restoring, setRestoring] = useState(false);
   const [subOpen, setSubOpen] = useState(false);
@@ -40,7 +59,7 @@ const SettingsTab = () => {
         .then((offering) => {
           console.log('[RC UI] offering set', offering ? {
             identifier: offering?.identifier,
-            availablePackages: offering?.availablePackages?.map((p: any) => ({
+            availablePackages: offering?.availablePackages?.map((p: RevenueCatPackage) => ({
               identifier: p?.identifier,
               productIdentifier: p?.product?.identifier,
               priceString: p?.product?.priceString,
@@ -53,20 +72,36 @@ const SettingsTab = () => {
     }
   }, []);
 
-  const findPackage = (productKey: string) => {
-    if (!offerings?.availablePackages) return null;
-    return offerings.availablePackages.find((p: any) =>
+  const findPackage = (productKey: string, source: RevenueCatOffering | null = offerings) => {
+    const packages = source?.availablePackages ?? [];
+    const exactMatch = packages.find((p) =>
       p?.product?.identifier === productKey || p?.identifier === productKey
     );
+    if (exactMatch) return exactMatch;
+
+    const isMonthly = productKey === PRODUCT_MONTHLY;
+    const directPackage = isMonthly ? source?.monthly : source?.annual;
+    if (directPackage) return directPackage;
+
+    const desiredPeriod = isMonthly ? 'month' : 'year';
+    return packages.find((p) => {
+      const packageText = `${p?.identifier ?? ''} ${p?.packageType ?? ''}`.toLowerCase();
+      const subscriptionPeriod = typeof p?.product?.subscriptionPeriod === 'string'
+        ? p.product.subscriptionPeriod.toLowerCase()
+        : p?.product?.subscriptionPeriod?.unit?.toLowerCase() ?? '';
+      return isMonthly
+        ? packageText.includes('monthly') || subscriptionPeriod.includes(desiredPeriod)
+        : packageText.includes('annual') || packageText.includes('year') || subscriptionPeriod.includes(desiredPeriod);
+    }) ?? null;
   };
 
-  const logMissingPackage = (productKey: string) => {
+  const logMissingPackage = (productKey: string, source: RevenueCatOffering | null = offerings) => {
     console.log('[RC UI] package not found', {
       requestedProductKey: productKey,
       expectedProducts: [PRODUCT_MONTHLY, PRODUCT_YEARLY],
-      hasOfferings: Boolean(offerings),
-      offeringIdentifier: offerings?.identifier,
-      availablePackages: offerings?.availablePackages?.map((p: any) => ({
+      hasOfferings: Boolean(source),
+      offeringIdentifier: source?.identifier,
+      availablePackages: source?.availablePackages?.map((p) => ({
         identifier: p?.identifier,
         packageType: p?.packageType,
         offeringIdentifier: p?.offeringIdentifier,
