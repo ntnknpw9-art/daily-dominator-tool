@@ -4,6 +4,63 @@
 import { Capacitor } from '@capacitor/core';
 import { supabase } from '@/integrations/supabase/client';
 
+export type RevenueCatProduct = {
+  identifier?: string;
+  title?: string;
+  description?: string;
+  price?: number;
+  priceString?: string;
+  currencyCode?: string;
+  productType?: string;
+  subscriptionPeriod?: string | { unit?: string };
+};
+
+export type RevenueCatPackage = {
+  identifier?: string;
+  packageType?: string;
+  offeringIdentifier?: string;
+  product?: RevenueCatProduct;
+};
+
+export type RevenueCatOffering = {
+  identifier?: string;
+  serverDescription?: string;
+  availablePackages?: RevenueCatPackage[];
+  monthly?: RevenueCatPackage;
+  annual?: RevenueCatPackage;
+  lifetime?: RevenueCatPackage;
+};
+
+type RevenueCatOfferings = {
+  current?: RevenueCatOffering | null;
+  all?: Record<string, RevenueCatOffering>;
+};
+
+type RevenueCatEntitlement = {
+  productIdentifier?: string;
+  expirationDate?: string | null;
+};
+
+type RevenueCatCustomerInfo = {
+  entitlements?: { active?: Record<string, RevenueCatEntitlement> };
+  activeSubscriptions?: string[];
+};
+
+type RevenueCatPurchaseResult = {
+  transaction?: { transactionIdentifier?: string };
+  productIdentifier?: string;
+  customerInfo?: RevenueCatCustomerInfo;
+};
+
+type RevenueCatError = Error & {
+  code?: string | number;
+  underlyingErrorMessage?: string;
+  userCancelled?: boolean;
+  readableErrorCode?: string;
+  readable_error_code?: string;
+  domain?: string;
+};
+
 /**
  * Central mapping for all in-app purchase products.
  * Single source of truth — do NOT hardcode product IDs elsewhere.
@@ -35,12 +92,12 @@ export const PRODUCT_YEARLY = PRODUCTS.yearly.id;
 
 // Public SDK key from RevenueCat (Apple). Safe to ship in client.
 const REVENUECAT_IOS_API_KEY =
-  (import.meta as any).env?.VITE_REVENUECAT_IOS_API_KEY ||
+  import.meta.env?.VITE_REVENUECAT_IOS_API_KEY ||
   'appl_OsIuxnzzmIfeIVgsxDoYxxuxgDF';
 
 let initialized = false;
 
-const safeJson = (value: any) => {
+const safeJson = (value: unknown) => {
   try {
     return JSON.stringify(value, null, 2);
   } catch {
@@ -48,7 +105,7 @@ const safeJson = (value: any) => {
   }
 };
 
-const rcLog = (scope: string, label: string, data?: any) => {
+const rcLog = (scope: string, label: string, data?: unknown) => {
   try {
     console.log(`[RC ${scope}] ${label}`, data !== undefined ? safeJson(data) : '');
   } catch {
@@ -56,7 +113,7 @@ const rcLog = (scope: string, label: string, data?: any) => {
   }
 };
 
-const summarizePackage = (pkg: any) => ({
+const summarizePackage = (pkg?: RevenueCatPackage | null) => ({
   identifier: pkg?.identifier,
   packageType: pkg?.packageType,
   offeringIdentifier: pkg?.offeringIdentifier,
@@ -72,7 +129,7 @@ const summarizePackage = (pkg: any) => ({
   },
 });
 
-const summarizeOffering = (offering: any) => offering ? ({
+const summarizeOffering = (offering?: RevenueCatOffering | null) => offering ? ({
   identifier: offering?.identifier,
   serverDescription: offering?.serverDescription,
   availablePackagesCount: offering?.availablePackages?.length ?? 0,
