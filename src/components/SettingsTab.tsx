@@ -73,16 +73,21 @@ const SettingsTab = () => {
   }, []);
 
   const findPackage = (productKey: string, source: RevenueCatOffering | null = offerings) => {
+    if (!source) return null;
+    const isMonthly = productKey === PRODUCT_MONTHLY;
+    // PREFERRED: the standard RevenueCat package slots ($rc_monthly / $rc_annual).
+    // This is the recommended way per RevenueCat docs.
+    const standardPackage = isMonthly ? source?.monthly : source?.annual;
+    if (standardPackage) return standardPackage;
+
     const packages = source?.availablePackages ?? [];
+    // Fallback 1: exact match on product or package identifier.
     const exactMatch = packages.find((p) =>
       p?.product?.identifier === productKey || p?.identifier === productKey
     );
     if (exactMatch) return exactMatch;
 
-    const isMonthly = productKey === PRODUCT_MONTHLY;
-    const directPackage = isMonthly ? source?.monthly : source?.annual;
-    if (directPackage) return directPackage;
-
+    // Fallback 2: period-based heuristic.
     const desiredPeriod = isMonthly ? 'month' : 'year';
     return packages.find((p) => {
       const packageText = `${p?.identifier ?? ''} ${p?.packageType ?? ''}`.toLowerCase();
