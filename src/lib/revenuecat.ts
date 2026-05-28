@@ -153,7 +153,7 @@ async function ensureInit(userId?: string) {
     await Purchases.configure({ apiKey: REVENUECAT_IOS_API_KEY, appUserID: userId });
     initialized = true;
   } else if (userId) {
-    try { await Purchases.logIn({ appUserID: userId }); } catch {}
+    try { await Purchases.logIn({ appUserID: userId }); } catch (e) { rcLog('init', 'logIn failed', e); }
   }
   return Purchases;
 }
@@ -169,7 +169,7 @@ export async function getOfferings() {
     return null;
   }
   try {
-    const offerings = await Purchases.getOfferings();
+    const offerings: RevenueCatOfferings = await Purchases.getOfferings();
     rcLog('offerings', 'loaded', {
       current: summarizeOffering(offerings?.current),
       allKeys: Object.keys(offerings?.all ?? {}),
@@ -179,16 +179,17 @@ export async function getOfferings() {
       expectedProductIds: ALL_PRODUCT_IDS,
     });
     return offerings.current ?? null;
-  } catch (e: any) {
+  } catch (e) {
+    const error = e as RevenueCatError;
     rcLog('offerings', 'ERROR', {
-      message: e?.message,
-      code: e?.code,
-      underlyingErrorMessage: e?.underlyingErrorMessage,
-      readableErrorCode: e?.readableErrorCode,
-      readable_error_code: e?.readable_error_code,
-      domain: e?.domain,
-      name: e?.name,
-      raw: typeof e === 'object' ? safeJson(e) : String(e),
+      message: error?.message,
+      code: error?.code,
+      underlyingErrorMessage: error?.underlyingErrorMessage,
+      readableErrorCode: error?.readableErrorCode,
+      readable_error_code: error?.readable_error_code,
+      domain: error?.domain,
+      name: error?.name,
+      raw: typeof error === 'object' ? safeJson(error) : String(error),
     });
     return null;
   }
@@ -209,7 +210,7 @@ async function syncToSupabase() {
 
 export const PREMIUM_ENTITLEMENT = 'Daily Dominator AI Pro';
 
-function extractActive(customerInfo: any): { isPremium: boolean; productId: string | null; expiresAt: string | null } {
+function extractActive(customerInfo?: RevenueCatCustomerInfo): { isPremium: boolean; productId: string | null; expiresAt: string | null } {
   const active = customerInfo?.entitlements?.active || {};
   // Prefer the explicit "premium" entitlement configured in RevenueCat
   const premium = active[PREMIUM_ENTITLEMENT];
