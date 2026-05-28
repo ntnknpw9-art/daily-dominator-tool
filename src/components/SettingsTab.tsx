@@ -72,7 +72,7 @@ const SettingsTab = () => {
         const details = [msg, code && `code: ${code}`, underlying && `(${underlying})`].filter(Boolean).join(' · ');
         toast.error('הרכישה נכשלה: ' + (details || 'שגיאה לא ידועה'));
       }
-    }
+    } finally {
       setPurchasing(null);
     }
   };
