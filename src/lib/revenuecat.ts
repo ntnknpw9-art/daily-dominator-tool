@@ -4,6 +4,63 @@
 import { Capacitor } from '@capacitor/core';
 import { supabase } from '@/integrations/supabase/client';
 
+export type RevenueCatProduct = {
+  identifier?: string;
+  title?: string;
+  description?: string;
+  price?: number;
+  priceString?: string;
+  currencyCode?: string;
+  productType?: string;
+  subscriptionPeriod?: string | { unit?: string };
+};
+
+export type RevenueCatPackage = {
+  identifier?: string;
+  packageType?: string;
+  offeringIdentifier?: string;
+  product?: RevenueCatProduct;
+};
+
+export type RevenueCatOffering = {
+  identifier?: string;
+  serverDescription?: string;
+  availablePackages?: RevenueCatPackage[];
+  monthly?: RevenueCatPackage;
+  annual?: RevenueCatPackage;
+  lifetime?: RevenueCatPackage;
+};
+
+type RevenueCatOfferings = {
+  current?: RevenueCatOffering | null;
+  all?: Record<string, RevenueCatOffering>;
+};
+
+type RevenueCatEntitlement = {
+  productIdentifier?: string;
+  expirationDate?: string | null;
+};
+
+type RevenueCatCustomerInfo = {
+  entitlements?: { active?: Record<string, RevenueCatEntitlement> };
+  activeSubscriptions?: string[];
+};
+
+type RevenueCatPurchaseResult = {
+  transaction?: { transactionIdentifier?: string };
+  productIdentifier?: string;
+  customerInfo?: RevenueCatCustomerInfo;
+};
+
+type RevenueCatError = Error & {
+  code?: string | number;
+  underlyingErrorMessage?: string;
+  userCancelled?: boolean;
+  readableErrorCode?: string;
+  readable_error_code?: string;
+  domain?: string;
+};
+
 /**
  * Central mapping for all in-app purchase products.
  * Single source of truth — do NOT hardcode product IDs elsewhere.
@@ -35,10 +92,52 @@ export const PRODUCT_YEARLY = PRODUCTS.yearly.id;
 
 // Public SDK key from RevenueCat (Apple). Safe to ship in client.
 const REVENUECAT_IOS_API_KEY =
-  (import.meta as any).env?.VITE_REVENUECAT_IOS_API_KEY ||
+  import.meta.env?.VITE_REVENUECAT_IOS_API_KEY ||
   'appl_OsIuxnzzmIfeIVgsxDoYxxuxgDF';
 
 let initialized = false;
+
+const safeJson = (value: unknown) => {
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch {
+    return String(value);
+  }
+};
+
+const rcLog = (scope: string, label: string, data?: unknown) => {
+  try {
+    console.log(`[RC ${scope}] ${label}`, data !== undefined ? safeJson(data) : '');
+  } catch {
+    console.log(`[RC ${scope}] ${label}`, data);
+  }
+};
+
+const summarizePackage = (pkg?: RevenueCatPackage | null) => ({
+  identifier: pkg?.identifier,
+  packageType: pkg?.packageType,
+  offeringIdentifier: pkg?.offeringIdentifier,
+  product: {
+    identifier: pkg?.product?.identifier,
+    title: pkg?.product?.title,
+    description: pkg?.product?.description,
+    price: pkg?.product?.price,
+    priceString: pkg?.product?.priceString,
+    currencyCode: pkg?.product?.currencyCode,
+    productType: pkg?.product?.productType,
+    subscriptionPeriod: pkg?.product?.subscriptionPeriod,
+  },
+});
+
+const summarizeOffering = (offering?: RevenueCatOffering | null) => offering ? ({
+  identifier: offering?.identifier,
+  serverDescription: offering?.serverDescription,
+  availablePackagesCount: offering?.availablePackages?.length ?? 0,
+  availablePackages: offering?.availablePackages?.map(summarizePackage) ?? [],
+  monthly: summarizePackage(offering?.monthly),
+  annual: summarizePackage(offering?.annual),
+  lifetime: summarizePackage(offering?.lifetime),
+}) : null;
 
 const isIOS = () =>
   typeof window !== 'undefined' &&
@@ -54,18 +153,44 @@ async function ensureInit(userId?: string) {
     await Purchases.configure({ apiKey: REVENUECAT_IOS_API_KEY, appUserID: userId });
     initialized = true;
   } else if (userId) {
-    try { await Purchases.logIn({ appUserID: userId }); } catch {}
+    try { await Purchases.logIn({ appUserID: userId }); } catch (e) { rcLog('init', 'logIn failed', e); }
   }
   return Purchases;
 }
 
 export async function getOfferings() {
   const Purchases = await ensureInit();
-  if (!Purchases) return null;
+  if (!Purchases) {
+    rcLog('offerings', 'not initialized', {
+      isNative: Capacitor.isNativePlatform(),
+      platform: Capacitor.getPlatform(),
+      hasApiKey: Boolean(REVENUECAT_IOS_API_KEY),
+    });
+    return null;
+  }
   try {
-    const offerings = await Purchases.getOfferings();
+    const offerings: RevenueCatOfferings = await Purchases.getOfferings();
+    rcLog('offerings', 'loaded', {
+      current: summarizeOffering(offerings?.current),
+      allKeys: Object.keys(offerings?.all ?? {}),
+      all: Object.fromEntries(
+        Object.entries(offerings?.all ?? {}).map(([key, offering]) => [key, summarizeOffering(offering)])
+      ),
+      expectedProductIds: ALL_PRODUCT_IDS,
+    });
     return offerings.current ?? null;
-  } catch {
+  } catch (e) {
+    const error = e as RevenueCatError;
+    rcLog('offerings', 'ERROR', {
+      message: error?.message,
+      code: error?.code,
+      underlyingErrorMessage: error?.underlyingErrorMessage,
+      readableErrorCode: error?.readableErrorCode,
+      readable_error_code: error?.readable_error_code,
+      domain: error?.domain,
+      name: error?.name,
+      raw: typeof error === 'object' ? safeJson(error) : String(error),
+    });
     return null;
   }
 }
@@ -85,7 +210,7 @@ async function syncToSupabase() {
 
 export const PREMIUM_ENTITLEMENT = 'Daily Dominator AI Pro';
 
-function extractActive(customerInfo: any): { isPremium: boolean; productId: string | null; expiresAt: string | null } {
+function extractActive(customerInfo?: RevenueCatCustomerInfo): { isPremium: boolean; productId: string | null; expiresAt: string | null } {
   const active = customerInfo?.entitlements?.active || {};
   // Prefer the explicit "premium" entitlement configured in RevenueCat
   const premium = active[PREMIUM_ENTITLEMENT];
@@ -114,9 +239,9 @@ function extractActive(customerInfo: any): { isPremium: boolean; productId: stri
   return { isPremium: false, productId: null, expiresAt: null };
 }
 
-export async function purchasePackage(pkg: any) {
-  const log = (label: string, data?: any) => {
-    try { console.log(`[RC purchase] ${label}`, data !== undefined ? JSON.stringify(data, null, 2) : ''); } catch { console.log(`[RC purchase] ${label}`, data); }
+export async function purchasePackage(pkg: RevenueCatPackage) {
+  const log = (label: string, data?: unknown) => {
+    rcLog('purchase', label, data);
   };
   try {
     const { data: auth } = await supabase.auth.getUser();
@@ -135,7 +260,7 @@ export async function purchasePackage(pkg: any) {
     const Purchases = await ensureInit(auth.user?.id);
     if (!Purchases) throw new Error('רכישות זמינות רק באפליקציית iOS');
     log('calling Purchases.purchasePackage...');
-    const result: any = await Purchases.purchasePackage({ aPackage: pkg });
+    const result: RevenueCatPurchaseResult = await Purchases.purchasePackage({ aPackage: pkg as Parameters<typeof Purchases.purchasePackage>[0]['aPackage'] });
     log('purchase result', {
       transactionId: result?.transaction?.transactionIdentifier,
       productId: result?.productIdentifier,
@@ -148,18 +273,19 @@ export async function purchasePackage(pkg: any) {
     await syncToSupabase();
     log('synced to backend');
     return active;
-  } catch (e: any) {
+  } catch (e) {
+    const error = e as RevenueCatError;
     log('ERROR', {
-      message: e?.message,
-      code: e?.code,
-      underlyingErrorMessage: e?.underlyingErrorMessage,
-      userCancelled: e?.userCancelled,
-      readableErrorCode: e?.readableErrorCode,
-      readable_error_code: e?.readable_error_code,
-      domain: e?.domain,
-      name: e?.name,
-      stack: e?.stack,
-      raw: typeof e === 'object' ? JSON.stringify(e, Object.getOwnPropertyNames(e)) : String(e),
+      message: error?.message,
+      code: error?.code,
+      underlyingErrorMessage: error?.underlyingErrorMessage,
+      userCancelled: error?.userCancelled,
+      readableErrorCode: error?.readableErrorCode,
+      readable_error_code: error?.readable_error_code,
+      domain: error?.domain,
+      name: error?.name,
+      stack: error?.stack,
+      raw: typeof error === 'object' ? JSON.stringify(error, Object.getOwnPropertyNames(error)) : String(error),
     });
     throw e;
   }
@@ -169,7 +295,7 @@ export async function restorePurchases() {
   const { data: auth } = await supabase.auth.getUser();
   const Purchases = await ensureInit(auth.user?.id);
   if (!Purchases) throw new Error('שחזור זמין רק באפליקציית iOS');
-  const result: any = await Purchases.restorePurchases();
+  const result: RevenueCatPurchaseResult = await Purchases.restorePurchases();
   const info = result.customerInfo;
   const active = extractActive(info);
   await syncToSupabase();
@@ -181,7 +307,7 @@ export async function refreshPremiumStatus() {
   const Purchases = await ensureInit(auth.user?.id);
   if (!Purchases) return null;
   try {
-    const result: any = await Purchases.getCustomerInfo();
+    const result: RevenueCatPurchaseResult = await Purchases.getCustomerInfo();
     const info = result.customerInfo;
     const active = extractActive(info);
     await syncToSupabase();
