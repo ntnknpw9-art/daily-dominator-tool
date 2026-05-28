@@ -115,14 +115,54 @@ function extractActive(customerInfo: any): { isPremium: boolean; productId: stri
 }
 
 export async function purchasePackage(pkg: any) {
-  const { data: auth } = await supabase.auth.getUser();
-  const Purchases = await ensureInit(auth.user?.id);
-  if (!Purchases) throw new Error('רכישות זמינות רק באפליקציית iOS');
-  const result: any = await Purchases.purchasePackage({ aPackage: pkg });
-  const info = result.customerInfo;
-  const active = extractActive(info);
-  await syncToSupabase();
-  return active;
+  const log = (label: string, data?: any) => {
+    try { console.log(`[RC purchase] ${label}`, data !== undefined ? JSON.stringify(data, null, 2) : ''); } catch { console.log(`[RC purchase] ${label}`, data); }
+  };
+  try {
+    const { data: auth } = await supabase.auth.getUser();
+    log('user', { id: auth.user?.id, email: auth.user?.email });
+    log('package received', {
+      identifier: pkg?.identifier,
+      packageType: pkg?.packageType,
+      offeringIdentifier: pkg?.offeringIdentifier,
+      product: {
+        identifier: pkg?.product?.identifier,
+        title: pkg?.product?.title,
+        priceString: pkg?.product?.priceString,
+        currencyCode: pkg?.product?.currencyCode,
+      },
+    });
+    const Purchases = await ensureInit(auth.user?.id);
+    if (!Purchases) throw new Error('רכישות זמינות רק באפליקציית iOS');
+    log('calling Purchases.purchasePackage...');
+    const result: any = await Purchases.purchasePackage({ aPackage: pkg });
+    log('purchase result', {
+      transactionId: result?.transaction?.transactionIdentifier,
+      productId: result?.productIdentifier,
+      activeEntitlements: Object.keys(result?.customerInfo?.entitlements?.active || {}),
+      activeSubscriptions: result?.customerInfo?.activeSubscriptions,
+    });
+    const info = result.customerInfo;
+    const active = extractActive(info);
+    log('extracted active', active);
+    await syncToSupabase();
+    log('synced to backend');
+    return active;
+  } catch (e: any) {
+    log('ERROR', {
+      message: e?.message,
+      code: e?.code,
+      underlyingErrorMessage: e?.underlyingErrorMessage,
+      userCancelled: e?.userCancelled,
+      readableErrorCode: e?.readableErrorCode,
+      readable_error_code: e?.readable_error_code,
+      domain: e?.domain,
+      name: e?.name,
+      stack: e?.stack,
+      raw: typeof e === 'object' ? JSON.stringify(e, Object.getOwnPropertyNames(e)) : String(e),
+    });
+    throw e;
+  }
 }
 
 export async function restorePurchases() {
