@@ -40,6 +40,48 @@ const REVENUECAT_IOS_API_KEY =
 
 let initialized = false;
 
+const safeJson = (value: any) => {
+  try {
+    return JSON.stringify(value, null, 2);
+  } catch {
+    return String(value);
+  }
+};
+
+const rcLog = (scope: string, label: string, data?: any) => {
+  try {
+    console.log(`[RC ${scope}] ${label}`, data !== undefined ? safeJson(data) : '');
+  } catch {
+    console.log(`[RC ${scope}] ${label}`, data);
+  }
+};
+
+const summarizePackage = (pkg: any) => ({
+  identifier: pkg?.identifier,
+  packageType: pkg?.packageType,
+  offeringIdentifier: pkg?.offeringIdentifier,
+  product: {
+    identifier: pkg?.product?.identifier,
+    title: pkg?.product?.title,
+    description: pkg?.product?.description,
+    price: pkg?.product?.price,
+    priceString: pkg?.product?.priceString,
+    currencyCode: pkg?.product?.currencyCode,
+    productType: pkg?.product?.productType,
+    subscriptionPeriod: pkg?.product?.subscriptionPeriod,
+  },
+});
+
+const summarizeOffering = (offering: any) => offering ? ({
+  identifier: offering?.identifier,
+  serverDescription: offering?.serverDescription,
+  availablePackagesCount: offering?.availablePackages?.length ?? 0,
+  availablePackages: offering?.availablePackages?.map(summarizePackage) ?? [],
+  monthly: summarizePackage(offering?.monthly),
+  annual: summarizePackage(offering?.annual),
+  lifetime: summarizePackage(offering?.lifetime),
+}) : null;
+
 const isIOS = () =>
   typeof window !== 'undefined' &&
   Capacitor.isNativePlatform() &&
@@ -61,11 +103,36 @@ async function ensureInit(userId?: string) {
 
 export async function getOfferings() {
   const Purchases = await ensureInit();
-  if (!Purchases) return null;
+  if (!Purchases) {
+    rcLog('offerings', 'not initialized', {
+      isNative: Capacitor.isNativePlatform(),
+      platform: Capacitor.getPlatform(),
+      hasApiKey: Boolean(REVENUECAT_IOS_API_KEY),
+    });
+    return null;
+  }
   try {
     const offerings = await Purchases.getOfferings();
+    rcLog('offerings', 'loaded', {
+      current: summarizeOffering(offerings?.current),
+      allKeys: Object.keys(offerings?.all ?? {}),
+      all: Object.fromEntries(
+        Object.entries(offerings?.all ?? {}).map(([key, offering]) => [key, summarizeOffering(offering)])
+      ),
+      expectedProductIds: ALL_PRODUCT_IDS,
+    });
     return offerings.current ?? null;
-  } catch {
+  } catch (e: any) {
+    rcLog('offerings', 'ERROR', {
+      message: e?.message,
+      code: e?.code,
+      underlyingErrorMessage: e?.underlyingErrorMessage,
+      readableErrorCode: e?.readableErrorCode,
+      readable_error_code: e?.readable_error_code,
+      domain: e?.domain,
+      name: e?.name,
+      raw: typeof e === 'object' ? safeJson(e) : String(e),
+    });
     return null;
   }
 }
@@ -116,7 +183,7 @@ function extractActive(customerInfo: any): { isPremium: boolean; productId: stri
 
 export async function purchasePackage(pkg: any) {
   const log = (label: string, data?: any) => {
-    try { console.log(`[RC purchase] ${label}`, data !== undefined ? JSON.stringify(data, null, 2) : ''); } catch { console.log(`[RC purchase] ${label}`, data); }
+    rcLog('purchase', label, data);
   };
   try {
     const { data: auth } = await supabase.auth.getUser();
