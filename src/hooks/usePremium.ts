@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { refreshPremiumStatus, isIOSNative } from '@/lib/revenuecat';
@@ -10,7 +10,7 @@ export function usePremium() {
   const [productId, setProductId] = useState<string | null>(null);
   const [expiresAt, setExpiresAt] = useState<string | null>(null);
 
-  const reload = async () => {
+  const reload = useCallback(async () => {
     if (!user) { setLoading(false); return; }
     setLoading(true);
     // Read from DB first for instant UI
@@ -34,9 +34,9 @@ export function usePremium() {
       }
     }
     setLoading(false);
-  };
+  }, [user]);
 
-  useEffect(() => { reload(); /* eslint-disable-next-line */ }, [user?.id]);
+  useEffect(() => { reload(); }, [reload]);
 
   return { isPremium, loading, productId, expiresAt, reload };
 }

@@ -8,6 +8,55 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const getTime = (dateValue?: string | null) => {
+  if (!dateValue) return null;
+  const time = new Date(dateValue).getTime();
+  return Number.isFinite(time) ? time : null;
+};
+
+type RevenueCatSubscriptionState = {
+  expires_date?: string | null;
+  product_identifier?: string | null;
+};
+
+type RevenueCatSubscriber = {
+  entitlements?: Record<string, RevenueCatSubscriptionState>;
+  subscriptions?: Record<string, RevenueCatSubscriptionState>;
+};
+
+const extractPremium = (subscriber: RevenueCatSubscriber) => {
+  const entitlements = subscriber?.entitlements ?? {};
+  const activeEntitlement = Object.values(entitlements).find((ent) => {
+    const expires = getTime(ent?.expires_date);
+    return ent && (!expires || expires > Date.now());
+  });
+
+  if (activeEntitlement) {
+    return {
+      isPremium: true,
+      productId: activeEntitlement.product_identifier ?? null,
+      expiresAt: activeEntitlement.expires_date ?? null,
+    };
+  }
+
+  const subscriptions = subscriber?.subscriptions ?? {};
+  const activeSubscription = Object.entries(subscriptions).find(([, sub]) => {
+    const expires = getTime(sub?.expires_date);
+    return sub && (!expires || expires > Date.now());
+  });
+
+  if (activeSubscription) {
+    const [fallbackProductId, subscription] = activeSubscription;
+    return {
+      isPremium: true,
+      productId: subscription.product_identifier ?? fallbackProductId,
+      expiresAt: subscription.expires_date ?? null,
+    };
+  }
+
+  return { isPremium: false, productId: null, expiresAt: null };
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -47,27 +96,27 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({ error: "RevenueCat verification failed" }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
       const body = await rcRes.json();
-      const ent = body?.subscriber?.entitlements?.["Daily Dominator AI Pro"];
-      if (ent?.expires_date) {
-        const exp = new Date(ent.expires_date).getTime();
-        if (exp > Date.now()) {
-          isPremium = true;
-          productId = ent.product_identifier ?? null;
-          expiresAt = ent.expires_date;
-        }
-      }
+      const premium = extractPremium(body?.subscriber ?? {});
+      isPremium = premium.isPremium;
+      productId = premium.productId;
+      expiresAt = premium.expiresAt;
     } else {
       return new Response(JSON.stringify({ error: "Server missing REVENUECAT_SECRET_API_KEY" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     const admin = createClient(supabaseUrl, serviceKey);
-    await admin.from("user_subscriptions").upsert({
+    const { error: upsertError } = await admin.from("user_subscriptions").upsert({
       user_id: user.id,
       is_premium: isPremium,
       product_id: productId,
       expires_at: expiresAt,
       revenuecat_user_id: subscriberId,
     }, { onConflict: "user_id" });
+
+    if (upsertError) {
+      console.error("subscription upsert failed", upsertError);
+      return new Response(JSON.stringify({ error: "Subscription sync failed" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
 
     return new Response(JSON.stringify({ isPremium, productId, expiresAt }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

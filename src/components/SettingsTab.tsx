@@ -42,11 +42,6 @@ type RevenueCatOffering = {
   availablePackages?: RevenueCatPackage[];
 };
 
-export const isNoMercyMode = () => {
-  if (typeof window === 'undefined') return false;
-  return localStorage.getItem(NO_MERCY_KEY) === 'true';
-};
-
 const SettingsTab = () => {
   const { signOut, user } = useAuth();
   const { syncHealthData, isSyncing } = useHealthSync();
