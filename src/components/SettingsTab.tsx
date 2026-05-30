@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 import { getTheme, applyTheme } from '@/lib/theme';
 import { useHealthSync } from '@/hooks/useHealthSync';
 import { usePremium } from '@/hooks/usePremium';
-import { getOfferings, getStoreProducts, purchasePackage, restorePurchases, isIOSNative, PRODUCT_MONTHLY, PRODUCT_YEARLY } from '@/lib/revenuecat';
+import { getOfferings, purchasePackage, restorePurchases, isIOSNative, PRODUCT_MONTHLY, PRODUCT_YEARLY } from '@/lib/revenuecat';
 
 const NO_MERCY_KEY = 'app_no_mercy_mode';
 
@@ -42,12 +42,13 @@ type RevenueCatOffering = {
   availablePackages?: RevenueCatPackage[];
 };
 
+const SUBSCRIPTION_PRODUCTS_UNAVAILABLE = 'Subscription products are not available right now. Please try again later.';
+
 const SettingsTab = () => {
   const { signOut, user } = useAuth();
   const { syncHealthData, isSyncing } = useHealthSync();
   const { isPremium, productId, expiresAt, reload: reloadPremium } = usePremium();
   const [offerings, setOfferings] = useState<RevenueCatOffering | null>(null);
-  const [storeProducts, setStoreProducts] = useState<RevenueCatProduct[]>([]);
   const [offeringsLoaded, setOfferingsLoaded] = useState(false);
   const [offeringsError, setOfferingsError] = useState<string | null>(null);
   const [purchasing, setPurchasing] = useState<string | null>(null);
@@ -60,18 +61,21 @@ const SettingsTab = () => {
       setOfferingsError(null);
       getOfferings()
         .then((offering) => {
-          console.log('[RC UI] offering set', offering ? {
+          const packages = offering?.availablePackages ?? [];
+          console.log('[RC UI] offerings loaded', offering ? {
             identifier: offering?.identifier,
-            availablePackages: offering?.availablePackages?.map((p: RevenueCatPackage) => ({
+            packagesCount: packages.length,
+            availablePackages: packages.map((p: RevenueCatPackage) => ({
               identifier: p?.identifier,
+              packageType: p?.packageType,
               productIdentifier: p?.product?.identifier,
               priceString: p?.product?.priceString,
             })) ?? [],
             expectedProducts: [PRODUCT_MONTHLY, PRODUCT_YEARLY],
           } : null);
+          console.log('[RC UI] packages count', packages.length);
           setOfferings(offering);
-          if (!offering) setOfferingsError('לא התקבלה הצעת מנוי מ-App Store');
-          return getStoreProducts().then((products) => setStoreProducts(products));
+          if (!offering || packages.length === 0) setOfferingsError(SUBSCRIPTION_PRODUCTS_UNAVAILABLE);
         })
         .catch((e) => {
           console.log('[RC UI] getOfferings failed', e);
@@ -84,17 +88,17 @@ const SettingsTab = () => {
   const findPackage = (productKey: string, source: RevenueCatOffering | null = offerings) => {
     if (!source) return null;
     const isMonthly = productKey === PRODUCT_MONTHLY;
-    // PREFERRED: the standard RevenueCat package slots ($rc_monthly / $rc_annual).
-    // This is the recommended way per RevenueCat docs.
-    const standardPackage = isMonthly ? source?.monthly : source?.annual;
-    if (standardPackage) return standardPackage;
-
     const packages = source?.availablePackages ?? [];
-    // Fallback 1: exact match on product or package identifier.
-    const exactMatch = packages.find((p) =>
-      p?.product?.identifier === productKey || p?.identifier === productKey
+    const standardIdentifier = isMonthly ? '$rc_monthly' : '$rc_annual';
+    const standardType = isMonthly ? 'monthly' : 'annual';
+
+    const standardMatch = packages.find((p) =>
+      p?.identifier === standardIdentifier || p?.packageType?.toLowerCase() === standardType
     );
-    if (exactMatch) return exactMatch;
+    if (standardMatch) return standardMatch;
+
+    const productMatch = packages.find((p) => p?.product?.identifier === productKey);
+    if (productMatch) return productMatch;
 
     // Fallback 2: period-based heuristic.
     const desiredPeriod = isMonthly ? 'month' : 'year';
@@ -109,11 +113,8 @@ const SettingsTab = () => {
     }) ?? null;
   };
 
-  const findStoreProduct = (productKey: string) =>
-    storeProducts.find((product) => product?.identifier === productKey) ?? null;
-
   const getPriceLabel = (productKey: string) =>
-    findPackage(productKey)?.product?.priceString || findStoreProduct(productKey)?.priceString || (isIOSNative() && !offeringsLoaded ? 'טוען...' : 'רכוש');
+    findPackage(productKey)?.product?.priceString || (isIOSNative() && !offeringsLoaded ? 'טוען...' : 'רכוש');
 
   const getPurchaseErrorMessage = (error: { message?: string; code?: string | number; readableErrorCode?: string; readable_error_code?: string; underlyingErrorMessage?: string }) => {
     const msg = error?.message || '';
