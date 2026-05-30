@@ -206,15 +206,13 @@ export async function getOfferings() {
   try {
     const offerings = await withTimeout(Purchases.getOfferings(), 12000, 'RevenueCat getOfferings') as unknown as RevenueCatOfferings;
     const allOfferings = offerings?.all ?? {};
-    const fallbackOffering = allOfferings.default ?? Object.values(allOfferings)[0] ?? null;
-    const current = offerings?.current ?? fallbackOffering;
-    const selectedSource = offerings?.current
-      ? 'current'
-      : allOfferings.default
-        ? 'all.default fallback'
-        : fallbackOffering
-          ? 'first offering fallback'
-          : 'none';
+    const defaultOffering = allOfferings.default ?? null;
+    const current = defaultOffering ?? offerings?.current ?? null;
+    const selectedSource = defaultOffering
+      ? 'all.default'
+      : offerings?.current
+        ? 'current fallback'
+        : 'none';
     const pkgCount = current?.availablePackages?.length ?? 0;
     rcLog('offerings', 'loaded', {
       currentIdentifier: current?.identifier ?? null,
@@ -227,8 +225,9 @@ export async function getOfferings() {
       ),
       expectedProductIds: ALL_PRODUCT_IDS,
     });
-    if (!offerings?.current && current) {
-      rcLog('offerings', 'No offerings.current returned; using fallback offering from offerings.all', {
+    rcLog('offerings', 'packages count', pkgCount);
+    if (!defaultOffering && current) {
+      rcLog('offerings', 'No offerings.all.default returned; using offerings.current fallback', {
         selectedSource,
         identifier: current?.identifier,
       });
@@ -252,40 +251,6 @@ export async function getOfferings() {
       raw: typeof error === 'object' ? safeJson(error) : String(error),
     });
     return null;
-  }
-}
-
-export async function getStoreProducts(productIds: string[] = ALL_PRODUCT_IDS) {
-  const Purchases = await ensureInit();
-  if (!Purchases) return [];
-  try {
-    const result = await withTimeout(
-      Purchases.getProducts({ productIdentifiers: productIds }),
-      12000,
-      'RevenueCat getProducts'
-    ) as unknown as { products?: RevenueCatProduct[] };
-    const products = result?.products ?? [];
-    rcLog('products', 'loaded direct products', {
-      requested: productIds,
-      products: products.map((product) => ({
-        identifier: product?.identifier,
-        title: product?.title,
-        priceString: product?.priceString,
-        currencyCode: product?.currencyCode,
-        subscriptionPeriod: product?.subscriptionPeriod,
-      })),
-    });
-    return products;
-  } catch (e) {
-    const error = e as RevenueCatError;
-    rcLog('products', 'ERROR', {
-      requested: productIds,
-      message: error?.message,
-      code: error?.code,
-      underlyingErrorMessage: error?.underlyingErrorMessage,
-      raw: typeof error === 'object' ? safeJson(error) : String(error),
-    });
-    return [];
   }
 }
 
@@ -398,58 +363,6 @@ export async function purchasePackage(pkg: RevenueCatPackage) {
     });
     throw e;
   }
-}
-
-export async function purchaseProduct(product: RevenueCatProduct) {
-  const log = (label: string, data?: unknown) => rcLog('purchaseProduct', label, data);
-  try {
-    const { data: auth } = await supabase.auth.getUser();
-    log('user', { id: auth.user?.id, email: auth.user?.email });
-    if (!product?.identifier) throw new Error('המוצר לא תקין. נסה שוב.');
-    const Purchases = await ensureInit(auth.user?.id);
-    if (!Purchases) throw new Error('רכישות זמינות רק באפליקציית iOS');
-    log('calling Purchases.purchaseStoreProduct...', {
-      productId: product.identifier,
-      priceString: product.priceString,
-      title: product.title,
-      timeoutMs: PURCHASE_TIMEOUT_MS,
-    });
-    const result: RevenueCatPurchaseResult = await withTimeout(
-      Purchases.purchaseStoreProduct({ product: product as Parameters<typeof Purchases.purchaseStoreProduct>[0]['product'] }),
-      PURCHASE_TIMEOUT_MS,
-      'RevenueCat purchaseStoreProduct'
-    );
-    log('purchase result', {
-      transactionId: result?.transaction?.transactionIdentifier,
-      productId: result?.productIdentifier,
-      activeEntitlements: Object.keys(result?.customerInfo?.entitlements?.active || {}),
-      activeSubscriptions: result?.customerInfo?.activeSubscriptions,
-    });
-    const active = extractActive(result.customerInfo);
-    await syncToSupabase();
-    log('synced to backend', active);
-    return active;
-  } catch (e) {
-    const error = e as RevenueCatError;
-    log('ERROR', {
-      message: error?.message,
-      code: error?.code,
-      underlyingErrorMessage: error?.underlyingErrorMessage,
-      userCancelled: error?.userCancelled,
-      readableErrorCode: error?.readableErrorCode,
-      readable_error_code: error?.readable_error_code,
-      domain: error?.domain,
-      name: error?.name,
-      raw: typeof error === 'object' ? JSON.stringify(error, Object.getOwnPropertyNames(error)) : String(error),
-    });
-    throw e;
-  }
-}
-
-export async function purchaseProductById(productId: string) {
-  const products = await getStoreProducts([productId]);
-  const product = products.find((item) => item?.identifier === productId) ?? { identifier: productId };
-  return purchaseProduct(product);
 }
 
 export async function restorePurchases() {
