@@ -128,8 +128,11 @@ const SettingsTab = () => {
     }) ?? null;
   };
 
+  const findStoreProduct = (productKey: string) =>
+    storeProducts.find((p) => p?.identifier === productKey) ?? null;
+
   const getPriceLabel = (productKey: string) =>
-    findPackage(productKey)?.product?.priceString || (isIOSNative() && !offeringsLoaded ? 'טוען...' : 'רכוש');
+    findPackage(productKey)?.product?.priceString || findStoreProduct(productKey)?.priceString || (isIOSNative() && !offeringsLoaded ? 'טוען...' : 'רכוש');
 
   const getPurchaseErrorMessage = (error: { message?: string; code?: string | number; readableErrorCode?: string; readable_error_code?: string; underlyingErrorMessage?: string }) => {
     const msg = error?.message || '';
@@ -153,7 +156,7 @@ const SettingsTab = () => {
       toast.info(SUBSCRIPTION_PRODUCTS_LOADING);
       return;
     }
-    if (!offerings || (offerings.availablePackages?.length ?? 0) === 0) {
+    if ((!offerings || (offerings.availablePackages?.length ?? 0) === 0) && storeProducts.length === 0) {
       console.log('[RC UI] purchase blocked: no offering packages loaded', {
         requestedProductKey: productKey,
         offeringIdentifier: offerings?.identifier ?? null,
@@ -167,31 +170,46 @@ const SettingsTab = () => {
     setOfferingsError(null);
     try {
       let selectedPackage = findPackage(productKey);
+      let selectedProduct = findStoreProduct(productKey);
 
-      if (!selectedPackage) {
-        console.log('[RC UI] package missing; refreshing offerings before purchase', { requestedProductKey: productKey });
+      if (!selectedPackage && !selectedProduct) {
+        console.log('[RC UI] package/product missing; refreshing offerings and direct products before purchase', { requestedProductKey: productKey });
         const freshOffering = await getOfferings();
         setOfferings(freshOffering);
         console.log('[RC UI] packages count after refresh', freshOffering?.availablePackages?.length ?? 0);
         selectedPackage = findPackage(productKey, freshOffering);
+        if (!selectedPackage) {
+          const freshProducts = await getStoreProducts();
+          setStoreProducts(freshProducts);
+          selectedProduct = freshProducts.find((p) => p?.identifier === productKey) ?? null;
+          console.log('[RC UI] direct products count after refresh', freshProducts.length);
+        }
       }
 
-      if (!selectedPackage) {
+      if (!selectedPackage && !selectedProduct) {
         const message = SUBSCRIPTION_PRODUCTS_UNAVAILABLE;
         setOfferingsError(message);
         toast.error(message);
         return;
       }
 
-      console.log('[RC UI] selected package identifier', selectedPackage?.identifier);
-      console.log('[RC UI] product identifier', selectedPackage?.product?.identifier);
-      console.log('[RC UI] purchase package from offering', {
-        requestedProductKey: productKey,
-        packageIdentifier: selectedPackage?.identifier,
-        offeringIdentifier: selectedPackage?.offeringIdentifier,
-        productIdentifier: selectedPackage?.product?.identifier,
-      });
-      const res = await purchasePackage(selectedPackage);
+      let res;
+      if (selectedPackage) {
+        console.log('[RC UI] purchase package from offering', {
+          requestedProductKey: productKey,
+          packageIdentifier: selectedPackage?.identifier,
+          offeringIdentifier: selectedPackage?.offeringIdentifier,
+          productIdentifier: selectedPackage?.product?.identifier,
+        });
+        res = await purchasePackage(selectedPackage);
+      } else {
+        console.log('[RC UI] purchase direct StoreKit product fallback', {
+          requestedProductKey: productKey,
+          productIdentifier: selectedProduct?.identifier,
+          priceString: selectedProduct?.priceString,
+        });
+        res = await purchaseStoreProduct(selectedProduct);
+      }
       console.log('[RC UI] purchase success', res);
       if (res.isPremium) {
         toast.success('תודה רבה על התמיכה! 💜');
