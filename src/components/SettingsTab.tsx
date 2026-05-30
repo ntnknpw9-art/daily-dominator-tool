@@ -619,15 +619,15 @@ const SettingsTab = () => {
             </button>
           </div>
 
-          {isIOSNative() && !offeringsLoaded && !findPackage(PRODUCT_MONTHLY) && !findPackage(PRODUCT_YEARLY) && !findStoreProduct(PRODUCT_MONTHLY) && !findStoreProduct(PRODUCT_YEARLY) && (
+          {isIOSNative() && !offeringsLoaded && !findPackage(PRODUCT_MONTHLY) && !findPackage(PRODUCT_YEARLY) && (
             <div className="text-[11px] text-muted-foreground text-center">
               טוען מחירים מ-App Store... אפשר ללחוץ, הרכישה תנסה לטעון מחדש.
             </div>
           )}
 
-          {isIOSNative() && offeringsLoaded && !findPackage(PRODUCT_MONTHLY) && !findPackage(PRODUCT_YEARLY) && !findStoreProduct(PRODUCT_MONTHLY) && !findStoreProduct(PRODUCT_YEARLY) && (
+          {isIOSNative() && offeringsLoaded && !findPackage(PRODUCT_MONTHLY) && !findPackage(PRODUCT_YEARLY) && (
             <div className="text-[11px] text-destructive text-center">
-              {offeringsError || 'המחירים לא נטענו. לחץ שוב כדי לנסות לטעון מחדש.'}
+              {offeringsError || SUBSCRIPTION_PRODUCTS_UNAVAILABLE}
             </div>
           )}
 
