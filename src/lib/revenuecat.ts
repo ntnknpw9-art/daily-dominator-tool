@@ -126,6 +126,8 @@ const withTimeout = async <T,>(promise: Promise<T>, ms: number, label: string): 
   }
 };
 
+const PURCHASE_TIMEOUT_MS = 60000;
+
 const summarizePackage = (pkg?: RevenueCatPackage | null) => ({
   identifier: pkg?.identifier,
   packageType: pkg?.packageType,
@@ -362,8 +364,12 @@ export async function purchasePackage(pkg: RevenueCatPackage) {
     }
     const Purchases = await ensureInit(auth.user?.id);
     if (!Purchases) throw new Error('רכישות זמינות רק באפליקציית iOS');
-    log('calling Purchases.purchasePackage...', { productId: pkg.product.identifier });
-    const result: RevenueCatPurchaseResult = await Purchases.purchasePackage({ aPackage: pkg as unknown as Parameters<typeof Purchases.purchasePackage>[0]['aPackage'] });
+    log('calling Purchases.purchasePackage...', { productId: pkg.product.identifier, timeoutMs: PURCHASE_TIMEOUT_MS });
+    const result: RevenueCatPurchaseResult = await withTimeout(
+      Purchases.purchasePackage({ aPackage: pkg as unknown as Parameters<typeof Purchases.purchasePackage>[0]['aPackage'] }),
+      PURCHASE_TIMEOUT_MS,
+      'RevenueCat purchasePackage'
+    );
     log('purchase result', {
       transactionId: result?.transaction?.transactionIdentifier,
       productId: result?.productIdentifier,
@@ -406,8 +412,13 @@ export async function purchaseProduct(product: RevenueCatProduct) {
       productId: product.identifier,
       priceString: product.priceString,
       title: product.title,
+      timeoutMs: PURCHASE_TIMEOUT_MS,
     });
-    const result: RevenueCatPurchaseResult = await Purchases.purchaseStoreProduct({ product: product as Parameters<typeof Purchases.purchaseStoreProduct>[0]['product'] });
+    const result: RevenueCatPurchaseResult = await withTimeout(
+      Purchases.purchaseStoreProduct({ product: product as Parameters<typeof Purchases.purchaseStoreProduct>[0]['product'] }),
+      PURCHASE_TIMEOUT_MS,
+      'RevenueCat purchaseStoreProduct'
+    );
     log('purchase result', {
       transactionId: result?.transaction?.transactionIdentifier,
       productId: result?.productIdentifier,
