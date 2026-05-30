@@ -351,18 +351,19 @@ export async function purchasePackage(pkg: RevenueCatPackage) {
     });
     // Validate package shape BEFORE calling StoreKit — a malformed package is a
     // common cause of "unspecified error" rejections from Apple reviewers.
-    if (!pkg || !pkg.identifier || !pkg.product?.identifier) {
+    if (!pkg || !pkg.identifier || !pkg.product?.identifier || !pkg.presentedOfferingContext) {
       log('INVALID PACKAGE — missing identifier or product.identifier', {
         hasPackage: !!pkg,
         identifier: pkg?.identifier,
         productIdentifier: pkg?.product?.identifier,
+        hasPresentedOfferingContext: Boolean(pkg?.presentedOfferingContext),
       });
       throw new Error('חבילת המנוי אינה תקינה. נסה לרענן ולנסות שוב.');
     }
     const Purchases = await ensureInit(auth.user?.id);
     if (!Purchases) throw new Error('רכישות זמינות רק באפליקציית iOS');
     log('calling Purchases.purchasePackage...', { productId: pkg.product.identifier });
-    const result: RevenueCatPurchaseResult = await Purchases.purchasePackage({ aPackage: pkg as Parameters<typeof Purchases.purchasePackage>[0]['aPackage'] });
+    const result: RevenueCatPurchaseResult = await Purchases.purchasePackage({ aPackage: pkg as unknown as Parameters<typeof Purchases.purchasePackage>[0]['aPackage'] });
     log('purchase result', {
       transactionId: result?.transaction?.transactionIdentifier,
       productId: result?.productIdentifier,
@@ -387,6 +388,47 @@ export async function purchasePackage(pkg: RevenueCatPackage) {
       domain: error?.domain,
       name: error?.name,
       stack: error?.stack,
+      raw: typeof error === 'object' ? JSON.stringify(error, Object.getOwnPropertyNames(error)) : String(error),
+    });
+    throw e;
+  }
+}
+
+export async function purchaseProduct(product: RevenueCatProduct) {
+  const log = (label: string, data?: unknown) => rcLog('purchaseProduct', label, data);
+  try {
+    const { data: auth } = await supabase.auth.getUser();
+    log('user', { id: auth.user?.id, email: auth.user?.email });
+    if (!product?.identifier) throw new Error('המוצר לא תקין. נסה שוב.');
+    const Purchases = await ensureInit(auth.user?.id);
+    if (!Purchases) throw new Error('רכישות זמינות רק באפליקציית iOS');
+    log('calling Purchases.purchaseStoreProduct...', {
+      productId: product.identifier,
+      priceString: product.priceString,
+      title: product.title,
+    });
+    const result: RevenueCatPurchaseResult = await Purchases.purchaseStoreProduct({ product: product as Parameters<typeof Purchases.purchaseStoreProduct>[0]['product'] });
+    log('purchase result', {
+      transactionId: result?.transaction?.transactionIdentifier,
+      productId: result?.productIdentifier,
+      activeEntitlements: Object.keys(result?.customerInfo?.entitlements?.active || {}),
+      activeSubscriptions: result?.customerInfo?.activeSubscriptions,
+    });
+    const active = extractActive(result.customerInfo);
+    await syncToSupabase();
+    log('synced to backend', active);
+    return active;
+  } catch (e) {
+    const error = e as RevenueCatError;
+    log('ERROR', {
+      message: error?.message,
+      code: error?.code,
+      underlyingErrorMessage: error?.underlyingErrorMessage,
+      userCancelled: error?.userCancelled,
+      readableErrorCode: error?.readableErrorCode,
+      readable_error_code: error?.readable_error_code,
+      domain: error?.domain,
+      name: error?.name,
       raw: typeof error === 'object' ? JSON.stringify(error, Object.getOwnPropertyNames(error)) : String(error),
     });
     throw e;
