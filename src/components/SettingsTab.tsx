@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 import { getTheme, applyTheme } from '@/lib/theme';
 import { useHealthSync } from '@/hooks/useHealthSync';
 import { usePremium } from '@/hooks/usePremium';
-import { getOfferings, purchasePackage, restorePurchases, isIOSNative, PRODUCT_MONTHLY, PRODUCT_YEARLY } from '@/lib/revenuecat';
+import { getOfferings, getStoreProducts, purchasePackage, purchaseProduct, restorePurchases, isIOSNative, PRODUCT_MONTHLY, PRODUCT_YEARLY } from '@/lib/revenuecat';
 
 const NO_MERCY_KEY = 'app_no_mercy_mode';
 
@@ -24,6 +24,7 @@ type RevenueCatPackage = {
   identifier?: string;
   packageType?: string;
   offeringIdentifier?: string;
+  presentedOfferingContext?: unknown;
   product?: {
     identifier?: string;
     title?: string;
@@ -31,6 +32,8 @@ type RevenueCatPackage = {
     subscriptionPeriod?: string | { unit?: string };
   };
 };
+
+type RevenueCatProduct = NonNullable<RevenueCatPackage['product']>;
 
 type RevenueCatOffering = {
   identifier?: string;
@@ -49,6 +52,7 @@ const SettingsTab = () => {
   const { syncHealthData, isSyncing } = useHealthSync();
   const { isPremium, productId, expiresAt, reload: reloadPremium } = usePremium();
   const [offerings, setOfferings] = useState<RevenueCatOffering | null>(null);
+  const [storeProducts, setStoreProducts] = useState<RevenueCatProduct[]>([]);
   const [offeringsLoaded, setOfferingsLoaded] = useState(false);
   const [offeringsError, setOfferingsError] = useState<string | null>(null);
   const [purchasing, setPurchasing] = useState<string | null>(null);
@@ -71,7 +75,8 @@ const SettingsTab = () => {
             expectedProducts: [PRODUCT_MONTHLY, PRODUCT_YEARLY],
           } : null);
           setOfferings(offering);
-          if (!offering) setOfferingsError('לא התקבלה הצעת מנוי מ-RevenueCat');
+          if (!offering) setOfferingsError('לא התקבלה הצעת מנוי מ-App Store');
+          return getStoreProducts().then((products) => setStoreProducts(products));
         })
         .catch((e) => {
           console.log('[RC UI] getOfferings failed', e);
