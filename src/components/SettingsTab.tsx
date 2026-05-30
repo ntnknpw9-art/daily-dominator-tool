@@ -17,6 +17,7 @@ import { getTheme, applyTheme } from '@/lib/theme';
 import { useHealthSync } from '@/hooks/useHealthSync';
 import { usePremium } from '@/hooks/usePremium';
 import { getOfferings, purchasePackage, restorePurchases, isIOSNative, PRODUCT_MONTHLY, PRODUCT_YEARLY } from '@/lib/revenuecat';
+import { SubscriptionDiagnostics } from './SubscriptionDiagnostics';
 
 const NO_MERCY_KEY = 'app_no_mercy_mode';
 
@@ -686,6 +687,8 @@ const SettingsTab = () => {
               רכישות זמינות באפליקציה על iPhone בלבד
             </div>
           )}
+
+          <SubscriptionDiagnostics />
         </DialogContent>
       </Dialog>
 
