@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 import { getTheme, applyTheme } from '@/lib/theme';
 import { useHealthSync } from '@/hooks/useHealthSync';
 import { usePremium } from '@/hooks/usePremium';
-import { getOfferings, purchasePackage, restorePurchases, isIOSNative, PRODUCT_MONTHLY, PRODUCT_YEARLY } from '@/lib/revenuecat';
+import { getOfferings, getStoreProducts, purchasePackage, purchaseProduct, restorePurchases, isIOSNative, PRODUCT_MONTHLY, PRODUCT_YEARLY } from '@/lib/revenuecat';
 
 const NO_MERCY_KEY = 'app_no_mercy_mode';
 
@@ -24,6 +24,7 @@ type RevenueCatPackage = {
   identifier?: string;
   packageType?: string;
   offeringIdentifier?: string;
+  presentedOfferingContext?: unknown;
   product?: {
     identifier?: string;
     title?: string;
@@ -31,6 +32,8 @@ type RevenueCatPackage = {
     subscriptionPeriod?: string | { unit?: string };
   };
 };
+
+type RevenueCatProduct = NonNullable<RevenueCatPackage['product']>;
 
 type RevenueCatOffering = {
   identifier?: string;
@@ -49,6 +52,7 @@ const SettingsTab = () => {
   const { syncHealthData, isSyncing } = useHealthSync();
   const { isPremium, productId, expiresAt, reload: reloadPremium } = usePremium();
   const [offerings, setOfferings] = useState<RevenueCatOffering | null>(null);
+  const [storeProducts, setStoreProducts] = useState<RevenueCatProduct[]>([]);
   const [offeringsLoaded, setOfferingsLoaded] = useState(false);
   const [offeringsError, setOfferingsError] = useState<string | null>(null);
   const [purchasing, setPurchasing] = useState<string | null>(null);
@@ -71,7 +75,8 @@ const SettingsTab = () => {
             expectedProducts: [PRODUCT_MONTHLY, PRODUCT_YEARLY],
           } : null);
           setOfferings(offering);
-          if (!offering) setOfferingsError('לא התקבלה הצעת מנוי מ-RevenueCat');
+          if (!offering) setOfferingsError('לא התקבלה הצעת מנוי מ-App Store');
+          return getStoreProducts().then((products) => setStoreProducts(products));
         })
         .catch((e) => {
           console.log('[RC UI] getOfferings failed', e);
@@ -109,6 +114,12 @@ const SettingsTab = () => {
     }) ?? null;
   };
 
+  const findStoreProduct = (productKey: string) =>
+    storeProducts.find((product) => product?.identifier === productKey) ?? null;
+
+  const getPriceLabel = (productKey: string) =>
+    findPackage(productKey)?.product?.priceString || findStoreProduct(productKey)?.priceString || (isIOSNative() && !offeringsLoaded ? 'טוען...' : 'רכוש');
+
   const logMissingPackage = (productKey: string, source: RevenueCatOffering | null = offerings) => {
     console.log('[RC UI] package not found', {
       requestedProductKey: productKey,
@@ -131,24 +142,36 @@ const SettingsTab = () => {
       toast.info('הרכישות זמינות באפליקציה על iPhone בלבד');
       return;
     }
-    let currentOfferings = offerings;
-    let pkg = findPackage(productKey, currentOfferings);
-    if (!pkg) {
-      console.log('[RC UI] package missing before refresh, reloading offerings', { requestedProductKey: productKey });
-      setOfferingsError(null);
-      currentOfferings = await getOfferings();
-      setOfferings(currentOfferings);
-      setOfferingsLoaded(true);
-      pkg = findPackage(productKey, currentOfferings);
-    }
-    if (!pkg) {
-      logMissingPackage(productKey, currentOfferings);
-      toast.error('המוצר לא זמין כרגע. נסה שוב מאוחר יותר.');
-      return;
-    }
+    setPurchasing(productKey);
+    setOfferingsError(null);
     try {
-      setPurchasing(productKey);
-      const res = await purchasePackage(pkg);
+      let currentOfferings = offerings;
+      let pkg = findPackage(productKey, currentOfferings);
+      let res: { isPremium: boolean; productId: string | null; expiresAt: string | null } | null = null;
+      if (!pkg) {
+        console.log('[RC UI] package missing before purchase, reloading offerings', { requestedProductKey: productKey });
+        currentOfferings = await getOfferings();
+        setOfferings(currentOfferings);
+        setOfferingsLoaded(true);
+        pkg = findPackage(productKey, currentOfferings);
+      }
+      if (pkg?.presentedOfferingContext) {
+        res = await purchasePackage(pkg);
+      } else {
+        if (pkg && !pkg.presentedOfferingContext) {
+          console.log('[RC UI] package has no presentedOfferingContext, falling back to direct product purchase', { requestedProductKey: productKey });
+        }
+        const products = storeProducts.length ? storeProducts : await getStoreProducts([productKey]);
+        if (!storeProducts.length) setStoreProducts(products);
+        const product = products.find((p) => p?.identifier === productKey) ?? null;
+        if (!product) {
+          logMissingPackage(productKey, currentOfferings);
+          setOfferingsError('המוצר לא חזר מ-App Store. בדוק שהמוצר פעיל, מחובר ל-Offering, ושה-Paid Apps Agreement בתוקף.');
+          toast.error('המוצר לא זמין כרגע ב-App Store.');
+          return;
+        }
+        res = await purchaseProduct(product);
+      }
       if (res.isPremium) {
         toast.success('תודה רבה על התמיכה! 💜');
         reloadPremium();
@@ -575,7 +598,7 @@ const SettingsTab = () => {
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
-              disabled={!!purchasing || isPremium || (isIOSNative() && !offeringsLoaded)}
+              disabled={!!purchasing || isPremium}
               onClick={() => handlePurchase(PRODUCT_MONTHLY)}
               className="relative flex flex-col items-center justify-center gap-1 rounded-lg border border-border/60 bg-background/40 p-4 transition hover:border-accent/40 disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -583,13 +606,13 @@ const SettingsTab = () => {
               <span className="font-bold text-base">
                 {purchasing === PRODUCT_MONTHLY
                   ? 'רוכש...'
-                  : (findPackage(PRODUCT_MONTHLY)?.product?.priceString || (isIOSNative() && !offeringsLoaded ? 'טוען...' : 'נסה שוב'))}
+                  : getPriceLabel(PRODUCT_MONTHLY)}
               </span>
               <span className="text-[11px] text-muted-foreground">לחודש</span>
             </button>
             <button
               type="button"
-              disabled={!!purchasing || isPremium || (isIOSNative() && !offeringsLoaded)}
+              disabled={!!purchasing || isPremium}
               onClick={() => handlePurchase(PRODUCT_YEARLY)}
               className="relative flex flex-col items-center justify-center gap-1 rounded-lg border border-border/60 bg-background/40 p-4 transition hover:border-accent/40 disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -600,19 +623,19 @@ const SettingsTab = () => {
               <span className="font-bold text-base">
                 {purchasing === PRODUCT_YEARLY
                   ? 'רוכש...'
-                  : (findPackage(PRODUCT_YEARLY)?.product?.priceString || (isIOSNative() && !offeringsLoaded ? 'טוען...' : 'נסה שוב'))}
+                  : getPriceLabel(PRODUCT_YEARLY)}
               </span>
               <span className="text-[11px] text-muted-foreground">לשנה</span>
             </button>
           </div>
 
-          {isIOSNative() && !offeringsLoaded && !findPackage(PRODUCT_MONTHLY) && !findPackage(PRODUCT_YEARLY) && (
+          {isIOSNative() && !offeringsLoaded && !findPackage(PRODUCT_MONTHLY) && !findPackage(PRODUCT_YEARLY) && !findStoreProduct(PRODUCT_MONTHLY) && !findStoreProduct(PRODUCT_YEARLY) && (
             <div className="text-[11px] text-muted-foreground text-center">
-              טוען מחירים מ-App Store...
+              טוען מחירים מ-App Store... אפשר ללחוץ, הרכישה תנסה לטעון מחדש.
             </div>
           )}
 
-          {isIOSNative() && offeringsLoaded && !findPackage(PRODUCT_MONTHLY) && !findPackage(PRODUCT_YEARLY) && (
+          {isIOSNative() && offeringsLoaded && !findPackage(PRODUCT_MONTHLY) && !findPackage(PRODUCT_YEARLY) && !findStoreProduct(PRODUCT_MONTHLY) && !findStoreProduct(PRODUCT_YEARLY) && (
             <div className="text-[11px] text-destructive text-center">
               {offeringsError || 'המחירים לא נטענו. לחץ שוב כדי לנסות לטעון מחדש.'}
             </div>
