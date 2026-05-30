@@ -115,6 +115,17 @@ const SettingsTab = () => {
   const getPriceLabel = (productKey: string) =>
     findPackage(productKey)?.product?.priceString || findStoreProduct(productKey)?.priceString || (isIOSNative() && !offeringsLoaded ? 'טוען...' : 'רכוש');
 
+  const getPurchaseErrorMessage = (error: { message?: string; code?: string | number; readableErrorCode?: string; readable_error_code?: string; underlyingErrorMessage?: string }) => {
+    const msg = error?.message || '';
+    const code = error?.code ?? error?.readableErrorCode ?? error?.readable_error_code;
+    const underlying = error?.underlyingErrorMessage;
+    if (msg.includes('timed out')) {
+      return 'הרכישה לא קיבלה תשובה מ-App Store בזמן סביר. נסה שוב, ואם זה ממשיך — המוצר כנראה לא זמין ב-Sandbox/App Store כרגע.';
+    }
+    const details = [msg, code && `code: ${code}`, underlying && `(${underlying})`].filter(Boolean).join(' · ');
+    return details || 'המוצר לא זמין כרגע. נסה שוב מאוחר יותר.';
+  };
+
   const handlePurchase = async (productKey: string) => {
     if (!isIOSNative()) {
       toast.info('הרכישות זמינות באפליקציה על iPhone בלבד');
@@ -149,15 +160,16 @@ const SettingsTab = () => {
       if (res.isPremium) {
         toast.success('תודה רבה על התמיכה! 💜');
         reloadPremium();
+      } else {
+        toast.info('הרכישה הסתיימה אבל לא נמצא מנוי פעיל. נסה לשחזר רכישות בעוד רגע.');
       }
     } catch (e) {
       const error = e as { message?: string; code?: string | number; readableErrorCode?: string; readable_error_code?: string; underlyingErrorMessage?: string; userCancelled?: boolean };
       const msg = error?.message || '';
-      const code = error?.code ?? error?.readableErrorCode ?? error?.readable_error_code;
-      const underlying = error?.underlyingErrorMessage;
       if (!msg.toLowerCase().includes('cancel') && !error?.userCancelled) {
-        const details = [msg, code && `code: ${code}`, underlying && `(${underlying})`].filter(Boolean).join(' · ');
-        toast.error('הרכישה נכשלה: ' + (details || 'שגיאה לא ידועה'));
+        const message = getPurchaseErrorMessage(error);
+        setOfferingsError(message);
+        toast.error('הרכישה נכשלה: ' + message);
       }
     } finally {
       setPurchasing(null);
