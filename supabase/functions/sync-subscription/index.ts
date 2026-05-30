@@ -14,12 +14,22 @@ const getTime = (dateValue?: string | null) => {
   return Number.isFinite(time) ? time : null;
 };
 
-const extractPremium = (subscriber: Record<string, any>) => {
+type RevenueCatSubscriptionState = {
+  expires_date?: string | null;
+  product_identifier?: string | null;
+};
+
+type RevenueCatSubscriber = {
+  entitlements?: Record<string, RevenueCatSubscriptionState>;
+  subscriptions?: Record<string, RevenueCatSubscriptionState>;
+};
+
+const extractPremium = (subscriber: RevenueCatSubscriber) => {
   const entitlements = subscriber?.entitlements ?? {};
-  const activeEntitlement = Object.values(entitlements).find((ent: any) => {
+  const activeEntitlement = Object.values(entitlements).find((ent) => {
     const expires = getTime(ent?.expires_date);
     return ent && (!expires || expires > Date.now());
-  }) as any | undefined;
+  });
 
   if (activeEntitlement) {
     return {
@@ -30,10 +40,10 @@ const extractPremium = (subscriber: Record<string, any>) => {
   }
 
   const subscriptions = subscriber?.subscriptions ?? {};
-  const activeSubscription = Object.entries(subscriptions).find(([, sub]: [string, any]) => {
+  const activeSubscription = Object.entries(subscriptions).find(([, sub]) => {
     const expires = getTime(sub?.expires_date);
     return sub && (!expires || expires > Date.now());
-  }) as [string, any] | undefined;
+  });
 
   if (activeSubscription) {
     const [fallbackProductId, subscription] = activeSubscription;
