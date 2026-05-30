@@ -15,6 +15,10 @@ export type RevenueCatProduct = {
   subscriptionPeriod?: string | { unit?: string };
 };
 
+export type RevenueCatStoreProduct = RevenueCatProduct & {
+  identifier: string;
+};
+
 export type RevenueCatPackage = {
   identifier?: string;
   packageType?: string;
@@ -51,6 +55,10 @@ type RevenueCatPurchaseResult = {
   transaction?: { transactionIdentifier?: string };
   productIdentifier?: string;
   customerInfo?: RevenueCatCustomerInfo;
+};
+
+type RevenueCatProductsResult = {
+  products?: RevenueCatStoreProduct[];
 };
 
 type RevenueCatError = Error & {
@@ -144,6 +152,17 @@ const summarizePackage = (pkg?: RevenueCatPackage | null) => ({
     productType: pkg?.product?.productType,
     subscriptionPeriod: pkg?.product?.subscriptionPeriod,
   },
+});
+
+const summarizeProduct = (product?: RevenueCatProduct | null) => ({
+  identifier: product?.identifier,
+  title: product?.title,
+  description: product?.description,
+  price: product?.price,
+  priceString: product?.priceString,
+  currencyCode: product?.currencyCode,
+  productType: product?.productType,
+  subscriptionPeriod: product?.subscriptionPeriod,
 });
 
 const summarizeOffering = (offering?: RevenueCatOffering | null) => offering ? ({
