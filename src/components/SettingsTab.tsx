@@ -65,7 +65,7 @@ const SettingsTab = () => {
       setOfferingsLoaded(false);
       setOfferingsError(null);
       getOfferings()
-        .then((offering) => {
+        .then(async (offering) => {
           const packages = offering?.availablePackages ?? [];
           console.log('[RC UI] offerings loaded', offering ? {
             identifier: offering?.identifier,
@@ -80,7 +80,17 @@ const SettingsTab = () => {
           } : null);
           console.log('[RC UI] packages count', packages.length);
           setOfferings(offering);
-          if (!offering || packages.length === 0) setOfferingsError(SUBSCRIPTION_PRODUCTS_UNAVAILABLE);
+          if (!offering || packages.length === 0) {
+            console.log('[RC UI] offerings missing packages; trying direct StoreKit product load');
+            const products = await getStoreProducts();
+            console.log('[RC UI] direct products loaded', products.map((p) => ({
+              identifier: p.identifier,
+              priceString: p.priceString,
+              title: p.title,
+            })));
+            setStoreProducts(products);
+            if (products.length === 0) setOfferingsError(SUBSCRIPTION_PRODUCTS_UNAVAILABLE);
+          }
         })
         .catch((e) => {
           console.log('[RC UI] getOfferings failed', e);
