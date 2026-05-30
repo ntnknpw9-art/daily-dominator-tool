@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 import { getTheme, applyTheme } from '@/lib/theme';
 import { useHealthSync } from '@/hooks/useHealthSync';
 import { usePremium } from '@/hooks/usePremium';
-import { getOfferings, purchasePackage, restorePurchases, isIOSNative, PRODUCT_MONTHLY, PRODUCT_YEARLY } from '@/lib/revenuecat';
+import { getOfferings, getStoreProducts, purchasePackage, purchaseStoreProduct, restorePurchases, isIOSNative, PRODUCT_MONTHLY, PRODUCT_YEARLY } from '@/lib/revenuecat';
 import { SubscriptionDiagnostics } from './SubscriptionDiagnostics';
 
 const NO_MERCY_KEY = 'app_no_mercy_mode';
@@ -41,6 +41,10 @@ type RevenueCatOffering = {
   availablePackages?: RevenueCatPackage[];
 };
 
+type RevenueCatStoreProduct = RevenueCatPackage['product'] & {
+  identifier: string;
+};
+
 const SUBSCRIPTION_PRODUCTS_UNAVAILABLE = 'Subscription products are not available right now. Please try again later.';
 const SUBSCRIPTION_PRODUCTS_LOADING = 'טוען את מוצרי המנוי מ-App Store. נסה שוב בעוד רגע.';
 
@@ -49,6 +53,7 @@ const SettingsTab = () => {
   const { syncHealthData, isSyncing } = useHealthSync();
   const { isPremium, productId, expiresAt, reload: reloadPremium } = usePremium();
   const [offerings, setOfferings] = useState<RevenueCatOffering | null>(null);
+  const [storeProducts, setStoreProducts] = useState<RevenueCatStoreProduct[]>([]);
   const [offeringsLoaded, setOfferingsLoaded] = useState(false);
   const [offeringsError, setOfferingsError] = useState<string | null>(null);
   const [purchasing, setPurchasing] = useState<string | null>(null);
@@ -60,7 +65,7 @@ const SettingsTab = () => {
       setOfferingsLoaded(false);
       setOfferingsError(null);
       getOfferings()
-        .then((offering) => {
+        .then(async (offering) => {
           const packages = offering?.availablePackages ?? [];
           console.log('[RC UI] offerings loaded', offering ? {
             identifier: offering?.identifier,
@@ -75,7 +80,17 @@ const SettingsTab = () => {
           } : null);
           console.log('[RC UI] packages count', packages.length);
           setOfferings(offering);
-          if (!offering || packages.length === 0) setOfferingsError(SUBSCRIPTION_PRODUCTS_UNAVAILABLE);
+          if (!offering || packages.length === 0) {
+            console.log('[RC UI] offerings missing packages; trying direct StoreKit product load');
+            const products = await getStoreProducts();
+            console.log('[RC UI] direct products loaded', products.map((p) => ({
+              identifier: p.identifier,
+              priceString: p.priceString,
+              title: p.title,
+            })));
+            setStoreProducts(products);
+            if (products.length === 0) setOfferingsError(SUBSCRIPTION_PRODUCTS_UNAVAILABLE);
+          }
         })
         .catch((e) => {
           console.log('[RC UI] getOfferings failed', e);
@@ -113,8 +128,11 @@ const SettingsTab = () => {
     }) ?? null;
   };
 
+  const findStoreProduct = (productKey: string) =>
+    storeProducts.find((p) => p?.identifier === productKey) ?? null;
+
   const getPriceLabel = (productKey: string) =>
-    findPackage(productKey)?.product?.priceString || (isIOSNative() && !offeringsLoaded ? 'טוען...' : 'רכוש');
+    findPackage(productKey)?.product?.priceString || findStoreProduct(productKey)?.priceString || (isIOSNative() && !offeringsLoaded ? 'טוען...' : 'רכוש');
 
   const getPurchaseErrorMessage = (error: { message?: string; code?: string | number; readableErrorCode?: string; readable_error_code?: string; underlyingErrorMessage?: string }) => {
     const msg = error?.message || '';
@@ -138,7 +156,7 @@ const SettingsTab = () => {
       toast.info(SUBSCRIPTION_PRODUCTS_LOADING);
       return;
     }
-    if (!offerings || (offerings.availablePackages?.length ?? 0) === 0) {
+    if ((!offerings || (offerings.availablePackages?.length ?? 0) === 0) && storeProducts.length === 0) {
       console.log('[RC UI] purchase blocked: no offering packages loaded', {
         requestedProductKey: productKey,
         offeringIdentifier: offerings?.identifier ?? null,
@@ -152,31 +170,46 @@ const SettingsTab = () => {
     setOfferingsError(null);
     try {
       let selectedPackage = findPackage(productKey);
+      let selectedProduct = findStoreProduct(productKey);
 
-      if (!selectedPackage) {
-        console.log('[RC UI] package missing; refreshing offerings before purchase', { requestedProductKey: productKey });
+      if (!selectedPackage && !selectedProduct) {
+        console.log('[RC UI] package/product missing; refreshing offerings and direct products before purchase', { requestedProductKey: productKey });
         const freshOffering = await getOfferings();
         setOfferings(freshOffering);
         console.log('[RC UI] packages count after refresh', freshOffering?.availablePackages?.length ?? 0);
         selectedPackage = findPackage(productKey, freshOffering);
+        if (!selectedPackage) {
+          const freshProducts = await getStoreProducts();
+          setStoreProducts(freshProducts);
+          selectedProduct = freshProducts.find((p) => p?.identifier === productKey) ?? null;
+          console.log('[RC UI] direct products count after refresh', freshProducts.length);
+        }
       }
 
-      if (!selectedPackage) {
+      if (!selectedPackage && !selectedProduct) {
         const message = SUBSCRIPTION_PRODUCTS_UNAVAILABLE;
         setOfferingsError(message);
         toast.error(message);
         return;
       }
 
-      console.log('[RC UI] selected package identifier', selectedPackage?.identifier);
-      console.log('[RC UI] product identifier', selectedPackage?.product?.identifier);
-      console.log('[RC UI] purchase package from offering', {
-        requestedProductKey: productKey,
-        packageIdentifier: selectedPackage?.identifier,
-        offeringIdentifier: selectedPackage?.offeringIdentifier,
-        productIdentifier: selectedPackage?.product?.identifier,
-      });
-      const res = await purchasePackage(selectedPackage);
+      let res;
+      if (selectedPackage) {
+        console.log('[RC UI] purchase package from offering', {
+          requestedProductKey: productKey,
+          packageIdentifier: selectedPackage?.identifier,
+          offeringIdentifier: selectedPackage?.offeringIdentifier,
+          productIdentifier: selectedPackage?.product?.identifier,
+        });
+        res = await purchasePackage(selectedPackage);
+      } else {
+        console.log('[RC UI] purchase direct StoreKit product fallback', {
+          requestedProductKey: productKey,
+          productIdentifier: selectedProduct?.identifier,
+          priceString: selectedProduct?.priceString,
+        });
+        res = await purchaseStoreProduct(selectedProduct);
+      }
       console.log('[RC UI] purchase success', res);
       if (res.isPremium) {
         toast.success('תודה רבה על התמיכה! 💜');
@@ -606,8 +639,10 @@ const SettingsTab = () => {
           {(() => {
             const monthlyPkg = findPackage(PRODUCT_MONTHLY);
             const yearlyPkg = findPackage(PRODUCT_YEARLY);
-            const blockMonthly = isIOSNative() && offeringsLoaded && !monthlyPkg;
-            const blockYearly = isIOSNative() && offeringsLoaded && !yearlyPkg;
+            const monthlyProduct = findStoreProduct(PRODUCT_MONTHLY);
+            const yearlyProduct = findStoreProduct(PRODUCT_YEARLY);
+            const blockMonthly = isIOSNative() && offeringsLoaded && !monthlyPkg && !monthlyProduct;
+            const blockYearly = isIOSNative() && offeringsLoaded && !yearlyPkg && !yearlyProduct;
             return (
               <div className="grid grid-cols-2 gap-2">
                 <button
@@ -651,7 +686,7 @@ const SettingsTab = () => {
             </div>
           )}
 
-          {isIOSNative() && offeringsLoaded && !findPackage(PRODUCT_MONTHLY) && !findPackage(PRODUCT_YEARLY) && (
+          {isIOSNative() && offeringsLoaded && !findPackage(PRODUCT_MONTHLY) && !findPackage(PRODUCT_YEARLY) && !findStoreProduct(PRODUCT_MONTHLY) && !findStoreProduct(PRODUCT_YEARLY) && (
             <div className="text-[11px] text-destructive text-center">
               {offeringsError || SUBSCRIPTION_PRODUCTS_UNAVAILABLE}
             </div>

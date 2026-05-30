@@ -15,6 +15,10 @@ export type RevenueCatProduct = {
   subscriptionPeriod?: string | { unit?: string };
 };
 
+export type RevenueCatStoreProduct = RevenueCatProduct & {
+  identifier: string;
+};
+
 export type RevenueCatPackage = {
   identifier?: string;
   packageType?: string;
@@ -51,6 +55,10 @@ type RevenueCatPurchaseResult = {
   transaction?: { transactionIdentifier?: string };
   productIdentifier?: string;
   customerInfo?: RevenueCatCustomerInfo;
+};
+
+type RevenueCatProductsResult = {
+  products?: RevenueCatStoreProduct[];
 };
 
 type RevenueCatError = Error & {
@@ -144,6 +152,17 @@ const summarizePackage = (pkg?: RevenueCatPackage | null) => ({
     productType: pkg?.product?.productType,
     subscriptionPeriod: pkg?.product?.subscriptionPeriod,
   },
+});
+
+const summarizeProduct = (product?: RevenueCatProduct | null) => ({
+  identifier: product?.identifier,
+  title: product?.title,
+  description: product?.description,
+  price: product?.price,
+  priceString: product?.priceString,
+  currencyCode: product?.currencyCode,
+  productType: product?.productType,
+  subscriptionPeriod: product?.subscriptionPeriod,
 });
 
 const summarizeOffering = (offering?: RevenueCatOffering | null) => offering ? ({
@@ -271,6 +290,57 @@ export async function getOfferings() {
   }
 }
 
+export async function getStoreProducts(productIds: string[] = ALL_PRODUCT_IDS) {
+  let Purchases = null;
+  try {
+    Purchases = await withTimeout(ensureInit(), INIT_TIMEOUT_MS, 'RevenueCat initialize');
+  } catch (e) {
+    const error = e as RevenueCatError;
+    rcLog('products', 'INIT ERROR', {
+      message: error?.message,
+      code: error?.code,
+      underlyingErrorMessage: error?.underlyingErrorMessage,
+      readableErrorCode: error?.readableErrorCode,
+      readable_error_code: error?.readable_error_code,
+      domain: error?.domain,
+      name: error?.name,
+      raw: typeof error === 'object' ? safeJson(error) : String(error),
+    });
+    return [];
+  }
+  if (!Purchases) return [];
+  try {
+    const result = await withTimeout(
+      Purchases.getProducts({ productIdentifiers: productIds }),
+      12000,
+      'RevenueCat getProducts'
+    ) as unknown as RevenueCatProductsResult;
+    const products = result?.products ?? [];
+    rcLog('products', 'loaded', {
+      requested: productIds,
+      count: products.length,
+      products: products.map(summarizeProduct),
+    });
+    if (products.length === 0) {
+      rcLog('products', 'WARNING: StoreKit returned 0 products. Check Bundle ID, Paid Apps Agreement, product status, and Sandbox tester.');
+    }
+    return products;
+  } catch (e) {
+    const error = e as RevenueCatError;
+    rcLog('products', 'ERROR', {
+      message: error?.message,
+      code: error?.code,
+      underlyingErrorMessage: error?.underlyingErrorMessage,
+      readableErrorCode: error?.readableErrorCode,
+      readable_error_code: error?.readable_error_code,
+      domain: error?.domain,
+      name: error?.name,
+      raw: typeof error === 'object' ? safeJson(error) : String(error),
+    });
+    return [];
+  }
+}
+
 async function syncToSupabase() {
   const { data: auth } = await supabase.auth.getUser();
   const user = auth.user;
@@ -360,6 +430,52 @@ export async function purchasePackage(pkg: RevenueCatPackage) {
     });
     const info = result.customerInfo;
     const active = extractActive(info);
+    log('extracted active', active);
+    await syncToSupabase();
+    log('synced to backend');
+    return active;
+  } catch (e) {
+    const error = e as RevenueCatError;
+    log('ERROR', {
+      message: error?.message,
+      code: error?.code,
+      underlyingErrorMessage: error?.underlyingErrorMessage,
+      userCancelled: error?.userCancelled,
+      readableErrorCode: error?.readableErrorCode,
+      readable_error_code: error?.readable_error_code,
+      domain: error?.domain,
+      name: error?.name,
+      stack: error?.stack,
+      raw: typeof error === 'object' ? JSON.stringify(error, Object.getOwnPropertyNames(error)) : String(error),
+    });
+    throw e;
+  }
+}
+
+export async function purchaseStoreProduct(product: RevenueCatStoreProduct) {
+  const log = (label: string, data?: unknown) => rcLog('purchase-product', label, data);
+  try {
+    const { data: auth } = await supabase.auth.getUser();
+    log('user', { id: auth.user?.id, email: auth.user?.email });
+    log('product received', summarizeProduct(product));
+    if (!product?.identifier) {
+      throw new Error('מוצר המנוי אינו תקין. נסה לרענן ולנסות שוב.');
+    }
+    const Purchases = await withTimeout(ensureInit(auth.user?.id), INIT_TIMEOUT_MS, 'RevenueCat initialize');
+    if (!Purchases) throw new Error('רכישות זמינות רק באפליקציית iOS');
+    log('calling Purchases.purchaseStoreProduct...', { productId: product.identifier, timeoutMs: PURCHASE_TIMEOUT_MS });
+    const result: RevenueCatPurchaseResult = await withTimeout(
+      Purchases.purchaseStoreProduct({ product: product as unknown as Parameters<typeof Purchases.purchaseStoreProduct>[0]['product'] }),
+      PURCHASE_TIMEOUT_MS,
+      'RevenueCat purchaseStoreProduct'
+    );
+    log('purchase result', {
+      transactionId: result?.transaction?.transactionIdentifier,
+      productId: result?.productIdentifier,
+      activeEntitlements: Object.keys(result?.customerInfo?.entitlements?.active || {}),
+      activeSubscriptions: result?.customerInfo?.activeSubscriptions,
+    });
+    const active = extractActive(result.customerInfo);
     log('extracted active', active);
     await syncToSupabase();
     log('synced to backend');
