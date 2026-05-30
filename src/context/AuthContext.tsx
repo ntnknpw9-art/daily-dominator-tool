@@ -29,24 +29,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
     });
 
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      // Campaign demo auto-login: ?demo=1 signs into a shared demo account.
-      // To remove: delete demo@dailydominator.org from Cloud > Users and remove this block.
-      const params = new URLSearchParams(window.location.search);
-      if (!session && params.get('demo') === '1') {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: 'demo@dailydominator.org',
-          password: 'Demo!Access2026',
-        });
-        if (!error) {
-          setSession(data.session);
-          params.delete('demo');
-          const newSearch = params.toString();
-          window.history.replaceState({}, '', window.location.pathname + (newSearch ? `?${newSearch}` : ''));
-        }
-        setLoading(false);
-        return;
-      }
+    supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
     });
