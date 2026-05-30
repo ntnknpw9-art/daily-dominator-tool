@@ -41,6 +41,7 @@ type RevenueCatOffering = {
 };
 
 const SUBSCRIPTION_PRODUCTS_UNAVAILABLE = 'Subscription products are not available right now. Please try again later.';
+const SUBSCRIPTION_PRODUCTS_LOADING = 'טוען את מוצרי המנוי מ-App Store. נסה שוב בעוד רגע.';
 
 const SettingsTab = () => {
   const { signOut, user } = useAuth();
@@ -128,6 +129,22 @@ const SettingsTab = () => {
   const handlePurchase = async (productKey: string) => {
     if (!isIOSNative()) {
       toast.info('הרכישות זמינות באפליקציה על iPhone בלבד');
+      return;
+    }
+    if (!offeringsLoaded) {
+      console.log('[RC UI] purchase blocked: offerings still loading', { requestedProductKey: productKey });
+      setOfferingsError(SUBSCRIPTION_PRODUCTS_LOADING);
+      toast.info(SUBSCRIPTION_PRODUCTS_LOADING);
+      return;
+    }
+    if (!offerings || (offerings.availablePackages?.length ?? 0) === 0) {
+      console.log('[RC UI] purchase blocked: no offering packages loaded', {
+        requestedProductKey: productKey,
+        offeringIdentifier: offerings?.identifier ?? null,
+        packagesCount: offerings?.availablePackages?.length ?? 0,
+      });
+      setOfferingsError(SUBSCRIPTION_PRODUCTS_UNAVAILABLE);
+      toast.error(SUBSCRIPTION_PRODUCTS_UNAVAILABLE);
       return;
     }
     setPurchasing(productKey);

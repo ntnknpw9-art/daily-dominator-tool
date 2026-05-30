@@ -127,6 +127,7 @@ const withTimeout = async <T,>(promise: Promise<T>, ms: number, label: string): 
 };
 
 const PURCHASE_TIMEOUT_MS = 60000;
+const INIT_TIMEOUT_MS = 10000;
 
 const summarizePackage = (pkg?: RevenueCatPackage | null) => ({
   identifier: pkg?.identifier,
@@ -194,7 +195,23 @@ async function ensureInit(userId?: string) {
 
 
 export async function getOfferings() {
-  const Purchases = await ensureInit();
+  let Purchases = null;
+  try {
+    Purchases = await withTimeout(ensureInit(), INIT_TIMEOUT_MS, 'RevenueCat initialize');
+  } catch (e) {
+    const error = e as RevenueCatError;
+    rcLog('offerings', 'INIT ERROR', {
+      message: error?.message,
+      code: error?.code,
+      underlyingErrorMessage: error?.underlyingErrorMessage,
+      readableErrorCode: error?.readableErrorCode,
+      readable_error_code: error?.readable_error_code,
+      domain: error?.domain,
+      name: error?.name,
+      raw: typeof error === 'object' ? safeJson(error) : String(error),
+    });
+    return null;
+  }
   if (!Purchases) {
     rcLog('offerings', 'not initialized', {
       isNative: Capacitor.isNativePlatform(),
@@ -327,7 +344,7 @@ export async function purchasePackage(pkg: RevenueCatPackage) {
       });
       throw new Error('חבילת המנוי אינה תקינה. נסה לרענן ולנסות שוב.');
     }
-    const Purchases = await ensureInit(auth.user?.id);
+    const Purchases = await withTimeout(ensureInit(auth.user?.id), INIT_TIMEOUT_MS, 'RevenueCat initialize');
     if (!Purchases) throw new Error('רכישות זמינות רק באפליקציית iOS');
     log('calling Purchases.purchasePackage...', { productId: pkg.product.identifier, timeoutMs: PURCHASE_TIMEOUT_MS });
     const result: RevenueCatPurchaseResult = await withTimeout(
