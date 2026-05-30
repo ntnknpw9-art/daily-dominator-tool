@@ -254,40 +254,6 @@ export async function getOfferings() {
   }
 }
 
-export async function getStoreProducts(productIds: string[] = ALL_PRODUCT_IDS) {
-  const Purchases = await ensureInit();
-  if (!Purchases) return [];
-  try {
-    const result = await withTimeout(
-      Purchases.getProducts({ productIdentifiers: productIds }),
-      12000,
-      'RevenueCat getProducts'
-    ) as unknown as { products?: RevenueCatProduct[] };
-    const products = result?.products ?? [];
-    rcLog('products', 'loaded direct products', {
-      requested: productIds,
-      products: products.map((product) => ({
-        identifier: product?.identifier,
-        title: product?.title,
-        priceString: product?.priceString,
-        currencyCode: product?.currencyCode,
-        subscriptionPeriod: product?.subscriptionPeriod,
-      })),
-    });
-    return products;
-  } catch (e) {
-    const error = e as RevenueCatError;
-    rcLog('products', 'ERROR', {
-      requested: productIds,
-      message: error?.message,
-      code: error?.code,
-      underlyingErrorMessage: error?.underlyingErrorMessage,
-      raw: typeof error === 'object' ? safeJson(error) : String(error),
-    });
-    return [];
-  }
-}
-
 async function syncToSupabase() {
   const { data: auth } = await supabase.auth.getUser();
   const user = auth.user;
