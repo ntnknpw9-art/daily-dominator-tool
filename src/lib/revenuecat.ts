@@ -435,6 +435,10 @@ export async function purchaseProduct(product: RevenueCatProduct) {
   }
 }
 
+export async function purchaseProductById(productId: string) {
+  return purchaseProduct({ identifier: productId });
+}
+
 export async function restorePurchases() {
   const log = (label: string, data?: unknown) => rcLog('restore', label, data);
   try {
