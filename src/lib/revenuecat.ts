@@ -452,6 +452,52 @@ export async function purchasePackage(pkg: RevenueCatPackage) {
   }
 }
 
+export async function purchaseStoreProduct(product: RevenueCatStoreProduct) {
+  const log = (label: string, data?: unknown) => rcLog('purchase-product', label, data);
+  try {
+    const { data: auth } = await supabase.auth.getUser();
+    log('user', { id: auth.user?.id, email: auth.user?.email });
+    log('product received', summarizeProduct(product));
+    if (!product?.identifier) {
+      throw new Error('מוצר המנוי אינו תקין. נסה לרענן ולנסות שוב.');
+    }
+    const Purchases = await withTimeout(ensureInit(auth.user?.id), INIT_TIMEOUT_MS, 'RevenueCat initialize');
+    if (!Purchases) throw new Error('רכישות זמינות רק באפליקציית iOS');
+    log('calling Purchases.purchaseStoreProduct...', { productId: product.identifier, timeoutMs: PURCHASE_TIMEOUT_MS });
+    const result: RevenueCatPurchaseResult = await withTimeout(
+      Purchases.purchaseStoreProduct({ product: product as unknown as Parameters<typeof Purchases.purchaseStoreProduct>[0]['product'] }),
+      PURCHASE_TIMEOUT_MS,
+      'RevenueCat purchaseStoreProduct'
+    );
+    log('purchase result', {
+      transactionId: result?.transaction?.transactionIdentifier,
+      productId: result?.productIdentifier,
+      activeEntitlements: Object.keys(result?.customerInfo?.entitlements?.active || {}),
+      activeSubscriptions: result?.customerInfo?.activeSubscriptions,
+    });
+    const active = extractActive(result.customerInfo);
+    log('extracted active', active);
+    await syncToSupabase();
+    log('synced to backend');
+    return active;
+  } catch (e) {
+    const error = e as RevenueCatError;
+    log('ERROR', {
+      message: error?.message,
+      code: error?.code,
+      underlyingErrorMessage: error?.underlyingErrorMessage,
+      userCancelled: error?.userCancelled,
+      readableErrorCode: error?.readableErrorCode,
+      readable_error_code: error?.readable_error_code,
+      domain: error?.domain,
+      name: error?.name,
+      stack: error?.stack,
+      raw: typeof error === 'object' ? JSON.stringify(error, Object.getOwnPropertyNames(error)) : String(error),
+    });
+    throw e;
+  }
+}
+
 export async function restorePurchases() {
   const log = (label: string, data?: unknown) => rcLog('restore', label, data);
   try {
