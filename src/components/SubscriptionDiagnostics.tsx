@@ -143,8 +143,40 @@ export const SubscriptionDiagnostics = () => {
     }
 
     // 5. Product match
+    update('directProducts', { status: 'running' });
+    let directProducts: Awaited<ReturnType<typeof getStoreProducts>> = [];
+    try {
+      const start = Date.now();
+      directProducts = await getStoreProducts();
+      const dur = Date.now() - start;
+      if (directProducts.length === 0) {
+        update('directProducts', {
+          status: 'fail',
+          detail: `StoreKit החזיר 0 מוצרים בבדיקה ישירה.
+זה אומר שהבעיה לפני RevenueCat Offering: Bundle ID, סטטוס המוצרים ב-App Store Connect, הסכם Paid Apps, Sandbox Tester, או שה-Build לא כולל In-App Purchase capability.`,
+          durationMs: dur,
+        });
+        errors.push('StoreKit לא מחזיר מוצרים בבדיקה ישירה.');
+      } else {
+        update('directProducts', {
+          status: 'ok',
+          detail: `StoreKit מצא ${directProducts.length} מוצרים:
+${directProducts.map((p) => `• ${p.identifier} ${p.priceString ? '· ' + p.priceString : ''}`).join('\n')}`,
+          durationMs: dur,
+        });
+      }
+    } catch (e) {
+      const err = e as Error;
+      update('directProducts', { status: 'fail', detail: `שגיאה: ${err?.message ?? String(e)}` });
+      errors.push('getProducts ישיר נכשל: ' + (err?.message ?? ''));
+    }
+
+    // 6. Product match
     update('products', { status: 'running' });
-    const foundIds = new Set(packages.map((p) => p.product?.identifier).filter(Boolean));
+    const foundIds = new Set([
+      ...packages.map((p) => p.product?.identifier).filter(Boolean),
+      ...directProducts.map((p) => p.identifier).filter(Boolean),
+    ]);
     const expectedIds = ALL_PRODUCT_IDS;
     const missing = expectedIds.filter((id) => !foundIds.has(id));
     const hasMonthly = foundIds.has(PRODUCT_MONTHLY);
@@ -168,7 +200,7 @@ export const SubscriptionDiagnostics = () => {
       errors.push('Product IDs חסרים: ' + missing.join(', '));
     }
 
-    // 6. CustomerInfo
+    // 7. CustomerInfo
     update('customer', { status: 'running' });
     try {
       const start = Date.now();
