@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 import { getTheme, applyTheme } from '@/lib/theme';
 import { useHealthSync } from '@/hooks/useHealthSync';
 import { usePremium } from '@/hooks/usePremium';
-import { getOfferings, getStoreProducts, purchasePackage, purchaseProduct, restorePurchases, isIOSNative, PRODUCT_MONTHLY, PRODUCT_YEARLY } from '@/lib/revenuecat';
+import { getOfferings, getStoreProducts, purchaseProductById, restorePurchases, isIOSNative, PRODUCT_MONTHLY, PRODUCT_YEARLY } from '@/lib/revenuecat';
 
 const NO_MERCY_KEY = 'app_no_mercy_mode';
 
@@ -120,23 +120,6 @@ const SettingsTab = () => {
   const getPriceLabel = (productKey: string) =>
     findPackage(productKey)?.product?.priceString || findStoreProduct(productKey)?.priceString || (isIOSNative() && !offeringsLoaded ? 'טוען...' : 'רכוש');
 
-  const logMissingPackage = (productKey: string, source: RevenueCatOffering | null = offerings) => {
-    console.log('[RC UI] package not found', {
-      requestedProductKey: productKey,
-      expectedProducts: [PRODUCT_MONTHLY, PRODUCT_YEARLY],
-      hasOfferings: Boolean(source),
-      offeringIdentifier: source?.identifier,
-      availablePackages: source?.availablePackages?.map((p) => ({
-        identifier: p?.identifier,
-        packageType: p?.packageType,
-        offeringIdentifier: p?.offeringIdentifier,
-        productIdentifier: p?.product?.identifier,
-        title: p?.product?.title,
-        priceString: p?.product?.priceString,
-      })) ?? [],
-    });
-  };
-
   const handlePurchase = async (productKey: string) => {
     if (!isIOSNative()) {
       toast.info('הרכישות זמינות באפליקציה על iPhone בלבד');
@@ -145,33 +128,8 @@ const SettingsTab = () => {
     setPurchasing(productKey);
     setOfferingsError(null);
     try {
-      let currentOfferings = offerings;
-      let pkg = findPackage(productKey, currentOfferings);
-      let res: { isPremium: boolean; productId: string | null; expiresAt: string | null } | null = null;
-      if (!pkg) {
-        console.log('[RC UI] package missing before purchase, reloading offerings', { requestedProductKey: productKey });
-        currentOfferings = await getOfferings();
-        setOfferings(currentOfferings);
-        setOfferingsLoaded(true);
-        pkg = findPackage(productKey, currentOfferings);
-      }
-      if (pkg?.presentedOfferingContext) {
-        res = await purchasePackage(pkg);
-      } else {
-        if (pkg && !pkg.presentedOfferingContext) {
-          console.log('[RC UI] package has no presentedOfferingContext, falling back to direct product purchase', { requestedProductKey: productKey });
-        }
-        const products = storeProducts.length ? storeProducts : await getStoreProducts([productKey]);
-        if (!storeProducts.length) setStoreProducts(products);
-        const product = products.find((p) => p?.identifier === productKey) ?? null;
-        if (!product) {
-          logMissingPackage(productKey, currentOfferings);
-          setOfferingsError('המוצר לא חזר מ-App Store. בדוק שהמוצר פעיל, מחובר ל-Offering, ושה-Paid Apps Agreement בתוקף.');
-          toast.error('המוצר לא זמין כרגע ב-App Store.');
-          return;
-        }
-        res = await purchaseProduct(product);
-      }
+      console.log('[RC UI] direct purchase by product id', { requestedProductKey: productKey });
+      const res = await purchaseProductById(productKey);
       if (res.isPremium) {
         toast.success('תודה רבה על התמיכה! 💜');
         reloadPremium();
