@@ -25,6 +25,7 @@
 		"SharePlugin",
 		"StatusBarPlugin",
 		"HealthPlugin",
-		"SocialLoginPlugin"
+		"SocialLoginPlugin",
+		"PurchasesPlugin"
 	]
 }
