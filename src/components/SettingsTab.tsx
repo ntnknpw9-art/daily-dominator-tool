@@ -120,23 +120,6 @@ const SettingsTab = () => {
   const getPriceLabel = (productKey: string) =>
     findPackage(productKey)?.product?.priceString || findStoreProduct(productKey)?.priceString || (isIOSNative() && !offeringsLoaded ? 'טוען...' : 'רכוש');
 
-  const logMissingPackage = (productKey: string, source: RevenueCatOffering | null = offerings) => {
-    console.log('[RC UI] package not found', {
-      requestedProductKey: productKey,
-      expectedProducts: [PRODUCT_MONTHLY, PRODUCT_YEARLY],
-      hasOfferings: Boolean(source),
-      offeringIdentifier: source?.identifier,
-      availablePackages: source?.availablePackages?.map((p) => ({
-        identifier: p?.identifier,
-        packageType: p?.packageType,
-        offeringIdentifier: p?.offeringIdentifier,
-        productIdentifier: p?.product?.identifier,
-        title: p?.product?.title,
-        priceString: p?.product?.priceString,
-      })) ?? [],
-    });
-  };
-
   const handlePurchase = async (productKey: string) => {
     if (!isIOSNative()) {
       toast.info('הרכישות זמינות באפליקציה על iPhone בלבד');
