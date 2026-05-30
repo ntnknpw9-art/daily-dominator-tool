@@ -206,15 +206,13 @@ export async function getOfferings() {
   try {
     const offerings = await withTimeout(Purchases.getOfferings(), 12000, 'RevenueCat getOfferings') as unknown as RevenueCatOfferings;
     const allOfferings = offerings?.all ?? {};
-    const fallbackOffering = allOfferings.default ?? Object.values(allOfferings)[0] ?? null;
-    const current = offerings?.current ?? fallbackOffering;
-    const selectedSource = offerings?.current
-      ? 'current'
-      : allOfferings.default
-        ? 'all.default fallback'
-        : fallbackOffering
-          ? 'first offering fallback'
-          : 'none';
+    const defaultOffering = allOfferings.default ?? null;
+    const current = defaultOffering ?? offerings?.current ?? null;
+    const selectedSource = defaultOffering
+      ? 'all.default'
+      : offerings?.current
+        ? 'current fallback'
+        : 'none';
     const pkgCount = current?.availablePackages?.length ?? 0;
     rcLog('offerings', 'loaded', {
       currentIdentifier: current?.identifier ?? null,
@@ -227,8 +225,9 @@ export async function getOfferings() {
       ),
       expectedProductIds: ALL_PRODUCT_IDS,
     });
-    if (!offerings?.current && current) {
-      rcLog('offerings', 'No offerings.current returned; using fallback offering from offerings.all', {
+    rcLog('offerings', 'packages count', pkgCount);
+    if (!defaultOffering && current) {
+      rcLog('offerings', 'No offerings.all.default returned; using offerings.current fallback', {
         selectedSource,
         identifier: current?.identifier,
       });
