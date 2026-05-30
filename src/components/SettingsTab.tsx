@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 import { getTheme, applyTheme } from '@/lib/theme';
 import { useHealthSync } from '@/hooks/useHealthSync';
 import { usePremium } from '@/hooks/usePremium';
-import { getOfferings, getStoreProducts, purchaseProductById, restorePurchases, isIOSNative, PRODUCT_MONTHLY, PRODUCT_YEARLY } from '@/lib/revenuecat';
+import { getOfferings, getStoreProducts, purchasePackage, restorePurchases, isIOSNative, PRODUCT_MONTHLY, PRODUCT_YEARLY } from '@/lib/revenuecat';
 
 const NO_MERCY_KEY = 'app_no_mercy_mode';
 
@@ -123,8 +123,29 @@ const SettingsTab = () => {
     setPurchasing(productKey);
     setOfferingsError(null);
     try {
-      console.log('[RC UI] direct purchase by product id', { requestedProductKey: productKey });
-      const res = await purchaseProductById(productKey);
+      let selectedPackage = findPackage(productKey);
+
+      if (!selectedPackage) {
+        console.log('[RC UI] package missing; refreshing offerings before purchase', { requestedProductKey: productKey });
+        const freshOffering = await getOfferings();
+        setOfferings(freshOffering);
+        selectedPackage = findPackage(productKey, freshOffering);
+      }
+
+      if (!selectedPackage) {
+        const message = 'המנוי לא נטען מה-Offering. ודא שהמוצרים מחוברים ל-default Offering ושבדיקה מתבצעת עם Sandbox.';
+        setOfferingsError(message);
+        toast.error(message);
+        return;
+      }
+
+      console.log('[RC UI] purchase package from offering', {
+        requestedProductKey: productKey,
+        packageIdentifier: selectedPackage?.identifier,
+        offeringIdentifier: selectedPackage?.offeringIdentifier,
+        productIdentifier: selectedPackage?.product?.identifier,
+      });
+      const res = await purchasePackage(selectedPackage);
       if (res.isPremium) {
         toast.success('תודה רבה על התמיכה! 💜');
         reloadPremium();
