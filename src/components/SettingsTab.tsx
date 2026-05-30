@@ -33,8 +33,6 @@ type RevenueCatPackage = {
   };
 };
 
-type RevenueCatProduct = NonNullable<RevenueCatPackage['product']>;
-
 type RevenueCatOffering = {
   identifier?: string;
   monthly?: RevenueCatPackage;
@@ -141,16 +139,19 @@ const SettingsTab = () => {
         console.log('[RC UI] package missing; refreshing offerings before purchase', { requestedProductKey: productKey });
         const freshOffering = await getOfferings();
         setOfferings(freshOffering);
+        console.log('[RC UI] packages count after refresh', freshOffering?.availablePackages?.length ?? 0);
         selectedPackage = findPackage(productKey, freshOffering);
       }
 
       if (!selectedPackage) {
-        const message = 'המנוי לא נטען מה-Offering. ודא שהמוצרים מחוברים ל-default Offering ושבדיקה מתבצעת עם Sandbox.';
+        const message = SUBSCRIPTION_PRODUCTS_UNAVAILABLE;
         setOfferingsError(message);
         toast.error(message);
         return;
       }
 
+      console.log('[RC UI] selected package identifier', selectedPackage?.identifier);
+      console.log('[RC UI] product identifier', selectedPackage?.product?.identifier);
       console.log('[RC UI] purchase package from offering', {
         requestedProductKey: productKey,
         packageIdentifier: selectedPackage?.identifier,
@@ -158,6 +159,7 @@ const SettingsTab = () => {
         productIdentifier: selectedPackage?.product?.identifier,
       });
       const res = await purchasePackage(selectedPackage);
+      console.log('[RC UI] purchase success', res);
       if (res.isPremium) {
         toast.success('תודה רבה על התמיכה! 💜');
         reloadPremium();
@@ -166,6 +168,7 @@ const SettingsTab = () => {
       }
     } catch (e) {
       const error = e as { message?: string; code?: string | number; readableErrorCode?: string; readable_error_code?: string; underlyingErrorMessage?: string; userCancelled?: boolean };
+      console.log('[RC UI] full purchase error', error);
       const msg = error?.message || '';
       if (!msg.toLowerCase().includes('cancel') && !error?.userCancelled) {
         const message = getPurchaseErrorMessage(error);
