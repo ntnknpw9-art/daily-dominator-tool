@@ -19,6 +19,7 @@ export type RevenueCatPackage = {
   identifier?: string;
   packageType?: string;
   offeringIdentifier?: string;
+  presentedOfferingContext?: Record<string, unknown> | null;
   product?: RevenueCatProduct;
 };
 
@@ -113,10 +114,23 @@ const rcLog = (scope: string, label: string, data?: unknown) => {
   }
 };
 
+const withTimeout = async <T,>(promise: Promise<T>, ms: number, label: string): Promise<T> => {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(`${label} timed out`)), ms);
+  });
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+};
+
 const summarizePackage = (pkg?: RevenueCatPackage | null) => ({
   identifier: pkg?.identifier,
   packageType: pkg?.packageType,
   offeringIdentifier: pkg?.offeringIdentifier,
+  hasPresentedOfferingContext: Boolean(pkg?.presentedOfferingContext),
   product: {
     identifier: pkg?.product?.identifier,
     title: pkg?.product?.title,
@@ -188,7 +202,7 @@ export async function getOfferings() {
     return null;
   }
   try {
-    const offerings: RevenueCatOfferings = await Purchases.getOfferings();
+    const offerings: RevenueCatOfferings = await withTimeout(Purchases.getOfferings(), 12000, 'RevenueCat getOfferings');
     const allOfferings = offerings?.all ?? {};
     const fallbackOffering = allOfferings.default ?? Object.values(allOfferings)[0] ?? null;
     const current = offerings?.current ?? fallbackOffering;
@@ -236,6 +250,40 @@ export async function getOfferings() {
       raw: typeof error === 'object' ? safeJson(error) : String(error),
     });
     return null;
+  }
+}
+
+export async function getStoreProducts(productIds: string[] = ALL_PRODUCT_IDS) {
+  const Purchases = await ensureInit();
+  if (!Purchases) return [];
+  try {
+    const result: { products?: RevenueCatProduct[] } = await withTimeout(
+      Purchases.getProducts({ productIdentifiers: productIds }),
+      12000,
+      'RevenueCat getProducts'
+    );
+    const products = result?.products ?? [];
+    rcLog('products', 'loaded direct products', {
+      requested: productIds,
+      products: products.map((product) => ({
+        identifier: product?.identifier,
+        title: product?.title,
+        priceString: product?.priceString,
+        currencyCode: product?.currencyCode,
+        subscriptionPeriod: product?.subscriptionPeriod,
+      })),
+    });
+    return products;
+  } catch (e) {
+    const error = e as RevenueCatError;
+    rcLog('products', 'ERROR', {
+      requested: productIds,
+      message: error?.message,
+      code: error?.code,
+      underlyingErrorMessage: error?.underlyingErrorMessage,
+      raw: typeof error === 'object' ? safeJson(error) : String(error),
+    });
+    return [];
   }
 }
 
