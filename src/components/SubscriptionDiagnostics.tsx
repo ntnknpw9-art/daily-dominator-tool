@@ -5,6 +5,7 @@ import { Activity, CheckCircle2, XCircle, Loader2, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   getOfferings,
+  getStoreProducts,
   refreshPremiumStatus,
   isIOSNative,
   PRODUCT_MONTHLY,
@@ -27,6 +28,7 @@ const INITIAL_STEPS: Step[] = [
   { key: 'plugin', label: 'טעינת פלאגין RevenueCat', status: 'idle' },
   { key: 'offerings', label: 'קריאת Offerings מ-RevenueCat', status: 'idle' },
   { key: 'packages', label: 'בדיקת Packages זמינים', status: 'idle' },
+  { key: 'directProducts', label: 'בדיקת Products ישירה מ-StoreKit', status: 'idle' },
   { key: 'products', label: 'התאמת Product IDs מ-App Store Connect', status: 'idle' },
   { key: 'customer', label: 'שליפת CustomerInfo (סטטוס premium)', status: 'idle' },
 ];
