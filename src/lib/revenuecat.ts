@@ -436,7 +436,9 @@ export async function purchaseProduct(product: RevenueCatProduct) {
 }
 
 export async function purchaseProductById(productId: string) {
-  return purchaseProduct({ identifier: productId });
+  const products = await getStoreProducts([productId]);
+  const product = products.find((item) => item?.identifier === productId) ?? { identifier: productId };
+  return purchaseProduct(product);
 }
 
 export async function restorePurchases() {
