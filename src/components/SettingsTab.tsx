@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 import { getTheme, applyTheme } from '@/lib/theme';
 import { useHealthSync } from '@/hooks/useHealthSync';
 import { usePremium } from '@/hooks/usePremium';
-import { getOfferings, purchasePackage, restorePurchases, isIOSNative, PRODUCT_MONTHLY, PRODUCT_YEARLY } from '@/lib/revenuecat';
+import { getOfferings, getStoreProducts, purchasePackage, purchaseStoreProduct, restorePurchases, isIOSNative, PRODUCT_MONTHLY, PRODUCT_YEARLY } from '@/lib/revenuecat';
 import { SubscriptionDiagnostics } from './SubscriptionDiagnostics';
 
 const NO_MERCY_KEY = 'app_no_mercy_mode';
@@ -41,6 +41,10 @@ type RevenueCatOffering = {
   availablePackages?: RevenueCatPackage[];
 };
 
+type RevenueCatStoreProduct = RevenueCatPackage['product'] & {
+  identifier: string;
+};
+
 const SUBSCRIPTION_PRODUCTS_UNAVAILABLE = 'Subscription products are not available right now. Please try again later.';
 const SUBSCRIPTION_PRODUCTS_LOADING = 'טוען את מוצרי המנוי מ-App Store. נסה שוב בעוד רגע.';
 
@@ -49,6 +53,7 @@ const SettingsTab = () => {
   const { syncHealthData, isSyncing } = useHealthSync();
   const { isPremium, productId, expiresAt, reload: reloadPremium } = usePremium();
   const [offerings, setOfferings] = useState<RevenueCatOffering | null>(null);
+  const [storeProducts, setStoreProducts] = useState<RevenueCatStoreProduct[]>([]);
   const [offeringsLoaded, setOfferingsLoaded] = useState(false);
   const [offeringsError, setOfferingsError] = useState<string | null>(null);
   const [purchasing, setPurchasing] = useState<string | null>(null);
