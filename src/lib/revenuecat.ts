@@ -311,7 +311,7 @@ export async function getStoreProducts(productIds: string[] = ALL_PRODUCT_IDS) {
   if (!Purchases) return [];
   try {
     const result = await withTimeout(
-      Purchases.getProducts({ productIdentifiers: productIds, type: 'SUBSCRIPTION' }),
+      Purchases.getProducts({ productIdentifiers: productIds }),
       12000,
       'RevenueCat getProducts'
     ) as unknown as RevenueCatProductsResult;
