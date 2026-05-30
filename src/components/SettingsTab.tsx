@@ -639,8 +639,10 @@ const SettingsTab = () => {
           {(() => {
             const monthlyPkg = findPackage(PRODUCT_MONTHLY);
             const yearlyPkg = findPackage(PRODUCT_YEARLY);
-            const blockMonthly = isIOSNative() && offeringsLoaded && !monthlyPkg;
-            const blockYearly = isIOSNative() && offeringsLoaded && !yearlyPkg;
+            const monthlyProduct = findStoreProduct(PRODUCT_MONTHLY);
+            const yearlyProduct = findStoreProduct(PRODUCT_YEARLY);
+            const blockMonthly = isIOSNative() && offeringsLoaded && !monthlyPkg && !monthlyProduct;
+            const blockYearly = isIOSNative() && offeringsLoaded && !yearlyPkg && !yearlyProduct;
             return (
               <div className="grid grid-cols-2 gap-2">
                 <button
@@ -684,7 +686,7 @@ const SettingsTab = () => {
             </div>
           )}
 
-          {isIOSNative() && offeringsLoaded && !findPackage(PRODUCT_MONTHLY) && !findPackage(PRODUCT_YEARLY) && (
+          {isIOSNative() && offeringsLoaded && !findPackage(PRODUCT_MONTHLY) && !findPackage(PRODUCT_YEARLY) && !findStoreProduct(PRODUCT_MONTHLY) && !findStoreProduct(PRODUCT_YEARLY) && (
             <div className="text-[11px] text-destructive text-center">
               {offeringsError || SUBSCRIPTION_PRODUCTS_UNAVAILABLE}
             </div>
