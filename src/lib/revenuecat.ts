@@ -365,58 +365,6 @@ export async function purchasePackage(pkg: RevenueCatPackage) {
   }
 }
 
-export async function purchaseProduct(product: RevenueCatProduct) {
-  const log = (label: string, data?: unknown) => rcLog('purchaseProduct', label, data);
-  try {
-    const { data: auth } = await supabase.auth.getUser();
-    log('user', { id: auth.user?.id, email: auth.user?.email });
-    if (!product?.identifier) throw new Error('המוצר לא תקין. נסה שוב.');
-    const Purchases = await ensureInit(auth.user?.id);
-    if (!Purchases) throw new Error('רכישות זמינות רק באפליקציית iOS');
-    log('calling Purchases.purchaseStoreProduct...', {
-      productId: product.identifier,
-      priceString: product.priceString,
-      title: product.title,
-      timeoutMs: PURCHASE_TIMEOUT_MS,
-    });
-    const result: RevenueCatPurchaseResult = await withTimeout(
-      Purchases.purchaseStoreProduct({ product: product as Parameters<typeof Purchases.purchaseStoreProduct>[0]['product'] }),
-      PURCHASE_TIMEOUT_MS,
-      'RevenueCat purchaseStoreProduct'
-    );
-    log('purchase result', {
-      transactionId: result?.transaction?.transactionIdentifier,
-      productId: result?.productIdentifier,
-      activeEntitlements: Object.keys(result?.customerInfo?.entitlements?.active || {}),
-      activeSubscriptions: result?.customerInfo?.activeSubscriptions,
-    });
-    const active = extractActive(result.customerInfo);
-    await syncToSupabase();
-    log('synced to backend', active);
-    return active;
-  } catch (e) {
-    const error = e as RevenueCatError;
-    log('ERROR', {
-      message: error?.message,
-      code: error?.code,
-      underlyingErrorMessage: error?.underlyingErrorMessage,
-      userCancelled: error?.userCancelled,
-      readableErrorCode: error?.readableErrorCode,
-      readable_error_code: error?.readable_error_code,
-      domain: error?.domain,
-      name: error?.name,
-      raw: typeof error === 'object' ? JSON.stringify(error, Object.getOwnPropertyNames(error)) : String(error),
-    });
-    throw e;
-  }
-}
-
-export async function purchaseProductById(productId: string) {
-  const products = await getStoreProducts([productId]);
-  const product = products.find((item) => item?.identifier === productId) ?? { identifier: productId };
-  return purchaseProduct(product);
-}
-
 export async function restorePurchases() {
   const log = (label: string, data?: unknown) => rcLog('restore', label, data);
   try {
