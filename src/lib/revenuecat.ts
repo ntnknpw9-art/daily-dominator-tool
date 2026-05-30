@@ -19,7 +19,7 @@ export type RevenueCatPackage = {
   identifier?: string;
   packageType?: string;
   offeringIdentifier?: string;
-  presentedOfferingContext?: Record<string, unknown> | null;
+  presentedOfferingContext?: unknown;
   product?: RevenueCatProduct;
 };
 
@@ -202,7 +202,7 @@ export async function getOfferings() {
     return null;
   }
   try {
-    const offerings: RevenueCatOfferings = await withTimeout(Purchases.getOfferings(), 12000, 'RevenueCat getOfferings');
+    const offerings = await withTimeout(Purchases.getOfferings(), 12000, 'RevenueCat getOfferings') as unknown as RevenueCatOfferings;
     const allOfferings = offerings?.all ?? {};
     const fallbackOffering = allOfferings.default ?? Object.values(allOfferings)[0] ?? null;
     const current = offerings?.current ?? fallbackOffering;
@@ -257,11 +257,11 @@ export async function getStoreProducts(productIds: string[] = ALL_PRODUCT_IDS) {
   const Purchases = await ensureInit();
   if (!Purchases) return [];
   try {
-    const result: { products?: RevenueCatProduct[] } = await withTimeout(
+    const result = await withTimeout(
       Purchases.getProducts({ productIdentifiers: productIds }),
       12000,
       'RevenueCat getProducts'
-    );
+    ) as unknown as { products?: RevenueCatProduct[] };
     const products = result?.products ?? [];
     rcLog('products', 'loaded direct products', {
       requested: productIds,
