@@ -493,9 +493,9 @@ export async function getStoreProducts(productIds: string[] = ALL_PRODUCT_IDS) {
   } catch (e) {
     const remembered = rememberRevenueCatError('RevenueCat initialize before getProducts', e);
     rcLog('products', 'INIT ERROR', remembered);
-    return [];
+    return getNativeStoreKitProducts(productIds);
   }
-  if (!Purchases) return [];
+  if (!Purchases) return getNativeStoreKitProducts(productIds);
   try {
     const start = Date.now();
     const result = await withTimeout(
@@ -512,12 +512,13 @@ export async function getStoreProducts(productIds: string[] = ALL_PRODUCT_IDS) {
     });
     if (products.length === 0) {
       rcLog('products', 'WARNING: StoreKit returned 0 products. Check Bundle ID, Paid Apps Agreement, product status, and Sandbox tester.');
+      return getNativeStoreKitProducts(productIds);
     }
     return products;
   } catch (e) {
     const remembered = rememberRevenueCatError('RevenueCat getProducts', e);
     rcLog('products', 'ERROR', remembered);
-    return [];
+    return getNativeStoreKitProducts(productIds);
   }
 }
 
