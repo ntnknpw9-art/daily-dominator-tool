@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
 import { Button } from '@/components/ui/button';
 import { Activity, CheckCircle2, XCircle, Loader2, Copy } from 'lucide-react';
@@ -50,12 +50,13 @@ const StatusIcon = ({ status }: { status: StepStatus }) => {
   return <div className="w-4 h-4 rounded-full border border-border" />;
 };
 
-export const SubscriptionDiagnostics = () => {
+export const SubscriptionDiagnostics = ({ autoRun = false }: { autoRun?: boolean } = {}) => {
   const [steps, setSteps] = useState<Step[]>(INITIAL_STEPS);
   const [running, setRunning] = useState(false);
   const [lastRunAt, setLastRunAt] = useState<string | null>(null);
   const [summary, setSummary] = useState<string | null>(null);
   const [premiumCheckedAt, setPremiumCheckedAt] = useState<string | null>(null);
+  const autoRunRef = useRef(false);
 
   const update = (key: string, patch: Partial<Step>) => {
     setSteps((prev) => prev.map((s) => (s.key === key ? { ...s, ...patch } : s)));
@@ -337,6 +338,14 @@ ${directProducts.map((p) => `• ${p.identifier} ${p.priceString ? '· ' + p.pri
     }
     setRunning(false);
   };
+
+  useEffect(() => {
+    if (autoRun && !autoRunRef.current) {
+      autoRunRef.current = true;
+      run();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoRun]);
 
   const copyReport = async () => {
     const report = [
