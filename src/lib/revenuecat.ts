@@ -61,6 +61,18 @@ type RevenueCatProductsResult = {
   products?: RevenueCatStoreProduct[];
 };
 
+type NativeStoreKitProduct = RevenueCatStoreProduct & {
+  source?: 'native-storekit';
+  displayName?: string;
+  displayPrice?: string;
+};
+
+type NativeStoreKitPurchaseResult = {
+  status?: 'success' | 'pending' | 'cancelled';
+  productIdentifier?: string;
+  transactionIdentifier?: string;
+};
+
 type RevenueCatError = Error & {
   code?: string | number;
   underlyingErrorMessage?: string;
@@ -123,17 +135,20 @@ let initialized = false;
 let initializePromise: Promise<unknown> | null = null;
 let configuredAppUserID: string | null = null;
 let lastRevenueCatError: RevenueCatLastError | null = null;
+let initializeStartedAt = 0;
 
 // StoreKit 1 is intentionally forced for this iOS build. RevenueCat's DEFAULT
 // may select StoreKit 2 on newer iOS versions, which requires RevenueCat's
 // App Store Connect In-App Purchase Key setup. StoreKit 1 is the safest path
 // for App Review/TestFlight product lookup and avoids StoreKit 2 key issues.
 const IOS_STOREKIT_VERSION = 'STOREKIT_1' as const;
-const INIT_TIMEOUT_MS = 15000;
-const STOREKIT_FETCH_TIMEOUT_MS = 20000;
+const APP_BUILD_MARKER = 'rc-native-storekit-fallback-2026-05-31-1755';
+const INIT_TIMEOUT_MS = 8000;
+const STOREKIT_FETCH_TIMEOUT_MS = 12000;
 const PURCHASE_TIMEOUT_MS = 90000;
-const RUNTIME_DIAGNOSTIC_TIMEOUT_MS = 8000;
-const REST_SNAPSHOT_TIMEOUT_MS = 12000;
+const RUNTIME_DIAGNOSTIC_TIMEOUT_MS = 6000;
+const REST_SNAPSHOT_TIMEOUT_MS = 10000;
+const NATIVE_STOREKIT_TIMEOUT_MS = 12000;
 
 const safeJson = (value: unknown) => {
   try {
