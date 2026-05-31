@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 import { getTheme, applyTheme } from '@/lib/theme';
 import { useHealthSync } from '@/hooks/useHealthSync';
 import { usePremium } from '@/hooks/usePremium';
-import { getOfferings, getStoreProducts, purchasePackage, purchaseStoreProduct, restorePurchases, isIOSNative, PRODUCT_MONTHLY, PRODUCT_YEARLY } from '@/lib/revenuecat';
+import { getOfferings, getStoreProducts, purchasePackage, purchaseNativeStoreKitProduct, purchaseStoreProduct, restorePurchases, isIOSNative, PRODUCT_MONTHLY, PRODUCT_YEARLY } from '@/lib/revenuecat';
 import { SubscriptionDiagnostics } from './SubscriptionDiagnostics';
 
 const NO_MERCY_KEY = 'app_no_mercy_mode';
@@ -43,6 +43,7 @@ type RevenueCatOffering = {
 
 type RevenueCatStoreProduct = RevenueCatPackage['product'] & {
   identifier: string;
+  source?: string;
 };
 
 const SUBSCRIPTION_PRODUCTS_UNAVAILABLE = 'מוצרי המנוי לא זמינים כרגע מ-App Store. נסה לרענן או לבדוק שוב בעוד רגע.';
@@ -205,6 +206,13 @@ const SettingsTab = () => {
           productIdentifier: selectedPackage?.product?.identifier,
         });
         res = await purchasePackage(selectedPackage);
+      } else if (selectedProduct?.source === 'native-storekit') {
+        console.log('[RC UI] purchase native StoreKit fallback product', {
+          requestedProductKey: productKey,
+          productIdentifier: selectedProduct?.identifier,
+          priceString: selectedProduct?.priceString,
+        });
+        res = await purchaseNativeStoreKitProduct(selectedProduct.identifier);
       } else {
         console.log('[RC UI] purchase direct StoreKit product fallback', {
           requestedProductKey: productKey,
