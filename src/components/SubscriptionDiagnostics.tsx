@@ -96,6 +96,7 @@ export const SubscriptionDiagnostics = () => {
       status: configProblems.length ? 'fail' : 'ok',
       detail: [
         `Bundle ID מצופה: ${clientConfig.expectedBundleId}`,
+        `Build marker: ${clientConfig.buildMarker}`,
         `RevenueCat key prefix: ${clientConfig.apiKeyPrefix}… (${clientConfig.apiKeyLength} תווים)`,
         `StoreKit version forced: ${clientConfig.storeKitVersion}`,
         `Default Offering: ${clientConfig.expectedDefaultOfferingId}`,
@@ -174,6 +175,25 @@ export const SubscriptionDiagnostics = () => {
         ].filter(Boolean).join('\n'),
       });
       errors.push('RevenueCat runtime diagnostics נכשל: ' + (err?.message ?? ''));
+    }
+
+    // Native StoreKit fallback diagnostics — independent from RevenueCat SDK runtime.
+    update('nativeStoreKit', { status: 'running' });
+    try {
+      const start = Date.now();
+      const nativeDiagnostics = await getNativeStoreKitDiagnostics();
+      update('nativeStoreKit', {
+        status: nativeDiagnostics ? 'ok' : 'fail',
+        detail: nativeDiagnostics
+          ? JSON.stringify(nativeDiagnostics, null, 2)
+          : 'DailyDominatorStoreKit לא זמין בבילד הזה. צריך להעלות בילד חדש אחרי npx cap sync ios.',
+        durationMs: Date.now() - start,
+      });
+      if (!nativeDiagnostics) errors.push('StoreKit Native fallback לא זמין בבילד הזה.');
+    } catch (e) {
+      const err = e as Error;
+      update('nativeStoreKit', { status: 'fail', detail: `שגיאה: ${err?.message ?? String(e)}` });
+      errors.push('StoreKit Native diagnostics נכשל: ' + (err?.message ?? ''));
     }
 
     // 6. Offerings from SDK/StoreKit
