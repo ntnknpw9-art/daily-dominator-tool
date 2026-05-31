@@ -202,9 +202,6 @@ const withTimeout = async <T,>(promise: Promise<T>, ms: number, label: string): 
   }
 };
 
-const PURCHASE_TIMEOUT_MS = 60000;
-const INIT_TIMEOUT_MS = 10000;
-
 const summarizePackage = (pkg?: RevenueCatPackage | null) => ({
   identifier: pkg?.identifier,
   packageType: pkg?.packageType,
