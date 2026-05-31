@@ -253,6 +253,158 @@ async function ensureInit(userId?: string) {
   }
   const { Purchases, LOG_LEVEL } = await import('@revenuecat/purchases-capacitor');
   if (!initialized) {
+    if (!initializePromise) {
+      const keyPrefix = REVENUECAT_IOS_API_KEY.slice(0, 10);
+      const keyLooksValid = REVENUECAT_IOS_API_KEY.startsWith('appl_');
+      rcLog('init', 'configuring RevenueCat', {
+        ...getRevenueCatClientConfig(),
+        apiKeyPrefix: keyPrefix,
+        appUserID: userId ?? '(anonymous)',
+      });
+      if (!keyLooksValid) {
+        rcLog('init', 'WARNING: API key does NOT start with "appl_" — this may be an Android (goog_) or Web (rcb_) key!');
+      }
+      initializePromise = (async () => {
+        await Purchases.setLogLevel({ level: LOG_LEVEL.VERBOSE });
+        await Purchases.configure({
+          apiKey: REVENUECAT_IOS_API_KEY,
+          appUserID: userId,
+          storeKitVersion: IOS_STOREKIT_VERSION,
+          diagnosticsEnabled: true,
+          preferredUILocaleOverride: 'he-IL',
+        } as never);
+        initialized = true;
+        configuredAppUserID = userId ?? null;
+        try {
+          const configured = await Purchases.isConfigured();
+          const appUser = await Purchases.getAppUserID();
+          rcLog('init', 'configured OK', { configured, appUserID: appUser?.appUserID, storeKitVersion: IOS_STOREKIT_VERSION });
+        } catch (e) {
+          rcLog('init', 'configured OK; identity diagnostic failed', e);
+        }
+      })();
+    }
+    await initializePromise;
+  } else if (userId && configuredAppUserID !== userId) {
+    try {
+      const result = await Purchases.logIn({ appUserID: userId });
+      configuredAppUserID = userId;
+      rcLog('init', 'logIn OK', { appUserID: userId, created: result?.created });
+    } catch (e) {
+      rememberRevenueCatError('logIn', e);
+      rcLog('init', 'logIn failed', e);
+    }
+  }
+  return Purchases;
+}
+
+export async function getRevenueCatRuntimeDiagnostics() {
+  const Purchases = await ensureInit();
+  if (!Purchases) return null;
+  const diagnostics: Record<string, unknown> = {};
+  try { diagnostics.isConfigured = await Purchases.isConfigured(); } catch (e) { diagnostics.isConfiguredError = rememberRevenueCatError('isConfigured', e); }
+  try { diagnostics.appUserID = (await Purchases.getAppUserID())?.appUserID; } catch (e) { diagnostics.appUserIDError = rememberRevenueCatError('getAppUserID', e); }
+  try { diagnostics.storefront = await withTimeout(Purchases.getStorefront(), 15000, 'RevenueCat getStorefront'); } catch (e) { diagnostics.storefrontError = rememberRevenueCatError('getStorefront', e); }
+  return diagnostics;
+}
+
+export async function getRevenueCatRemoteOfferingSnapshot() {
+  const appUserId = configuredAppUserID || `diagnostics-${Date.now()}`;
+  const url = `https://api.revenuecat.com/v1/subscribers/${encodeURIComponent(appUserId)}/offerings`;
+  const start = Date.now();
+  try {
+    const response = await withTimeout(fetch(url, {
+      headers: {
+        Authorization: `Bearer ${REVENUECAT_IOS_API_KEY}`,
+        'X-Platform': 'ios',
+      },
+    }), 15000, 'RevenueCat REST offerings snapshot');
+    const body = await response.json().catch(() => null);
+    const defaultOffering = Array.isArray(body?.offerings)
+      ? body.offerings.find((offering: { identifier?: string }) => offering?.identifier === 'default')
+      : null;
+    return {
+      ok: response.ok,
+      status: response.status,
+      elapsedMs: Date.now() - start,
+      currentOfferingId: body?.current_offering_id ?? null,
+      offeringIds: Array.isArray(body?.offerings) ? body.offerings.map((o: { identifier?: string }) => o?.identifier) : [],
+      defaultPackages: Array.isArray(defaultOffering?.packages) ? defaultOffering.packages : [],
+      raw: body,
+    };
+  } catch (e) {
+    rememberRevenueCatError('RevenueCat REST offerings snapshot', e, Date.now() - start);
+    return { ok: false, elapsedMs: Date.now() - start, error: getLastRevenueCatError() };
+  }
+}
+
+
+export async function getOfferings() {
+  let Purchases = null;
+  try {
+    Purchases = await withTimeout(ensureInit(), INIT_TIMEOUT_MS, 'RevenueCat initialize');
+  } catch (e) {
+    const remembered = rememberRevenueCatError('RevenueCat initialize before getOfferings', e);
+    rcLog('offerings', 'INIT ERROR', remembered);
+    return null;
+  }
+  if (!Purchases) {
+    rcLog('offerings', 'not initialized', {
+      isNative: Capacitor.isNativePlatform(),
+      platform: Capacitor.getPlatform(),
+      hasApiKey: Boolean(REVENUECAT_IOS_API_KEY),
+    });
+    return null;
+  }
+  try {
+    const start = Date.now();
+    const offerings = await withTimeout(Purchases.getOfferings(), STOREKIT_FETCH_TIMEOUT_MS, 'RevenueCat getOfferings') as unknown as RevenueCatOfferings;
+    const allOfferings = offerings?.all ?? {};
+    const defaultOffering = allOfferings.default ?? null;
+    const current = defaultOffering ?? offerings?.current ?? null;
+    const selectedSource = defaultOffering
+      ? 'all.default'
+      : offerings?.current
+        ? 'current fallback'
+        : 'none';
+    const pkgCount = current?.availablePackages?.length ?? 0;
+    rcLog('offerings', 'loaded', {
+      elapsedMs: Date.now() - start,
+      currentIdentifier: current?.identifier ?? null,
+      selectedSource,
+      currentPackagesCount: pkgCount,
+      current: summarizeOffering(current),
+      allKeys: Object.keys(allOfferings),
+      all: Object.fromEntries(
+        Object.entries(allOfferings).map(([key, offering]) => [key, summarizeOffering(offering)])
+      ),
+      expectedProductIds: ALL_PRODUCT_IDS,
+    });
+    rcLog('offerings', 'packages count', pkgCount);
+    if (!defaultOffering && current) {
+      rcLog('offerings', 'No offerings.all.default returned; using offerings.current fallback', {
+        selectedSource,
+        identifier: current?.identifier,
+      });
+    }
+    if (!current) {
+      rcLog('offerings', 'WARNING: No default/current offering returned from RevenueCat. Make sure the default offering exists and has packages attached.');
+    } else if (pkgCount === 0) {
+      rcLog('offerings', 'WARNING: Current offering has 0 packages. StoreKit did not return products to RevenueCat. Check Apple product availability, Paid Apps Agreement, Bundle ID, Sandbox tester, and product status.');
+    }
+    return current;
+  } catch (e) {
+    const remembered = rememberRevenueCatError('RevenueCat getOfferings', e);
+    rcLog('offerings', 'ERROR', remembered);
+    return null;
+  }
+}
+
+/* Legacy duplicate implementation removed below. */
+async function __legacyEnsureInitDisabled(userId?: string) {
+  if (!userId) return null;
+  return null;
+  /*
     const keyPrefix = REVENUECAT_IOS_API_KEY.slice(0, 6);
     const keyLooksValid = REVENUECAT_IOS_API_KEY.startsWith('appl_');
     rcLog('init', 'configuring RevenueCat', {
