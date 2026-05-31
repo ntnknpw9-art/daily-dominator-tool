@@ -270,13 +270,17 @@ async function ensureInit(userId?: string) {
       }
       initializePromise = (async () => {
         await Purchases.setLogLevel({ level: LOG_LEVEL.VERBOSE });
-        await Purchases.configure({
-          apiKey: REVENUECAT_IOS_API_KEY,
-          appUserID: userId,
-          storeKitVersion: IOS_STOREKIT_VERSION,
-          diagnosticsEnabled: true,
-          preferredUILocaleOverride: 'he-IL',
-        } as never);
+        await withTimeout(
+          Purchases.configure({
+            apiKey: REVENUECAT_IOS_API_KEY,
+            appUserID: userId,
+            storeKitVersion: IOS_STOREKIT_VERSION,
+            diagnosticsEnabled: true,
+            preferredUILocaleOverride: 'he-IL',
+          } as never),
+          INIT_TIMEOUT_MS,
+          'RevenueCat configure'
+        );
         initialized = true;
         configuredAppUserID = userId ?? null;
         rcLog('init', 'configure resolved', { storeKitVersion: IOS_STOREKIT_VERSION });
@@ -292,7 +296,14 @@ async function ensureInit(userId?: string) {
         });
       })();
     }
-    await initializePromise;
+    try {
+      await initializePromise;
+    } catch (e) {
+      initialized = false;
+      initializePromise = null;
+      rememberRevenueCatError('RevenueCat configure', e);
+      throw e;
+    }
   } else if (userId && configuredAppUserID !== userId) {
     try {
       const result = await Purchases.logIn({ appUserID: userId });
