@@ -282,9 +282,11 @@ type DailyDominatorStoreKitPlugin = {
 const DailyDominatorStoreKit = registerPlugin<DailyDominatorStoreKitPlugin>('DailyDominatorStoreKit');
 
 const callNativeStoreKit = async <T,>(methodName: string, options?: unknown): Promise<T> => {
-  const registeredMethod = DailyDominatorStoreKit[methodName as keyof DailyDominatorStoreKitPlugin];
+  const registeredMethod = DailyDominatorStoreKit[methodName as keyof DailyDominatorStoreKitPlugin] as
+    | ((options?: unknown) => Promise<T>)
+    | undefined;
   if (typeof registeredMethod === 'function') {
-    return registeredMethod(options as never) as Promise<T>;
+    return registeredMethod(options);
   }
 
   const capacitorWindow = window as CapacitorWindow;
