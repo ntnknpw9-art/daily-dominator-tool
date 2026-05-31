@@ -521,6 +521,49 @@ export async function getStoreProducts(productIds: string[] = ALL_PRODUCT_IDS) {
   }
 }
 
+export async function getNativeStoreKitDiagnostics() {
+  if (!isIOS()) return null;
+  try {
+    return await withTimeout(
+      callNativeStoreKit<Record<string, unknown>>('diagnostics'),
+      NATIVE_STOREKIT_TIMEOUT_MS,
+      'Native StoreKit diagnostics'
+    );
+  } catch (e) {
+    rememberRevenueCatError('Native StoreKit diagnostics', e);
+    return null;
+  }
+}
+
+export async function getNativeStoreKitProducts(productIds: string[] = ALL_PRODUCT_IDS) {
+  if (!isIOS()) return [] as NativeStoreKitProduct[];
+  try {
+    const start = Date.now();
+    const result = await withTimeout(
+      callNativeStoreKit<{ products?: NativeStoreKitProduct[] }>('getProducts', { productIdentifiers: productIds }),
+      NATIVE_STOREKIT_TIMEOUT_MS,
+      'Native StoreKit getProducts'
+    );
+    const products = (result?.products ?? []).map((product) => ({
+      ...product,
+      source: 'native-storekit' as const,
+      priceString: product.priceString || product.displayPrice,
+      title: product.title || product.displayName,
+    }));
+    rcLog('native-storekit', 'products loaded', {
+      elapsedMs: Date.now() - start,
+      requested: productIds,
+      count: products.length,
+      products: products.map(summarizeProduct),
+    });
+    return products;
+  } catch (e) {
+    const remembered = rememberRevenueCatError('Native StoreKit getProducts', e);
+    rcLog('native-storekit', 'products ERROR', remembered);
+    return [] as NativeStoreKitProduct[];
+  }
+}
+
 async function syncToSupabase() {
   const { data: auth } = await supabase.auth.getUser();
   const user = auth.user;
