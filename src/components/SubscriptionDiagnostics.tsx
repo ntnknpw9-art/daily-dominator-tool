@@ -50,12 +50,13 @@ const StatusIcon = ({ status }: { status: StepStatus }) => {
   return <div className="w-4 h-4 rounded-full border border-border" />;
 };
 
-export const SubscriptionDiagnostics = () => {
+export const SubscriptionDiagnostics = ({ autoRun = false }: { autoRun?: boolean } = {}) => {
   const [steps, setSteps] = useState<Step[]>(INITIAL_STEPS);
   const [running, setRunning] = useState(false);
   const [lastRunAt, setLastRunAt] = useState<string | null>(null);
   const [summary, setSummary] = useState<string | null>(null);
   const [premiumCheckedAt, setPremiumCheckedAt] = useState<string | null>(null);
+  const autoRunRef = useRef(false);
 
   const update = (key: string, patch: Partial<Step>) => {
     setSteps((prev) => prev.map((s) => (s.key === key ? { ...s, ...patch } : s)));
