@@ -68,6 +68,21 @@ type RevenueCatError = Error & {
   readableErrorCode?: string;
   readable_error_code?: string;
   domain?: string;
+  details?: unknown;
+};
+
+type RevenueCatLastError = {
+  operation: string;
+  message?: string;
+  code?: string | number;
+  underlyingErrorMessage?: string;
+  readableErrorCode?: string;
+  readable_error_code?: string;
+  domain?: string;
+  name?: string;
+  elapsedMs?: number;
+  raw?: string;
+  at: string;
 };
 
 /**
@@ -105,6 +120,18 @@ const REVENUECAT_IOS_API_KEY =
   'appl_OsIuxnzzmIfeIVgsxDoYxxuxgDF';
 
 let initialized = false;
+let initializePromise: Promise<unknown> | null = null;
+let configuredAppUserID: string | null = null;
+let lastRevenueCatError: RevenueCatLastError | null = null;
+
+// StoreKit 1 is intentionally forced for this iOS build. RevenueCat's DEFAULT
+// may select StoreKit 2 on newer iOS versions, which requires RevenueCat's
+// App Store Connect In-App Purchase Key setup. StoreKit 1 is the safest path
+// for App Review/TestFlight product lookup and avoids StoreKit 2 key issues.
+const IOS_STOREKIT_VERSION = 'STOREKIT_1' as const;
+const INIT_TIMEOUT_MS = 45000;
+const STOREKIT_FETCH_TIMEOUT_MS = 45000;
+const PURCHASE_TIMEOUT_MS = 90000;
 
 const safeJson = (value: unknown) => {
   try {
@@ -122,10 +149,51 @@ const rcLog = (scope: string, label: string, data?: unknown) => {
   }
 };
 
+const rememberRevenueCatError = (operation: string, error: unknown, elapsedMs?: number) => {
+  const e = error as RevenueCatError;
+  lastRevenueCatError = {
+    operation,
+    message: e?.message ?? String(error),
+    code: e?.code,
+    underlyingErrorMessage: e?.underlyingErrorMessage,
+    readableErrorCode: e?.readableErrorCode,
+    readable_error_code: e?.readable_error_code,
+    domain: e?.domain,
+    name: e?.name,
+    elapsedMs,
+    raw: typeof error === 'object' ? safeJson(error) : String(error),
+    at: new Date().toISOString(),
+  };
+  return lastRevenueCatError;
+};
+
+export const getLastRevenueCatError = () => lastRevenueCatError;
+
+export const getRevenueCatClientConfig = () => ({
+  platform: Capacitor.getPlatform(),
+  isNative: Capacitor.isNativePlatform(),
+  isIOSNative: isIOS(),
+  apiKeyPrefix: REVENUECAT_IOS_API_KEY.slice(0, 10),
+  apiKeyLength: REVENUECAT_IOS_API_KEY.length,
+  apiKeyLooksLikeIOS: REVENUECAT_IOS_API_KEY.startsWith('appl_'),
+  storeKitVersion: IOS_STOREKIT_VERSION,
+  initTimeoutMs: INIT_TIMEOUT_MS,
+  storeKitFetchTimeoutMs: STOREKIT_FETCH_TIMEOUT_MS,
+  purchaseTimeoutMs: PURCHASE_TIMEOUT_MS,
+  expectedBundleId: 'com.natanknafo.dailydominator',
+  expectedDefaultOfferingId: 'default',
+  expectedPackages: ['$rc_monthly', '$rc_annual'],
+  expectedProductIds: ALL_PRODUCT_IDS,
+});
+
 const withTimeout = async <T,>(promise: Promise<T>, ms: number, label: string): Promise<T> => {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<never>((_, reject) => {
-    timeoutId = setTimeout(() => reject(new Error(`${label} timed out`)), ms);
+    timeoutId = setTimeout(() => {
+      const error = new Error(`${label} timed out after ${ms}ms`) as RevenueCatError;
+      error.code = 'LOVABLE_TIMEOUT';
+      reject(error);
+    }, ms);
   });
   try {
     return await Promise.race([promise, timeout]);
