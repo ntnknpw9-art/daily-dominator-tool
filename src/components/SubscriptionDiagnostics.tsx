@@ -83,7 +83,28 @@ export const SubscriptionDiagnostics = () => {
     }
     update('env', { status: 'ok', detail: `platform=${platform}, isNative=${isNative}` });
 
-    // 2. Plugin
+    // 2. Client config
+    update('clientConfig', { status: 'running' });
+    const clientConfig = getRevenueCatClientConfig();
+    const configProblems: string[] = [];
+    if (!clientConfig.apiKeyLooksLikeIOS) configProblems.push('RevenueCat API key לא נראה כמו iOS key (צריך להתחיל ב-appl_)');
+    if (clientConfig.storeKitVersion !== 'STOREKIT_1') configProblems.push('StoreKitVersion לא מוגדר ל-STOREKIT_1 בבילד הזה');
+    const expectedProductLines = ALL_PRODUCT_IDS.map((id) => `• ${id}`).join('\n');
+    update('clientConfig', {
+      status: configProblems.length ? 'fail' : 'ok',
+      detail: [
+        `Bundle ID מצופה: ${clientConfig.expectedBundleId}`,
+        `RevenueCat key prefix: ${clientConfig.apiKeyPrefix}… (${clientConfig.apiKeyLength} תווים)`,
+        `StoreKit version forced: ${clientConfig.storeKitVersion}`,
+        `Default Offering: ${clientConfig.expectedDefaultOfferingId}`,
+        `Expected packages: ${clientConfig.expectedPackages.join(', ')}`,
+        `Expected product IDs:\n${expectedProductLines}`,
+        configProblems.length ? `בעיות:\n${configProblems.map((p) => `• ${p}`).join('\n')}` : 'קונפיגורציית האפליקציה נראית תקינה.',
+      ].join('\n'),
+    });
+    if (configProblems.length) errors.push(...configProblems);
+
+    // 3. Plugin
     update('plugin', { status: 'running' });
     let pluginOk = false;
     try {
