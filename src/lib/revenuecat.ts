@@ -292,6 +292,14 @@ async function ensureInit(userId?: string) {
   }
   const { Purchases, LOG_LEVEL } = await import('@revenuecat/purchases-capacitor');
   if (!initialized) {
+    if (initializePromise && initializeStartedAt && Date.now() - initializeStartedAt > INIT_TIMEOUT_MS + 2000) {
+      rcLog('init', 'discarding stale initialize promise before retry', {
+        elapsedMs: Date.now() - initializeStartedAt,
+        timeoutMs: INIT_TIMEOUT_MS,
+      });
+      initializePromise = null;
+      initializeStartedAt = 0;
+    }
     if (!initializePromise) {
       const keyPrefix = REVENUECAT_IOS_API_KEY.slice(0, 10);
       const keyLooksValid = REVENUECAT_IOS_API_KEY.startsWith('appl_');
