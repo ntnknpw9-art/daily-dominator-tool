@@ -8,6 +8,10 @@ import {
   getStoreProducts,
   refreshPremiumStatus,
   isIOSNative,
+  getLastRevenueCatError,
+  getRevenueCatClientConfig,
+  getRevenueCatRemoteOfferingSnapshot,
+  getRevenueCatRuntimeDiagnostics,
   PRODUCT_MONTHLY,
   PRODUCT_YEARLY,
   ALL_PRODUCT_IDS,
@@ -25,7 +29,10 @@ type Step = {
 
 const INITIAL_STEPS: Step[] = [
   { key: 'env', label: 'בדיקת סביבה (iOS Native)', status: 'idle' },
+  { key: 'clientConfig', label: 'בדיקת קונפיגורציית RevenueCat באפליקציה', status: 'idle' },
   { key: 'plugin', label: 'טעינת פלאגין RevenueCat', status: 'idle' },
+  { key: 'runtime', label: 'בדיקת Runtime: configured / appUserID / storefront', status: 'idle' },
+  { key: 'remoteOffering', label: 'בדיקת RevenueCat REST: Default Offering', status: 'idle' },
   { key: 'offerings', label: 'קריאת Offerings מ-RevenueCat', status: 'idle' },
   { key: 'packages', label: 'בדיקת Packages זמינים', status: 'idle' },
   { key: 'directProducts', label: 'בדיקת Products ישירה מ-StoreKit', status: 'idle' },
@@ -76,7 +83,28 @@ export const SubscriptionDiagnostics = () => {
     }
     update('env', { status: 'ok', detail: `platform=${platform}, isNative=${isNative}` });
 
-    // 2. Plugin
+    // 2. Client config
+    update('clientConfig', { status: 'running' });
+    const clientConfig = getRevenueCatClientConfig();
+    const configProblems: string[] = [];
+    if (!clientConfig.apiKeyLooksLikeIOS) configProblems.push('RevenueCat API key לא נראה כמו iOS key (צריך להתחיל ב-appl_)');
+    if (clientConfig.storeKitVersion !== 'STOREKIT_1') configProblems.push('StoreKitVersion לא מוגדר ל-STOREKIT_1 בבילד הזה');
+    const expectedProductLines = ALL_PRODUCT_IDS.map((id) => `• ${id}`).join('\n');
+    update('clientConfig', {
+      status: configProblems.length ? 'fail' : 'ok',
+      detail: [
+        `Bundle ID מצופה: ${clientConfig.expectedBundleId}`,
+        `RevenueCat key prefix: ${clientConfig.apiKeyPrefix}… (${clientConfig.apiKeyLength} תווים)`,
+        `StoreKit version forced: ${clientConfig.storeKitVersion}`,
+        `Default Offering: ${clientConfig.expectedDefaultOfferingId}`,
+        `Expected packages: ${clientConfig.expectedPackages.join(', ')}`,
+        `Expected product IDs:\n${expectedProductLines}`,
+        configProblems.length ? `בעיות:\n${configProblems.map((p) => `• ${p}`).join('\n')}` : 'קונפיגורציית האפליקציה נראית תקינה.',
+      ].join('\n'),
+    });
+    if (configProblems.length) errors.push(...configProblems);
+
+    // 3. Plugin
     update('plugin', { status: 'running' });
     let pluginOk = false;
     try {
@@ -95,7 +123,50 @@ export const SubscriptionDiagnostics = () => {
       errors.push('Plugin import נכשל: ' + (err?.message ?? ''));
     }
 
-    // 3. Offerings
+    // 4. Runtime diagnostics
+    update('runtime', { status: 'running' });
+    try {
+      const start = Date.now();
+      const runtime = await getRevenueCatRuntimeDiagnostics();
+      update('runtime', {
+        status: runtime ? 'ok' : 'fail',
+        detail: runtime ? JSON.stringify(runtime, null, 2) : 'RevenueCat לא מאותחל ב-iOS Native.',
+        durationMs: Date.now() - start,
+      });
+      if (!runtime) errors.push('RevenueCat Runtime diagnostics נכשל.');
+    } catch (e) {
+      const err = e as Error;
+      update('runtime', { status: 'fail', detail: `שגיאה: ${err?.message ?? String(e)}` });
+      errors.push('RevenueCat runtime diagnostics נכשל: ' + (err?.message ?? ''));
+    }
+
+    // 5. RevenueCat REST offering snapshot
+    update('remoteOffering', { status: 'running' });
+    try {
+      const snapshot = await getRevenueCatRemoteOfferingSnapshot();
+      const packageLines = snapshot.defaultPackages?.map((p: { identifier?: string; platform_product_identifier?: string }) => `• ${p.identifier} → ${p.platform_product_identifier}`).join('\n') || '(אין packages)';
+      const defaultHasTwoPackages = snapshot.ok && snapshot.currentOfferingId === 'default' && snapshot.defaultPackages?.length === 2;
+      update('remoteOffering', {
+        status: defaultHasTwoPackages ? 'ok' : 'fail',
+        detail: [
+          `HTTP ok=${snapshot.ok} status=${snapshot.status ?? '—'} (${snapshot.elapsedMs}ms)`,
+          `current_offering_id=${snapshot.currentOfferingId ?? '—'}`,
+          `offerings=${snapshot.offeringIds?.join(', ') || '(אין)'}`,
+          `default packages:\n${packageLines}`,
+          defaultHasTwoPackages
+            ? 'RevenueCat עצמו מוגדר נכון ומחזיר 2 packages. אם StoreKit עדיין מחזיר 0 — הבעיה בצד Apple/App Store Connect.'
+            : 'RevenueCat REST לא מחזיר default עם 2 packages — צריך לתקן Offering/Products ב-RevenueCat לפני שליחה.',
+        ].join('\n'),
+        durationMs: snapshot.elapsedMs,
+      });
+      if (!defaultHasTwoPackages) errors.push('RevenueCat REST לא מחזיר Default Offering עם 2 packages.');
+    } catch (e) {
+      const err = e as Error;
+      update('remoteOffering', { status: 'fail', detail: `שגיאה: ${err?.message ?? String(e)}` });
+      errors.push('RevenueCat REST offering snapshot נכשל: ' + (err?.message ?? ''));
+    }
+
+    // 6. Offerings from SDK/StoreKit
     update('offerings', { status: 'running' });
     let offering: Awaited<ReturnType<typeof getOfferings>> = null;
     let offeringsDuration = 0;
@@ -104,9 +175,14 @@ export const SubscriptionDiagnostics = () => {
       offering = await getOfferings();
       offeringsDuration = Date.now() - start;
       if (!offering) {
+        const lastError = getLastRevenueCatError();
         update('offerings', {
           status: 'fail',
-          detail: 'getOfferings החזיר null. סיבות אפשריות: (1) RevenueCat לא הוגדר עם API Key תקין, (2) App Store Connect API Key לא מחובר ב-RevenueCat Dashboard, (3) Timeout.',
+          detail: [
+            'getOfferings החזיר null.',
+            lastError ? `Last SDK error:\n${JSON.stringify(lastError, null, 2)}` : 'לא התקבלה שגיאת SDK מפורטת.',
+            'אם בדיקת RevenueCat REST למעלה תקינה אבל כאן נכשל — RevenueCat מוגדר, אבל StoreKit/TestFlight לא מצליחים לקבל את מוצרי Apple.',
+          ].join('\n'),
           durationMs: offeringsDuration,
         });
         errors.push('Offerings לא נטענו.');

@@ -68,6 +68,21 @@ type RevenueCatError = Error & {
   readableErrorCode?: string;
   readable_error_code?: string;
   domain?: string;
+  details?: unknown;
+};
+
+type RevenueCatLastError = {
+  operation: string;
+  message?: string;
+  code?: string | number;
+  underlyingErrorMessage?: string;
+  readableErrorCode?: string;
+  readable_error_code?: string;
+  domain?: string;
+  name?: string;
+  elapsedMs?: number;
+  raw?: string;
+  at: string;
 };
 
 /**
@@ -105,6 +120,18 @@ const REVENUECAT_IOS_API_KEY =
   'appl_OsIuxnzzmIfeIVgsxDoYxxuxgDF';
 
 let initialized = false;
+let initializePromise: Promise<unknown> | null = null;
+let configuredAppUserID: string | null = null;
+let lastRevenueCatError: RevenueCatLastError | null = null;
+
+// StoreKit 1 is intentionally forced for this iOS build. RevenueCat's DEFAULT
+// may select StoreKit 2 on newer iOS versions, which requires RevenueCat's
+// App Store Connect In-App Purchase Key setup. StoreKit 1 is the safest path
+// for App Review/TestFlight product lookup and avoids StoreKit 2 key issues.
+const IOS_STOREKIT_VERSION = 'STOREKIT_1' as const;
+const INIT_TIMEOUT_MS = 45000;
+const STOREKIT_FETCH_TIMEOUT_MS = 45000;
+const PURCHASE_TIMEOUT_MS = 90000;
 
 const safeJson = (value: unknown) => {
   try {
@@ -122,10 +149,51 @@ const rcLog = (scope: string, label: string, data?: unknown) => {
   }
 };
 
+const rememberRevenueCatError = (operation: string, error: unknown, elapsedMs?: number) => {
+  const e = error as RevenueCatError;
+  lastRevenueCatError = {
+    operation,
+    message: e?.message ?? String(error),
+    code: e?.code,
+    underlyingErrorMessage: e?.underlyingErrorMessage,
+    readableErrorCode: e?.readableErrorCode,
+    readable_error_code: e?.readable_error_code,
+    domain: e?.domain,
+    name: e?.name,
+    elapsedMs,
+    raw: typeof error === 'object' ? safeJson(error) : String(error),
+    at: new Date().toISOString(),
+  };
+  return lastRevenueCatError;
+};
+
+export const getLastRevenueCatError = () => lastRevenueCatError;
+
+export const getRevenueCatClientConfig = () => ({
+  platform: Capacitor.getPlatform(),
+  isNative: Capacitor.isNativePlatform(),
+  isIOSNative: isIOS(),
+  apiKeyPrefix: REVENUECAT_IOS_API_KEY.slice(0, 10),
+  apiKeyLength: REVENUECAT_IOS_API_KEY.length,
+  apiKeyLooksLikeIOS: REVENUECAT_IOS_API_KEY.startsWith('appl_'),
+  storeKitVersion: IOS_STOREKIT_VERSION,
+  initTimeoutMs: INIT_TIMEOUT_MS,
+  storeKitFetchTimeoutMs: STOREKIT_FETCH_TIMEOUT_MS,
+  purchaseTimeoutMs: PURCHASE_TIMEOUT_MS,
+  expectedBundleId: 'com.natanknafo.dailydominator',
+  expectedDefaultOfferingId: 'default',
+  expectedPackages: ['$rc_monthly', '$rc_annual'],
+  expectedProductIds: ALL_PRODUCT_IDS,
+});
+
 const withTimeout = async <T,>(promise: Promise<T>, ms: number, label: string): Promise<T> => {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<never>((_, reject) => {
-    timeoutId = setTimeout(() => reject(new Error(`${label} timed out`)), ms);
+    timeoutId = setTimeout(() => {
+      const error = new Error(`${label} timed out after ${ms}ms`) as RevenueCatError;
+      error.code = 'LOVABLE_TIMEOUT';
+      reject(error);
+    }, ms);
   });
   try {
     return await Promise.race([promise, timeout]);
@@ -133,9 +201,6 @@ const withTimeout = async <T,>(promise: Promise<T>, ms: number, label: string): 
     if (timeoutId) clearTimeout(timeoutId);
   }
 };
-
-const PURCHASE_TIMEOUT_MS = 60000;
-const INIT_TIMEOUT_MS = 10000;
 
 const summarizePackage = (pkg?: RevenueCatPackage | null) => ({
   identifier: pkg?.identifier,
@@ -188,28 +253,98 @@ async function ensureInit(userId?: string) {
   }
   const { Purchases, LOG_LEVEL } = await import('@revenuecat/purchases-capacitor');
   if (!initialized) {
-    const keyPrefix = REVENUECAT_IOS_API_KEY.slice(0, 6);
-    const keyLooksValid = REVENUECAT_IOS_API_KEY.startsWith('appl_');
-    rcLog('init', 'configuring RevenueCat', {
-      platform: Capacitor.getPlatform(),
-      isNative: Capacitor.isNativePlatform(),
-      apiKeyPrefix: keyPrefix,
-      apiKeyLength: REVENUECAT_IOS_API_KEY.length,
-      apiKeyLooksLikeIOS: keyLooksValid,
-      appUserID: userId ?? '(anonymous)',
-      expectedProductIds: ALL_PRODUCT_IDS,
-    });
-    if (!keyLooksValid) {
-      rcLog('init', 'WARNING: API key does NOT start with "appl_" — this may be an Android (goog_) or Web (rcb_) key!');
+    if (!initializePromise) {
+      const keyPrefix = REVENUECAT_IOS_API_KEY.slice(0, 10);
+      const keyLooksValid = REVENUECAT_IOS_API_KEY.startsWith('appl_');
+      rcLog('init', 'configuring RevenueCat', {
+        ...getRevenueCatClientConfig(),
+        apiKeyPrefix: keyPrefix,
+        appUserID: userId ?? '(anonymous)',
+      });
+      if (!keyLooksValid) {
+        rcLog('init', 'WARNING: API key does NOT start with "appl_" — this may be an Android (goog_) or Web (rcb_) key!');
+      }
+      initializePromise = (async () => {
+        await Purchases.setLogLevel({ level: LOG_LEVEL.VERBOSE });
+        await Purchases.configure({
+          apiKey: REVENUECAT_IOS_API_KEY,
+          appUserID: userId,
+          storeKitVersion: IOS_STOREKIT_VERSION,
+          diagnosticsEnabled: true,
+          preferredUILocaleOverride: 'he-IL',
+        } as never);
+        initialized = true;
+        configuredAppUserID = userId ?? null;
+        try {
+          const configured = await Purchases.isConfigured();
+          const appUser = await Purchases.getAppUserID();
+          rcLog('init', 'configured OK', { configured, appUserID: appUser?.appUserID, storeKitVersion: IOS_STOREKIT_VERSION });
+        } catch (e) {
+          rcLog('init', 'configured OK; identity diagnostic failed', e);
+        }
+      })();
     }
-    await Purchases.setLogLevel({ level: LOG_LEVEL.VERBOSE });
-    await Purchases.configure({ apiKey: REVENUECAT_IOS_API_KEY, appUserID: userId });
-    initialized = true;
-    rcLog('init', 'configured OK');
-  } else if (userId) {
-    try { await Purchases.logIn({ appUserID: userId }); } catch (e) { rcLog('init', 'logIn failed', e); }
+    await initializePromise;
+  } else if (userId && configuredAppUserID !== userId) {
+    try {
+      const result = await Purchases.logIn({ appUserID: userId });
+      configuredAppUserID = userId;
+      rcLog('init', 'logIn OK', { appUserID: userId, created: result?.created });
+    } catch (e) {
+      rememberRevenueCatError('logIn', e);
+      rcLog('init', 'logIn failed', e);
+    }
   }
   return Purchases;
+}
+
+export async function getRevenueCatRuntimeDiagnostics() {
+  const Purchases = await ensureInit();
+  if (!Purchases) return null;
+  const diagnostics: Record<string, unknown> = {};
+  try { diagnostics.isConfigured = await Purchases.isConfigured(); } catch (e) { diagnostics.isConfiguredError = rememberRevenueCatError('isConfigured', e); }
+  try { diagnostics.appUserID = (await Purchases.getAppUserID())?.appUserID; } catch (e) { diagnostics.appUserIDError = rememberRevenueCatError('getAppUserID', e); }
+  try { diagnostics.storefront = await withTimeout(Purchases.getStorefront(), 15000, 'RevenueCat getStorefront'); } catch (e) { diagnostics.storefrontError = rememberRevenueCatError('getStorefront', e); }
+  return diagnostics;
+}
+
+export async function getRevenueCatRemoteOfferingSnapshot() {
+  const appUserId = configuredAppUserID || `diagnostics-${Date.now()}`;
+  const url = `https://api.revenuecat.com/v1/subscribers/${encodeURIComponent(appUserId)}/offerings`;
+  const start = Date.now();
+  try {
+    const response = await withTimeout(fetch(url, {
+      headers: {
+        Authorization: `Bearer ${REVENUECAT_IOS_API_KEY}`,
+        'X-Platform': 'ios',
+      },
+    }), 15000, 'RevenueCat REST offerings snapshot');
+    const body = await response.json().catch(() => null);
+    const defaultOffering = Array.isArray(body?.offerings)
+      ? body.offerings.find((offering: { identifier?: string }) => offering?.identifier === 'default')
+      : null;
+    return {
+      ok: response.ok,
+      status: response.status,
+      elapsedMs: Date.now() - start,
+      currentOfferingId: body?.current_offering_id ?? null,
+      offeringIds: Array.isArray(body?.offerings) ? body.offerings.map((o: { identifier?: string }) => o?.identifier) : [],
+      defaultPackages: Array.isArray(defaultOffering?.packages) ? defaultOffering.packages : [],
+      raw: body,
+    };
+  } catch (e) {
+    rememberRevenueCatError('RevenueCat REST offerings snapshot', e, Date.now() - start);
+    return {
+      ok: false,
+      status: undefined,
+      elapsedMs: Date.now() - start,
+      currentOfferingId: null,
+      offeringIds: [],
+      defaultPackages: [],
+      raw: null,
+      error: getLastRevenueCatError(),
+    };
+  }
 }
 
 
@@ -218,17 +353,8 @@ export async function getOfferings() {
   try {
     Purchases = await withTimeout(ensureInit(), INIT_TIMEOUT_MS, 'RevenueCat initialize');
   } catch (e) {
-    const error = e as RevenueCatError;
-    rcLog('offerings', 'INIT ERROR', {
-      message: error?.message,
-      code: error?.code,
-      underlyingErrorMessage: error?.underlyingErrorMessage,
-      readableErrorCode: error?.readableErrorCode,
-      readable_error_code: error?.readable_error_code,
-      domain: error?.domain,
-      name: error?.name,
-      raw: typeof error === 'object' ? safeJson(error) : String(error),
-    });
+    const remembered = rememberRevenueCatError('RevenueCat initialize before getOfferings', e);
+    rcLog('offerings', 'INIT ERROR', remembered);
     return null;
   }
   if (!Purchases) {
@@ -240,7 +366,8 @@ export async function getOfferings() {
     return null;
   }
   try {
-    const offerings = await withTimeout(Purchases.getOfferings(), 12000, 'RevenueCat getOfferings') as unknown as RevenueCatOfferings;
+    const start = Date.now();
+    const offerings = await withTimeout(Purchases.getOfferings(), STOREKIT_FETCH_TIMEOUT_MS, 'RevenueCat getOfferings') as unknown as RevenueCatOfferings;
     const allOfferings = offerings?.all ?? {};
     const defaultOffering = allOfferings.default ?? null;
     const current = defaultOffering ?? offerings?.current ?? null;
@@ -251,6 +378,7 @@ export async function getOfferings() {
         : 'none';
     const pkgCount = current?.availablePackages?.length ?? 0;
     rcLog('offerings', 'loaded', {
+      elapsedMs: Date.now() - start,
       currentIdentifier: current?.identifier ?? null,
       selectedSource,
       currentPackagesCount: pkgCount,
@@ -271,21 +399,12 @@ export async function getOfferings() {
     if (!current) {
       rcLog('offerings', 'WARNING: No default/current offering returned from RevenueCat. Make sure the default offering exists and has packages attached.');
     } else if (pkgCount === 0) {
-      rcLog('offerings', 'WARNING: Current offering has 0 packages. StoreKit did not return the products. Check: (1) Paid Apps Agreement Active, (2) Products attached to the offering in RevenueCat, (3) Bundle ID matches, (4) Sandbox tester signed in on device.');
+      rcLog('offerings', 'WARNING: Current offering has 0 packages. StoreKit did not return products to RevenueCat. Check Apple product availability, Paid Apps Agreement, Bundle ID, Sandbox tester, and product status.');
     }
     return current;
   } catch (e) {
-    const error = e as RevenueCatError;
-    rcLog('offerings', 'ERROR', {
-      message: error?.message,
-      code: error?.code,
-      underlyingErrorMessage: error?.underlyingErrorMessage,
-      readableErrorCode: error?.readableErrorCode,
-      readable_error_code: error?.readable_error_code,
-      domain: error?.domain,
-      name: error?.name,
-      raw: typeof error === 'object' ? safeJson(error) : String(error),
-    });
+    const remembered = rememberRevenueCatError('RevenueCat getOfferings', e);
+    rcLog('offerings', 'ERROR', remembered);
     return null;
   }
 }
@@ -295,28 +414,21 @@ export async function getStoreProducts(productIds: string[] = ALL_PRODUCT_IDS) {
   try {
     Purchases = await withTimeout(ensureInit(), INIT_TIMEOUT_MS, 'RevenueCat initialize');
   } catch (e) {
-    const error = e as RevenueCatError;
-    rcLog('products', 'INIT ERROR', {
-      message: error?.message,
-      code: error?.code,
-      underlyingErrorMessage: error?.underlyingErrorMessage,
-      readableErrorCode: error?.readableErrorCode,
-      readable_error_code: error?.readable_error_code,
-      domain: error?.domain,
-      name: error?.name,
-      raw: typeof error === 'object' ? safeJson(error) : String(error),
-    });
+    const remembered = rememberRevenueCatError('RevenueCat initialize before getProducts', e);
+    rcLog('products', 'INIT ERROR', remembered);
     return [];
   }
   if (!Purchases) return [];
   try {
+    const start = Date.now();
     const result = await withTimeout(
       Purchases.getProducts({ productIdentifiers: productIds }),
-      12000,
+      STOREKIT_FETCH_TIMEOUT_MS,
       'RevenueCat getProducts'
     ) as unknown as RevenueCatProductsResult;
     const products = result?.products ?? [];
     rcLog('products', 'loaded', {
+      elapsedMs: Date.now() - start,
       requested: productIds,
       count: products.length,
       products: products.map(summarizeProduct),
@@ -326,17 +438,8 @@ export async function getStoreProducts(productIds: string[] = ALL_PRODUCT_IDS) {
     }
     return products;
   } catch (e) {
-    const error = e as RevenueCatError;
-    rcLog('products', 'ERROR', {
-      message: error?.message,
-      code: error?.code,
-      underlyingErrorMessage: error?.underlyingErrorMessage,
-      readableErrorCode: error?.readableErrorCode,
-      readable_error_code: error?.readable_error_code,
-      domain: error?.domain,
-      name: error?.name,
-      raw: typeof error === 'object' ? safeJson(error) : String(error),
-    });
+    const remembered = rememberRevenueCatError('RevenueCat getProducts', e);
+    rcLog('products', 'ERROR', remembered);
     return [];
   }
 }

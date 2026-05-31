@@ -32,12 +32,14 @@ npm install
 חשוב: לפני העלאה לחנות, יש לבנות ללא ה-server URL של לובאבל.
 
 ```bash
-# בנייה רגילה — capacitor.config.ts כבר מוגדר להתעלם מ-server בפרודקשן
+git pull
+npm install
+rm -rf dist ios/App/App/public
 npm run build
 npx cap sync ios
 ```
 
-**הסבר:** הקובץ `capacitor.config.ts` עודכן כך שה-`server.url` נטען רק כש-`CAP_ENV=development`. ברירת המחדל היא בנייה מקומית מתוך `dist/` — בדיוק מה שאפל דורשת.
+**הסבר:** מוחקים את `dist` ואת `ios/App/App/public` לפני הבנייה כדי לוודא שהארכיון הבא מכיל בדיוק את הקוד החדש — ולא Web assets ישנים מבילד קודם. הקובץ `capacitor.config.ts` מוגדר כך שה-`server.url` נטען רק כש-`CAP_ENV=development`. ברירת המחדל היא בנייה מקומית מתוך `dist/` — בדיוק מה שאפל דורשת.
 
 אם תרצה Hot-reload בזמן פיתוח על המכשיר:
 ```bash
@@ -60,8 +62,8 @@ Xcode ייפתח עם הפרויקט `ios/App/App.xcworkspace`.
 2. תחת **Signing & Capabilities**:
    - סמן **Automatically manage signing**.
    - בחר את ה-**Team** שלך (חשבון ה-Developer).
-   - **Bundle Identifier**: `app.lovable.dailydominator`
-     - ⚠️ אם זה תפוס, החלף ל-ID ייחודי (למשל `com.yourname.dailydominator`) גם כאן וגם ב-`capacitor.config.ts`.
+   - **Bundle Identifier**: `com.natanknafo.dailydominator`
+      - חייב להתאים בדיוק ל-App Store Connect, ל-RevenueCat ול-`capacitor.config.ts`.
 3. תחת **General**:
    - **Display Name**: `Daily Dominator`
    - **Version**: `1.0.0`
