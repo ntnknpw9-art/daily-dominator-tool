@@ -339,6 +339,14 @@ ${directProducts.map((p) => `• ${p.identifier} ${p.priceString ? '· ' + p.pri
     setRunning(false);
   };
 
+  useEffect(() => {
+    if (autoRun && !autoRunRef.current) {
+      autoRunRef.current = true;
+      run();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoRun]);
+
   const copyReport = async () => {
     const report = [
       `=== Daily Dominator — Subscription Diagnostics ===`,
