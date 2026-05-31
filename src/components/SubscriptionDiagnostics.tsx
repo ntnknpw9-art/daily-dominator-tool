@@ -175,9 +175,14 @@ export const SubscriptionDiagnostics = () => {
       offering = await getOfferings();
       offeringsDuration = Date.now() - start;
       if (!offering) {
+        const lastError = getLastRevenueCatError();
         update('offerings', {
           status: 'fail',
-          detail: 'getOfferings החזיר null. סיבות אפשריות: (1) RevenueCat לא הוגדר עם API Key תקין, (2) App Store Connect API Key לא מחובר ב-RevenueCat Dashboard, (3) Timeout.',
+          detail: [
+            'getOfferings החזיר null.',
+            lastError ? `Last SDK error:\n${JSON.stringify(lastError, null, 2)}` : 'לא התקבלה שגיאת SDK מפורטת.',
+            'אם בדיקת RevenueCat REST למעלה תקינה אבל כאן נכשל — RevenueCat מוגדר, אבל StoreKit/TestFlight לא מצליחים לקבל את מוצרי Apple.',
+          ].join('\n'),
           durationMs: offeringsDuration,
         });
         errors.push('Offerings לא נטענו.');
