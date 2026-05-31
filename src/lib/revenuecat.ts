@@ -334,7 +334,16 @@ export async function getRevenueCatRemoteOfferingSnapshot() {
     };
   } catch (e) {
     rememberRevenueCatError('RevenueCat REST offerings snapshot', e, Date.now() - start);
-    return { ok: false, elapsedMs: Date.now() - start, error: getLastRevenueCatError() };
+    return {
+      ok: false,
+      status: undefined,
+      elapsedMs: Date.now() - start,
+      currentOfferingId: null,
+      offeringIds: [],
+      defaultPackages: [],
+      raw: null,
+      error: getLastRevenueCatError(),
+    };
   }
 }
 
