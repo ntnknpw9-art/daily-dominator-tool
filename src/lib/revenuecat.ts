@@ -649,10 +649,20 @@ export async function restorePurchases() {
 
 export async function refreshPremiumStatus() {
   const { data: auth } = await supabase.auth.getUser();
-  const Purchases = await ensureInit(auth.user?.id);
+  let Purchases = null;
+  try {
+    Purchases = await withTimeout(ensureInit(auth.user?.id), INIT_TIMEOUT_MS, 'RevenueCat initialize before getCustomerInfo');
+  } catch (e) {
+    rememberRevenueCatError('RevenueCat initialize before getCustomerInfo', e);
+    return null;
+  }
   if (!Purchases) return null;
   try {
-    const result: RevenueCatPurchaseResult = await Purchases.getCustomerInfo();
+    const result: RevenueCatPurchaseResult = await withTimeout(
+      Purchases.getCustomerInfo(),
+      STOREKIT_FETCH_TIMEOUT_MS,
+      'RevenueCat getCustomerInfo'
+    );
     const info = result.customerInfo;
     const active = extractActive(info);
     await syncToSupabase();
