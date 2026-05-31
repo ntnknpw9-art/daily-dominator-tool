@@ -8,6 +8,10 @@ import {
   getStoreProducts,
   refreshPremiumStatus,
   isIOSNative,
+  getLastRevenueCatError,
+  getRevenueCatClientConfig,
+  getRevenueCatRemoteOfferingSnapshot,
+  getRevenueCatRuntimeDiagnostics,
   PRODUCT_MONTHLY,
   PRODUCT_YEARLY,
   ALL_PRODUCT_IDS,
@@ -25,7 +29,10 @@ type Step = {
 
 const INITIAL_STEPS: Step[] = [
   { key: 'env', label: 'בדיקת סביבה (iOS Native)', status: 'idle' },
+  { key: 'clientConfig', label: 'בדיקת קונפיגורציית RevenueCat באפליקציה', status: 'idle' },
   { key: 'plugin', label: 'טעינת פלאגין RevenueCat', status: 'idle' },
+  { key: 'runtime', label: 'בדיקת Runtime: configured / appUserID / storefront', status: 'idle' },
+  { key: 'remoteOffering', label: 'בדיקת RevenueCat REST: Default Offering', status: 'idle' },
   { key: 'offerings', label: 'קריאת Offerings מ-RevenueCat', status: 'idle' },
   { key: 'packages', label: 'בדיקת Packages זמינים', status: 'idle' },
   { key: 'directProducts', label: 'בדיקת Products ישירה מ-StoreKit', status: 'idle' },
