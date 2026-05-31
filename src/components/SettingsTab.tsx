@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Volume2, VolumeX, Sun, Moon, Bell, BellOff, Skull, Trash2, Watch, CheckCircle2, RefreshCw, Sparkles, Heart, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -45,8 +45,8 @@ type RevenueCatStoreProduct = RevenueCatPackage['product'] & {
   identifier: string;
 };
 
-const SUBSCRIPTION_PRODUCTS_UNAVAILABLE = 'Subscription products are not available right now. Please try again later.';
-const SUBSCRIPTION_PRODUCTS_LOADING = 'טוען את מוצרי המנוי מ-App Store. נסה שוב בעוד רגע.';
+const SUBSCRIPTION_PRODUCTS_UNAVAILABLE = 'מוצרי המנוי לא זמינים כרגע מ-App Store. נסה לרענן או לבדוק שוב בעוד רגע.';
+const SUBSCRIPTION_PRODUCTS_LOADING = 'טוען את מוצרי המנוי מ-App Store...';
 
 const SettingsTab = () => {
   const { signOut, user } = useAuth();
@@ -59,13 +59,18 @@ const SettingsTab = () => {
   const [purchasing, setPurchasing] = useState<string | null>(null);
   const [restoring, setRestoring] = useState(false);
   const [subOpen, setSubOpen] = useState(false);
+  const catalogLoadPromiseRef = useRef<Promise<{ offering: RevenueCatOffering | null; products: RevenueCatStoreProduct[] }> | null>(null);
 
-  useEffect(() => {
-    if (isIOSNative()) {
+  const loadSubscriptionProducts = useCallback(async (reason: 'auto' | 'purchase' | 'refresh' = 'auto') => {
+    if (!isIOSNative()) return { offering: null, products: [] };
+    if (catalogLoadPromiseRef.current) return catalogLoadPromiseRef.current;
+
+    const promise = (async () => {
       setOfferingsLoaded(false);
       setOfferingsError(null);
-      getOfferings()
-        .then(async (offering) => {
+      try {
+        console.log('[RC UI] loading subscription catalog', { reason });
+        const offering = await getOfferings();
           const packages = offering?.availablePackages ?? [];
           console.log('[RC UI] offerings loaded', offering ? {
             identifier: offering?.identifier,
@@ -80,9 +85,11 @@ const SettingsTab = () => {
           } : null);
           console.log('[RC UI] packages count', packages.length);
           setOfferings(offering);
-          if (!offering || packages.length === 0) {
-            console.log('[RC UI] offerings missing packages; trying direct StoreKit product load');
-            const products = await getStoreProducts();
+
+          let products: RevenueCatStoreProduct[] = [];
+          if (!offering || packages.length < 2) {
+            console.log('[RC UI] offerings missing packages; trying direct StoreKit product load', { reason, packagesCount: packages.length });
+            products = await getStoreProducts();
             console.log('[RC UI] direct products loaded', products.map((p) => ({
               identifier: p.identifier,
               priceString: p.priceString,
@@ -91,14 +98,28 @@ const SettingsTab = () => {
             setStoreProducts(products);
             if (products.length === 0) setOfferingsError(SUBSCRIPTION_PRODUCTS_UNAVAILABLE);
           }
-        })
-        .catch((e) => {
-          console.log('[RC UI] getOfferings failed', e);
-          setOfferingsError(e?.message || 'טעינת המחירים נכשלה');
-        })
-        .finally(() => setOfferingsLoaded(true));
-    }
+
+          return { offering, products };
+      } catch (e) {
+        const error = e as { message?: string };
+        console.log('[RC UI] subscription catalog load failed', error);
+        setOfferingsError(error?.message || SUBSCRIPTION_PRODUCTS_UNAVAILABLE);
+        return { offering: null, products: [] };
+      } finally {
+        setOfferingsLoaded(true);
+        catalogLoadPromiseRef.current = null;
+      }
+    })();
+
+    catalogLoadPromiseRef.current = promise;
+    return promise;
   }, []);
+
+  useEffect(() => {
+    if (subOpen && isIOSNative() && !offeringsLoaded && !offerings && storeProducts.length === 0) {
+      void loadSubscriptionProducts('auto');
+    }
+  }, [subOpen, offeringsLoaded, offerings, storeProducts.length, loadSubscriptionProducts]);
 
   const findPackage = (productKey: string, source: RevenueCatOffering | null = offerings) => {
     if (!source) return null;
@@ -150,22 +171,6 @@ const SettingsTab = () => {
       toast.info('הרכישות זמינות באפליקציה על iPhone בלבד');
       return;
     }
-    if (!offeringsLoaded) {
-      console.log('[RC UI] purchase blocked: offerings still loading', { requestedProductKey: productKey });
-      setOfferingsError(SUBSCRIPTION_PRODUCTS_LOADING);
-      toast.info(SUBSCRIPTION_PRODUCTS_LOADING);
-      return;
-    }
-    if ((!offerings || (offerings.availablePackages?.length ?? 0) === 0) && storeProducts.length === 0) {
-      console.log('[RC UI] purchase blocked: no offering packages loaded', {
-        requestedProductKey: productKey,
-        offeringIdentifier: offerings?.identifier ?? null,
-        packagesCount: offerings?.availablePackages?.length ?? 0,
-      });
-      setOfferingsError(SUBSCRIPTION_PRODUCTS_UNAVAILABLE);
-      toast.error(SUBSCRIPTION_PRODUCTS_UNAVAILABLE);
-      return;
-    }
     setPurchasing(productKey);
     setOfferingsError(null);
     try {
@@ -173,17 +178,15 @@ const SettingsTab = () => {
       let selectedProduct = findStoreProduct(productKey);
 
       if (!selectedPackage && !selectedProduct) {
-        console.log('[RC UI] package/product missing; refreshing offerings and direct products before purchase', { requestedProductKey: productKey });
-        const freshOffering = await getOfferings();
-        setOfferings(freshOffering);
-        console.log('[RC UI] packages count after refresh', freshOffering?.availablePackages?.length ?? 0);
-        selectedPackage = findPackage(productKey, freshOffering);
-        if (!selectedPackage) {
-          const freshProducts = await getStoreProducts();
-          setStoreProducts(freshProducts);
-          selectedProduct = freshProducts.find((p) => p?.identifier === productKey) ?? null;
-          console.log('[RC UI] direct products count after refresh', freshProducts.length);
-        }
+        console.log('[RC UI] package/product missing; loading catalog before purchase', { requestedProductKey: productKey, offeringsLoaded });
+        toast.info(SUBSCRIPTION_PRODUCTS_LOADING);
+        const fresh = await loadSubscriptionProducts('purchase');
+        console.log('[RC UI] catalog after purchase-triggered load', {
+          packagesCount: fresh.offering?.availablePackages?.length ?? 0,
+          directProductsCount: fresh.products.length,
+        });
+        selectedPackage = findPackage(productKey, fresh.offering);
+        selectedProduct = fresh.products.find((p) => p?.identifier === productKey) ?? findStoreProduct(productKey);
       }
 
       if (!selectedPackage && !selectedProduct) {

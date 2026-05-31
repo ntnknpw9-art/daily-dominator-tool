@@ -129,8 +129,8 @@ let lastRevenueCatError: RevenueCatLastError | null = null;
 // App Store Connect In-App Purchase Key setup. StoreKit 1 is the safest path
 // for App Review/TestFlight product lookup and avoids StoreKit 2 key issues.
 const IOS_STOREKIT_VERSION = 'STOREKIT_1' as const;
-const INIT_TIMEOUT_MS = 45000;
-const STOREKIT_FETCH_TIMEOUT_MS = 45000;
+const INIT_TIMEOUT_MS = 15000;
+const STOREKIT_FETCH_TIMEOUT_MS = 20000;
 const PURCHASE_TIMEOUT_MS = 90000;
 const RUNTIME_DIAGNOSTIC_TIMEOUT_MS = 8000;
 const REST_SNAPSHOT_TIMEOUT_MS = 12000;
@@ -270,25 +270,40 @@ async function ensureInit(userId?: string) {
       }
       initializePromise = (async () => {
         await Purchases.setLogLevel({ level: LOG_LEVEL.VERBOSE });
-        await Purchases.configure({
-          apiKey: REVENUECAT_IOS_API_KEY,
-          appUserID: userId,
-          storeKitVersion: IOS_STOREKIT_VERSION,
-          diagnosticsEnabled: true,
-          preferredUILocaleOverride: 'he-IL',
-        } as never);
+        await withTimeout(
+          Purchases.configure({
+            apiKey: REVENUECAT_IOS_API_KEY,
+            appUserID: userId,
+            storeKitVersion: IOS_STOREKIT_VERSION,
+            diagnosticsEnabled: true,
+            preferredUILocaleOverride: 'he-IL',
+          } as never),
+          INIT_TIMEOUT_MS,
+          'RevenueCat configure'
+        );
         initialized = true;
         configuredAppUserID = userId ?? null;
-        try {
-          const configured = await Purchases.isConfigured();
-          const appUser = await Purchases.getAppUserID();
-          rcLog('init', 'configured OK', { configured, appUserID: appUser?.appUserID, storeKitVersion: IOS_STOREKIT_VERSION });
-        } catch (e) {
-          rcLog('init', 'configured OK; identity diagnostic failed', e);
-        }
+        rcLog('init', 'configure resolved', { storeKitVersion: IOS_STOREKIT_VERSION });
+        void Promise.allSettled([
+          withTimeout(Purchases.isConfigured(), 3000, 'RevenueCat post-config isConfigured'),
+          withTimeout(Purchases.getAppUserID(), 3000, 'RevenueCat post-config getAppUserID'),
+        ]).then(([configured, appUser]) => {
+          rcLog('init', 'post-config identity diagnostic', {
+            configured: configured.status === 'fulfilled' ? configured.value : configured.reason?.message,
+            appUserID: appUser.status === 'fulfilled' ? appUser.value?.appUserID : appUser.reason?.message,
+            storeKitVersion: IOS_STOREKIT_VERSION,
+          });
+        });
       })();
     }
-    await initializePromise;
+    try {
+      await initializePromise;
+    } catch (e) {
+      initialized = false;
+      initializePromise = null;
+      rememberRevenueCatError('RevenueCat configure', e);
+      throw e;
+    }
   } else if (userId && configuredAppUserID !== userId) {
     try {
       const result = await Purchases.logIn({ appUserID: userId });
