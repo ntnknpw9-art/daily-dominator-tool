@@ -37,9 +37,12 @@ npm install
 rm -rf dist ios/App/App/public
 npm run build
 npx cap sync ios
+npx cap open ios
 ```
 
 **הסבר:** מוחקים את `dist` ואת `ios/App/App/public` לפני הבנייה כדי לוודא שהארכיון הבא מכיל בדיוק את הקוד החדש — ולא Web assets ישנים מבילד קודם. הקובץ `capacitor.config.ts` מוגדר כך שה-`server.url` נטען רק כש-`CAP_ENV=development`. ברירת המחדל היא בנייה מקומית מתוך `dist/` — בדיוק מה שאפל דורשת.
+
+לפני העלאה חוזרת ל-TestFlight, פתח את אבחון המנויים באפליקציה וודא שמופיע `Build marker: rc-native-storekit-fallback-2026-05-31-1755` ושבדיקת `StoreKit Native ישירה` עוברת. אם הסימון לא מופיע — זה עדיין הבילד הישן.
 
 אם תרצה Hot-reload בזמן פיתוח על המכשיר:
 ```bash
@@ -67,7 +70,7 @@ Xcode ייפתח עם הפרויקט `ios/App/App.xcworkspace`.
 3. תחת **General**:
    - **Display Name**: `Daily Dominator`
    - **Version**: `1.0.0`
-   - **Build**: `1`
+   - **Build**: `2` (חובה להעלות בילד חדש — לא להשתמש בארכיון הישן)
    - **Minimum Deployments**: iOS 15.0
 4. תחת **App Icons**: ודא שיש אייקון 1024x1024 ב-`Assets.xcassets/AppIcon`.
 
