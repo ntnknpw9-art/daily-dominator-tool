@@ -306,7 +306,9 @@ async function ensureInit(userId?: string) {
       initializeStartedAt = Date.now();
       initializePromise = (async () => {
         try {
-          Purchases.setLogLevel({ level: LOG_LEVEL.VERBOSE });
+          void Promise.resolve(Purchases.setLogLevel({ level: LOG_LEVEL.VERBOSE })).catch((e) => {
+            rcLog('init', 'setLogLevel failed but continuing', e);
+          });
         } catch (e) {
           rcLog('init', 'setLogLevel failed but continuing', e);
         }
