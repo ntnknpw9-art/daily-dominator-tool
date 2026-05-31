@@ -123,7 +123,50 @@ export const SubscriptionDiagnostics = () => {
       errors.push('Plugin import נכשל: ' + (err?.message ?? ''));
     }
 
-    // 3. Offerings
+    // 4. Runtime diagnostics
+    update('runtime', { status: 'running' });
+    try {
+      const start = Date.now();
+      const runtime = await getRevenueCatRuntimeDiagnostics();
+      update('runtime', {
+        status: runtime ? 'ok' : 'fail',
+        detail: runtime ? JSON.stringify(runtime, null, 2) : 'RevenueCat לא מאותחל ב-iOS Native.',
+        durationMs: Date.now() - start,
+      });
+      if (!runtime) errors.push('RevenueCat Runtime diagnostics נכשל.');
+    } catch (e) {
+      const err = e as Error;
+      update('runtime', { status: 'fail', detail: `שגיאה: ${err?.message ?? String(e)}` });
+      errors.push('RevenueCat runtime diagnostics נכשל: ' + (err?.message ?? ''));
+    }
+
+    // 5. RevenueCat REST offering snapshot
+    update('remoteOffering', { status: 'running' });
+    try {
+      const snapshot = await getRevenueCatRemoteOfferingSnapshot();
+      const packageLines = snapshot.defaultPackages?.map((p: { identifier?: string; platform_product_identifier?: string }) => `• ${p.identifier} → ${p.platform_product_identifier}`).join('\n') || '(אין packages)';
+      const defaultHasTwoPackages = snapshot.ok && snapshot.currentOfferingId === 'default' && snapshot.defaultPackages?.length === 2;
+      update('remoteOffering', {
+        status: defaultHasTwoPackages ? 'ok' : 'fail',
+        detail: [
+          `HTTP ok=${snapshot.ok} status=${snapshot.status ?? '—'} (${snapshot.elapsedMs}ms)`,
+          `current_offering_id=${snapshot.currentOfferingId ?? '—'}`,
+          `offerings=${snapshot.offeringIds?.join(', ') || '(אין)'}`,
+          `default packages:\n${packageLines}`,
+          defaultHasTwoPackages
+            ? 'RevenueCat עצמו מוגדר נכון ומחזיר 2 packages. אם StoreKit עדיין מחזיר 0 — הבעיה בצד Apple/App Store Connect.'
+            : 'RevenueCat REST לא מחזיר default עם 2 packages — צריך לתקן Offering/Products ב-RevenueCat לפני שליחה.',
+        ].join('\n'),
+        durationMs: snapshot.elapsedMs,
+      });
+      if (!defaultHasTwoPackages) errors.push('RevenueCat REST לא מחזיר Default Offering עם 2 packages.');
+    } catch (e) {
+      const err = e as Error;
+      update('remoteOffering', { status: 'fail', detail: `שגיאה: ${err?.message ?? String(e)}` });
+      errors.push('RevenueCat REST offering snapshot נכשל: ' + (err?.message ?? ''));
+    }
+
+    // 6. Offerings from SDK/StoreKit
     update('offerings', { status: 'running' });
     let offering: Awaited<ReturnType<typeof getOfferings>> = null;
     let offeringsDuration = 0;
