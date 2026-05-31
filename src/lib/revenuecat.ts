@@ -61,6 +61,18 @@ type RevenueCatProductsResult = {
   products?: RevenueCatStoreProduct[];
 };
 
+type NativeStoreKitProduct = RevenueCatStoreProduct & {
+  source?: 'native-storekit';
+  displayName?: string;
+  displayPrice?: string;
+};
+
+type NativeStoreKitPurchaseResult = {
+  status?: 'success' | 'pending' | 'cancelled';
+  productIdentifier?: string;
+  transactionIdentifier?: string;
+};
+
 type RevenueCatError = Error & {
   code?: string | number;
   underlyingErrorMessage?: string;
@@ -123,17 +135,20 @@ let initialized = false;
 let initializePromise: Promise<unknown> | null = null;
 let configuredAppUserID: string | null = null;
 let lastRevenueCatError: RevenueCatLastError | null = null;
+let initializeStartedAt = 0;
 
 // StoreKit 1 is intentionally forced for this iOS build. RevenueCat's DEFAULT
 // may select StoreKit 2 on newer iOS versions, which requires RevenueCat's
 // App Store Connect In-App Purchase Key setup. StoreKit 1 is the safest path
 // for App Review/TestFlight product lookup and avoids StoreKit 2 key issues.
 const IOS_STOREKIT_VERSION = 'STOREKIT_1' as const;
-const INIT_TIMEOUT_MS = 15000;
-const STOREKIT_FETCH_TIMEOUT_MS = 20000;
+const APP_BUILD_MARKER = 'rc-native-storekit-fallback-2026-05-31-1755';
+const INIT_TIMEOUT_MS = 8000;
+const STOREKIT_FETCH_TIMEOUT_MS = 12000;
 const PURCHASE_TIMEOUT_MS = 90000;
-const RUNTIME_DIAGNOSTIC_TIMEOUT_MS = 8000;
-const REST_SNAPSHOT_TIMEOUT_MS = 12000;
+const RUNTIME_DIAGNOSTIC_TIMEOUT_MS = 6000;
+const REST_SNAPSHOT_TIMEOUT_MS = 10000;
+const NATIVE_STOREKIT_TIMEOUT_MS = 12000;
 
 const safeJson = (value: unknown) => {
   try {
@@ -175,6 +190,7 @@ export const getRevenueCatClientConfig = () => ({
   platform: Capacitor.getPlatform(),
   isNative: Capacitor.isNativePlatform(),
   isIOSNative: isIOS(),
+  buildMarker: APP_BUILD_MARKER,
   apiKeyPrefix: REVENUECAT_IOS_API_KEY.slice(0, 10),
   apiKeyLength: REVENUECAT_IOS_API_KEY.length,
   apiKeyLooksLikeIOS: REVENUECAT_IOS_API_KEY.startsWith('appl_'),
@@ -184,6 +200,7 @@ export const getRevenueCatClientConfig = () => ({
   purchaseTimeoutMs: PURCHASE_TIMEOUT_MS,
   runtimeDiagnosticTimeoutMs: RUNTIME_DIAGNOSTIC_TIMEOUT_MS,
   restSnapshotTimeoutMs: REST_SNAPSHOT_TIMEOUT_MS,
+  nativeStoreKitTimeoutMs: NATIVE_STOREKIT_TIMEOUT_MS,
   expectedBundleId: 'com.natanknafo.dailydominator',
   expectedDefaultOfferingId: 'default',
   expectedPackages: ['$rc_monthly', '$rc_annual'],
@@ -249,6 +266,24 @@ const isIOS = () =>
   Capacitor.isNativePlatform() &&
   Capacitor.getPlatform() === 'ios';
 
+type CapacitorWindow = Window & {
+  Capacitor?: {
+    Plugins?: Record<string, Record<string, (options?: unknown) => Promise<unknown>>>;
+    nativePromise?: (pluginName: string, methodName: string, options?: unknown) => Promise<unknown>;
+  };
+};
+
+const callNativeStoreKit = async <T,>(methodName: string, options?: unknown): Promise<T> => {
+  const capacitorWindow = window as CapacitorWindow;
+  const plugin = capacitorWindow.Capacitor?.Plugins?.DailyDominatorStoreKit;
+  const method = plugin?.[methodName];
+  if (typeof method === 'function') return method(options) as Promise<T>;
+  if (typeof capacitorWindow.Capacitor?.nativePromise === 'function') {
+    return capacitorWindow.Capacitor.nativePromise('DailyDominatorStoreKit', methodName, options) as Promise<T>;
+  }
+  throw new Error('DailyDominatorStoreKit native plugin is unavailable. Run npx cap sync ios and archive a fresh build.');
+};
+
 async function ensureInit(userId?: string) {
   if (!isIOS()) return null;
   if (!REVENUECAT_IOS_API_KEY) {
@@ -257,6 +292,14 @@ async function ensureInit(userId?: string) {
   }
   const { Purchases, LOG_LEVEL } = await import('@revenuecat/purchases-capacitor');
   if (!initialized) {
+    if (initializePromise && initializeStartedAt && Date.now() - initializeStartedAt > INIT_TIMEOUT_MS + 2000) {
+      rcLog('init', 'discarding stale initialize promise before retry', {
+        elapsedMs: Date.now() - initializeStartedAt,
+        timeoutMs: INIT_TIMEOUT_MS,
+      });
+      initializePromise = null;
+      initializeStartedAt = 0;
+    }
     if (!initializePromise) {
       const keyPrefix = REVENUECAT_IOS_API_KEY.slice(0, 10);
       const keyLooksValid = REVENUECAT_IOS_API_KEY.startsWith('appl_');
@@ -268,8 +311,15 @@ async function ensureInit(userId?: string) {
       if (!keyLooksValid) {
         rcLog('init', 'WARNING: API key does NOT start with "appl_" — this may be an Android (goog_) or Web (rcb_) key!');
       }
+      initializeStartedAt = Date.now();
       initializePromise = (async () => {
-        await Purchases.setLogLevel({ level: LOG_LEVEL.VERBOSE });
+        try {
+          void Promise.resolve(Purchases.setLogLevel({ level: LOG_LEVEL.VERBOSE })).catch((e) => {
+            rcLog('init', 'setLogLevel failed but continuing', e);
+          });
+        } catch (e) {
+          rcLog('init', 'setLogLevel failed but continuing', e);
+        }
         await withTimeout(
           Purchases.configure({
             apiKey: REVENUECAT_IOS_API_KEY,
@@ -301,6 +351,7 @@ async function ensureInit(userId?: string) {
     } catch (e) {
       initialized = false;
       initializePromise = null;
+      initializeStartedAt = 0;
       rememberRevenueCatError('RevenueCat configure', e);
       throw e;
     }
@@ -442,9 +493,9 @@ export async function getStoreProducts(productIds: string[] = ALL_PRODUCT_IDS) {
   } catch (e) {
     const remembered = rememberRevenueCatError('RevenueCat initialize before getProducts', e);
     rcLog('products', 'INIT ERROR', remembered);
-    return [];
+    return getNativeStoreKitProducts(productIds);
   }
-  if (!Purchases) return [];
+  if (!Purchases) return getNativeStoreKitProducts(productIds);
   try {
     const start = Date.now();
     const result = await withTimeout(
@@ -461,12 +512,91 @@ export async function getStoreProducts(productIds: string[] = ALL_PRODUCT_IDS) {
     });
     if (products.length === 0) {
       rcLog('products', 'WARNING: StoreKit returned 0 products. Check Bundle ID, Paid Apps Agreement, product status, and Sandbox tester.');
+      return getNativeStoreKitProducts(productIds);
     }
     return products;
   } catch (e) {
     const remembered = rememberRevenueCatError('RevenueCat getProducts', e);
     rcLog('products', 'ERROR', remembered);
-    return [];
+    return getNativeStoreKitProducts(productIds);
+  }
+}
+
+export async function getNativeStoreKitDiagnostics() {
+  if (!isIOS()) return null;
+  try {
+    return await withTimeout(
+      callNativeStoreKit<Record<string, unknown>>('diagnostics'),
+      NATIVE_STOREKIT_TIMEOUT_MS,
+      'Native StoreKit diagnostics'
+    );
+  } catch (e) {
+    rememberRevenueCatError('Native StoreKit diagnostics', e);
+    return null;
+  }
+}
+
+export async function getNativeStoreKitProducts(productIds: string[] = ALL_PRODUCT_IDS) {
+  if (!isIOS()) return [] as NativeStoreKitProduct[];
+  try {
+    const start = Date.now();
+    const result = await withTimeout(
+      callNativeStoreKit<{ products?: NativeStoreKitProduct[] }>('getProducts', { productIdentifiers: productIds }),
+      NATIVE_STOREKIT_TIMEOUT_MS,
+      'Native StoreKit getProducts'
+    );
+    const products = (result?.products ?? []).map((product) => ({
+      ...product,
+      source: 'native-storekit' as const,
+      priceString: product.priceString || product.displayPrice,
+      title: product.title || product.displayName,
+    }));
+    rcLog('native-storekit', 'products loaded', {
+      elapsedMs: Date.now() - start,
+      requested: productIds,
+      count: products.length,
+      products: products.map(summarizeProduct),
+    });
+    return products;
+  } catch (e) {
+    const remembered = rememberRevenueCatError('Native StoreKit getProducts', e);
+    rcLog('native-storekit', 'products ERROR', remembered);
+    return [] as NativeStoreKitProduct[];
+  }
+}
+
+export async function purchaseNativeStoreKitProduct(productIdentifier: string) {
+  const log = (label: string, data?: unknown) => rcLog('native-purchase', label, data);
+  if (!isIOS()) throw new Error('רכישות זמינות רק באפליקציית iOS');
+  try {
+    const result = await withTimeout(
+      callNativeStoreKit<NativeStoreKitPurchaseResult>('purchase', { productIdentifier }),
+      PURCHASE_TIMEOUT_MS,
+      'Native StoreKit purchase'
+    );
+    log('purchase result', result);
+    if (result?.status === 'cancelled') {
+      const error = new Error('המשתמש ביטל את הרכישה') as RevenueCatError;
+      error.userCancelled = true;
+      throw error;
+    }
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      const Purchases = await withTimeout(ensureInit(auth.user?.id), 5000, 'RevenueCat initialize after native purchase');
+      await withTimeout(Purchases.syncPurchases(), 15000, 'RevenueCat syncPurchases after native purchase');
+      const customerInfo = await withTimeout(Purchases.getCustomerInfo(), 15000, 'RevenueCat getCustomerInfo after native purchase') as RevenueCatPurchaseResult;
+      const active = extractActive(customerInfo.customerInfo);
+      await syncToSupabase();
+      return active;
+    } catch (e) {
+      rememberRevenueCatError('RevenueCat sync after native purchase', e);
+      await syncToSupabase();
+      return { isPremium: true, productId: productIdentifier, expiresAt: null };
+    }
+  } catch (e) {
+    rememberRevenueCatError('Native StoreKit purchase', e);
+    log('ERROR', e);
+    throw e;
   }
 }
 
