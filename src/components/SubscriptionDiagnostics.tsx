@@ -31,8 +31,8 @@ const INITIAL_STEPS: Step[] = [
   { key: 'env', label: 'בדיקת סביבה (iOS Native)', status: 'idle' },
   { key: 'clientConfig', label: 'בדיקת קונפיגורציית RevenueCat באפליקציה', status: 'idle' },
   { key: 'plugin', label: 'טעינת פלאגין RevenueCat', status: 'idle' },
-  { key: 'runtime', label: 'בדיקת Runtime: configured / appUserID / storefront', status: 'idle' },
   { key: 'remoteOffering', label: 'בדיקת RevenueCat REST: Default Offering', status: 'idle' },
+  { key: 'runtime', label: 'בדיקת Runtime: configured / appUserID / storefront', status: 'idle' },
   { key: 'offerings', label: 'קריאת Offerings מ-RevenueCat', status: 'idle' },
   { key: 'packages', label: 'בדיקת Packages זמינים', status: 'idle' },
   { key: 'directProducts', label: 'בדיקת Products ישירה מ-StoreKit', status: 'idle' },
@@ -123,24 +123,7 @@ export const SubscriptionDiagnostics = () => {
       errors.push('Plugin import נכשל: ' + (err?.message ?? ''));
     }
 
-    // 4. Runtime diagnostics
-    update('runtime', { status: 'running' });
-    try {
-      const start = Date.now();
-      const runtime = await getRevenueCatRuntimeDiagnostics();
-      update('runtime', {
-        status: runtime ? 'ok' : 'fail',
-        detail: runtime ? JSON.stringify(runtime, null, 2) : 'RevenueCat לא מאותחל ב-iOS Native.',
-        durationMs: Date.now() - start,
-      });
-      if (!runtime) errors.push('RevenueCat Runtime diagnostics נכשל.');
-    } catch (e) {
-      const err = e as Error;
-      update('runtime', { status: 'fail', detail: `שגיאה: ${err?.message ?? String(e)}` });
-      errors.push('RevenueCat runtime diagnostics נכשל: ' + (err?.message ?? ''));
-    }
-
-    // 5. RevenueCat REST offering snapshot
+    // 4. RevenueCat REST offering snapshot — runs before native runtime so an SDK hang cannot hide backend status.
     update('remoteOffering', { status: 'running' });
     try {
       const snapshot = await getRevenueCatRemoteOfferingSnapshot();
@@ -164,6 +147,31 @@ export const SubscriptionDiagnostics = () => {
       const err = e as Error;
       update('remoteOffering', { status: 'fail', detail: `שגיאה: ${err?.message ?? String(e)}` });
       errors.push('RevenueCat REST offering snapshot נכשל: ' + (err?.message ?? ''));
+    }
+
+    // 5. Runtime diagnostics
+    update('runtime', { status: 'running' });
+    try {
+      const start = Date.now();
+      const runtime = await getRevenueCatRuntimeDiagnostics();
+      update('runtime', {
+        status: runtime ? 'ok' : 'fail',
+        detail: runtime ? JSON.stringify(runtime, null, 2) : 'RevenueCat לא מאותחל ב-iOS Native.',
+        durationMs: Date.now() - start,
+      });
+      if (!runtime) errors.push('RevenueCat Runtime diagnostics נכשל.');
+    } catch (e) {
+      const err = e as Error;
+      const lastError = getLastRevenueCatError();
+      update('runtime', {
+        status: 'fail',
+        detail: [
+          `שגיאה: ${err?.message ?? String(e)}`,
+          lastError ? `Last SDK error:\n${JSON.stringify(lastError, null, 2)}` : null,
+          'הבדיקה ממשיכה למרות תקיעת Runtime כדי לאבחן Offerings ו-StoreKit.',
+        ].filter(Boolean).join('\n'),
+      });
+      errors.push('RevenueCat runtime diagnostics נכשל: ' + (err?.message ?? ''));
     }
 
     // 6. Offerings from SDK/StoreKit

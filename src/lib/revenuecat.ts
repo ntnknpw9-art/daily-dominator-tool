@@ -132,6 +132,8 @@ const IOS_STOREKIT_VERSION = 'STOREKIT_1' as const;
 const INIT_TIMEOUT_MS = 45000;
 const STOREKIT_FETCH_TIMEOUT_MS = 45000;
 const PURCHASE_TIMEOUT_MS = 90000;
+const RUNTIME_DIAGNOSTIC_TIMEOUT_MS = 8000;
+const REST_SNAPSHOT_TIMEOUT_MS = 12000;
 
 const safeJson = (value: unknown) => {
   try {
@@ -180,6 +182,8 @@ export const getRevenueCatClientConfig = () => ({
   initTimeoutMs: INIT_TIMEOUT_MS,
   storeKitFetchTimeoutMs: STOREKIT_FETCH_TIMEOUT_MS,
   purchaseTimeoutMs: PURCHASE_TIMEOUT_MS,
+  runtimeDiagnosticTimeoutMs: RUNTIME_DIAGNOSTIC_TIMEOUT_MS,
+  restSnapshotTimeoutMs: REST_SNAPSHOT_TIMEOUT_MS,
   expectedBundleId: 'com.natanknafo.dailydominator',
   expectedDefaultOfferingId: 'default',
   expectedPackages: ['$rc_monthly', '$rc_annual'],
@@ -299,12 +303,19 @@ async function ensureInit(userId?: string) {
 }
 
 export async function getRevenueCatRuntimeDiagnostics() {
-  const Purchases = await ensureInit();
+  const start = Date.now();
+  const Purchases = await withTimeout(
+    ensureInit(),
+    RUNTIME_DIAGNOSTIC_TIMEOUT_MS,
+    'RevenueCat runtime diagnostics initialize'
+  );
   if (!Purchases) return null;
   const diagnostics: Record<string, unknown> = {};
-  try { diagnostics.isConfigured = await Purchases.isConfigured(); } catch (e) { diagnostics.isConfiguredError = rememberRevenueCatError('isConfigured', e); }
-  try { diagnostics.appUserID = (await Purchases.getAppUserID())?.appUserID; } catch (e) { diagnostics.appUserIDError = rememberRevenueCatError('getAppUserID', e); }
-  try { diagnostics.storefront = await withTimeout(Purchases.getStorefront(), 15000, 'RevenueCat getStorefront'); } catch (e) { diagnostics.storefrontError = rememberRevenueCatError('getStorefront', e); }
+  diagnostics.timeoutMs = RUNTIME_DIAGNOSTIC_TIMEOUT_MS;
+  try { diagnostics.isConfigured = await withTimeout(Purchases.isConfigured(), RUNTIME_DIAGNOSTIC_TIMEOUT_MS, 'RevenueCat isConfigured'); } catch (e) { diagnostics.isConfiguredError = rememberRevenueCatError('isConfigured', e); }
+  try { diagnostics.appUserID = (await withTimeout(Purchases.getAppUserID(), RUNTIME_DIAGNOSTIC_TIMEOUT_MS, 'RevenueCat getAppUserID'))?.appUserID; } catch (e) { diagnostics.appUserIDError = rememberRevenueCatError('getAppUserID', e); }
+  try { diagnostics.storefront = await withTimeout(Purchases.getStorefront(), RUNTIME_DIAGNOSTIC_TIMEOUT_MS, 'RevenueCat getStorefront'); } catch (e) { diagnostics.storefrontError = rememberRevenueCatError('getStorefront', e); }
+  diagnostics.elapsedMs = Date.now() - start;
   return diagnostics;
 }
 
@@ -318,7 +329,7 @@ export async function getRevenueCatRemoteOfferingSnapshot() {
         Authorization: `Bearer ${REVENUECAT_IOS_API_KEY}`,
         'X-Platform': 'ios',
       },
-    }), 15000, 'RevenueCat REST offerings snapshot');
+    }), REST_SNAPSHOT_TIMEOUT_MS, 'RevenueCat REST offerings snapshot');
     const body = await response.json().catch(() => null);
     const defaultOffering = Array.isArray(body?.offerings)
       ? body.offerings.find((offering: { identifier?: string }) => offering?.identifier === 'default')
@@ -638,10 +649,20 @@ export async function restorePurchases() {
 
 export async function refreshPremiumStatus() {
   const { data: auth } = await supabase.auth.getUser();
-  const Purchases = await ensureInit(auth.user?.id);
+  let Purchases = null;
+  try {
+    Purchases = await withTimeout(ensureInit(auth.user?.id), INIT_TIMEOUT_MS, 'RevenueCat initialize before getCustomerInfo');
+  } catch (e) {
+    rememberRevenueCatError('RevenueCat initialize before getCustomerInfo', e);
+    return null;
+  }
   if (!Purchases) return null;
   try {
-    const result: RevenueCatPurchaseResult = await Purchases.getCustomerInfo();
+    const result: RevenueCatPurchaseResult = await withTimeout(
+      Purchases.getCustomerInfo(),
+      STOREKIT_FETCH_TIMEOUT_MS,
+      'RevenueCat getCustomerInfo'
+    );
     const info = result.customerInfo;
     const active = extractActive(info);
     await syncToSupabase();
