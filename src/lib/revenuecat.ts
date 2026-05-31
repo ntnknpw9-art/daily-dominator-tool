@@ -405,28 +405,21 @@ export async function getStoreProducts(productIds: string[] = ALL_PRODUCT_IDS) {
   try {
     Purchases = await withTimeout(ensureInit(), INIT_TIMEOUT_MS, 'RevenueCat initialize');
   } catch (e) {
-    const error = e as RevenueCatError;
-    rcLog('products', 'INIT ERROR', {
-      message: error?.message,
-      code: error?.code,
-      underlyingErrorMessage: error?.underlyingErrorMessage,
-      readableErrorCode: error?.readableErrorCode,
-      readable_error_code: error?.readable_error_code,
-      domain: error?.domain,
-      name: error?.name,
-      raw: typeof error === 'object' ? safeJson(error) : String(error),
-    });
+    const remembered = rememberRevenueCatError('RevenueCat initialize before getProducts', e);
+    rcLog('products', 'INIT ERROR', remembered);
     return [];
   }
   if (!Purchases) return [];
   try {
+    const start = Date.now();
     const result = await withTimeout(
       Purchases.getProducts({ productIdentifiers: productIds }),
-      12000,
+      STOREKIT_FETCH_TIMEOUT_MS,
       'RevenueCat getProducts'
     ) as unknown as RevenueCatProductsResult;
     const products = result?.products ?? [];
     rcLog('products', 'loaded', {
+      elapsedMs: Date.now() - start,
       requested: productIds,
       count: products.length,
       products: products.map(summarizeProduct),
@@ -436,17 +429,8 @@ export async function getStoreProducts(productIds: string[] = ALL_PRODUCT_IDS) {
     }
     return products;
   } catch (e) {
-    const error = e as RevenueCatError;
-    rcLog('products', 'ERROR', {
-      message: error?.message,
-      code: error?.code,
-      underlyingErrorMessage: error?.underlyingErrorMessage,
-      readableErrorCode: error?.readableErrorCode,
-      readable_error_code: error?.readable_error_code,
-      domain: error?.domain,
-      name: error?.name,
-      raw: typeof error === 'object' ? safeJson(error) : String(error),
-    });
+    const remembered = rememberRevenueCatError('RevenueCat getProducts', e);
+    rcLog('products', 'ERROR', remembered);
     return [];
   }
 }
