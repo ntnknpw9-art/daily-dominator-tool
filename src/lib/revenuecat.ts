@@ -1,7 +1,7 @@
 // RevenueCat integration — iOS only. No-op on web/Android.
 // Premium is purely optional: nothing in the app changes based on status.
 
-import { Capacitor } from '@capacitor/core';
+import { Capacitor, registerPlugin } from '@capacitor/core';
 import { supabase } from '@/integrations/supabase/client';
 
 export type RevenueCatProduct = {
@@ -273,7 +273,22 @@ type CapacitorWindow = Window & {
   };
 };
 
+type DailyDominatorStoreKitPlugin = {
+  diagnostics(): Promise<Record<string, unknown>>;
+  getProducts(options: { productIdentifiers: string[] }): Promise<{ products?: NativeStoreKitProduct[] }>;
+  purchase(options: { productIdentifier: string }): Promise<NativeStoreKitPurchaseResult>;
+};
+
+const DailyDominatorStoreKit = registerPlugin<DailyDominatorStoreKitPlugin>('DailyDominatorStoreKit');
+
 const callNativeStoreKit = async <T,>(methodName: string, options?: unknown): Promise<T> => {
+  const registeredMethod = DailyDominatorStoreKit[methodName as keyof DailyDominatorStoreKitPlugin] as
+    | ((options?: unknown) => Promise<T>)
+    | undefined;
+  if (typeof registeredMethod === 'function') {
+    return registeredMethod(options);
+  }
+
   const capacitorWindow = window as CapacitorWindow;
   const plugin = capacitorWindow.Capacitor?.Plugins?.DailyDominatorStoreKit;
   const method = plugin?.[methodName];
