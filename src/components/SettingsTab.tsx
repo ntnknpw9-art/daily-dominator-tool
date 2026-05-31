@@ -89,7 +89,7 @@ const SettingsTab = () => {
           let products: RevenueCatStoreProduct[] = [];
           if (!offering || packages.length < 2) {
             console.log('[RC UI] offerings missing packages; trying direct StoreKit product load', { reason, packagesCount: packages.length });
-            const products = await getStoreProducts();
+            products = await getStoreProducts();
             console.log('[RC UI] direct products loaded', products.map((p) => ({
               identifier: p.identifier,
               priceString: p.priceString,
@@ -171,22 +171,6 @@ const SettingsTab = () => {
       toast.info('הרכישות זמינות באפליקציה על iPhone בלבד');
       return;
     }
-    if (!offeringsLoaded) {
-      console.log('[RC UI] purchase blocked: offerings still loading', { requestedProductKey: productKey });
-      setOfferingsError(SUBSCRIPTION_PRODUCTS_LOADING);
-      toast.info(SUBSCRIPTION_PRODUCTS_LOADING);
-      return;
-    }
-    if ((!offerings || (offerings.availablePackages?.length ?? 0) === 0) && storeProducts.length === 0) {
-      console.log('[RC UI] purchase blocked: no offering packages loaded', {
-        requestedProductKey: productKey,
-        offeringIdentifier: offerings?.identifier ?? null,
-        packagesCount: offerings?.availablePackages?.length ?? 0,
-      });
-      setOfferingsError(SUBSCRIPTION_PRODUCTS_UNAVAILABLE);
-      toast.error(SUBSCRIPTION_PRODUCTS_UNAVAILABLE);
-      return;
-    }
     setPurchasing(productKey);
     setOfferingsError(null);
     try {
@@ -194,17 +178,15 @@ const SettingsTab = () => {
       let selectedProduct = findStoreProduct(productKey);
 
       if (!selectedPackage && !selectedProduct) {
-        console.log('[RC UI] package/product missing; refreshing offerings and direct products before purchase', { requestedProductKey: productKey });
-        const freshOffering = await getOfferings();
-        setOfferings(freshOffering);
-        console.log('[RC UI] packages count after refresh', freshOffering?.availablePackages?.length ?? 0);
-        selectedPackage = findPackage(productKey, freshOffering);
-        if (!selectedPackage) {
-          const freshProducts = await getStoreProducts();
-          setStoreProducts(freshProducts);
-          selectedProduct = freshProducts.find((p) => p?.identifier === productKey) ?? null;
-          console.log('[RC UI] direct products count after refresh', freshProducts.length);
-        }
+        console.log('[RC UI] package/product missing; loading catalog before purchase', { requestedProductKey: productKey, offeringsLoaded });
+        toast.info(SUBSCRIPTION_PRODUCTS_LOADING);
+        const fresh = await loadSubscriptionProducts('purchase');
+        console.log('[RC UI] catalog after purchase-triggered load', {
+          packagesCount: fresh.offering?.availablePackages?.length ?? 0,
+          directProductsCount: fresh.products.length,
+        });
+        selectedPackage = findPackage(productKey, fresh.offering);
+        selectedProduct = fresh.products.find((p) => p?.identifier === productKey) ?? findStoreProduct(productKey);
       }
 
       if (!selectedPackage && !selectedProduct) {
