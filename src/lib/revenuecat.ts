@@ -266,6 +266,24 @@ const isIOS = () =>
   Capacitor.isNativePlatform() &&
   Capacitor.getPlatform() === 'ios';
 
+type CapacitorWindow = Window & {
+  Capacitor?: {
+    Plugins?: Record<string, Record<string, (options?: unknown) => Promise<unknown>>>;
+    nativePromise?: (pluginName: string, methodName: string, options?: unknown) => Promise<unknown>;
+  };
+};
+
+const callNativeStoreKit = async <T,>(methodName: string, options?: unknown): Promise<T> => {
+  const capacitorWindow = window as CapacitorWindow;
+  const plugin = capacitorWindow.Capacitor?.Plugins?.DailyDominatorStoreKit;
+  const method = plugin?.[methodName];
+  if (typeof method === 'function') return method(options) as Promise<T>;
+  if (typeof capacitorWindow.Capacitor?.nativePromise === 'function') {
+    return capacitorWindow.Capacitor.nativePromise('DailyDominatorStoreKit', methodName, options) as Promise<T>;
+  }
+  throw new Error('DailyDominatorStoreKit native plugin is unavailable. Run npx cap sync ios and archive a fresh build.');
+};
+
 async function ensureInit(userId?: string) {
   if (!isIOS()) return null;
   if (!REVENUECAT_IOS_API_KEY) {
@@ -285,8 +303,13 @@ async function ensureInit(userId?: string) {
       if (!keyLooksValid) {
         rcLog('init', 'WARNING: API key does NOT start with "appl_" — this may be an Android (goog_) or Web (rcb_) key!');
       }
+      initializeStartedAt = Date.now();
       initializePromise = (async () => {
-        await Purchases.setLogLevel({ level: LOG_LEVEL.VERBOSE });
+        try {
+          Purchases.setLogLevel({ level: LOG_LEVEL.VERBOSE });
+        } catch (e) {
+          rcLog('init', 'setLogLevel failed but continuing', e);
+        }
         await withTimeout(
           Purchases.configure({
             apiKey: REVENUECAT_IOS_API_KEY,
@@ -318,6 +341,7 @@ async function ensureInit(userId?: string) {
     } catch (e) {
       initialized = false;
       initializePromise = null;
+      initializeStartedAt = 0;
       rememberRevenueCatError('RevenueCat configure', e);
       throw e;
     }
