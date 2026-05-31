@@ -565,6 +565,41 @@ export async function getNativeStoreKitProducts(productIds: string[] = ALL_PRODU
   }
 }
 
+export async function purchaseNativeStoreKitProduct(productIdentifier: string) {
+  const log = (label: string, data?: unknown) => rcLog('native-purchase', label, data);
+  if (!isIOS()) throw new Error('רכישות זמינות רק באפליקציית iOS');
+  try {
+    const result = await withTimeout(
+      callNativeStoreKit<NativeStoreKitPurchaseResult>('purchase', { productIdentifier }),
+      PURCHASE_TIMEOUT_MS,
+      'Native StoreKit purchase'
+    );
+    log('purchase result', result);
+    if (result?.status === 'cancelled') {
+      const error = new Error('המשתמש ביטל את הרכישה') as RevenueCatError;
+      error.userCancelled = true;
+      throw error;
+    }
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      const Purchases = await withTimeout(ensureInit(auth.user?.id), 5000, 'RevenueCat initialize after native purchase');
+      await withTimeout(Purchases.syncPurchases(), 15000, 'RevenueCat syncPurchases after native purchase');
+      const customerInfo = await withTimeout(Purchases.getCustomerInfo(), 15000, 'RevenueCat getCustomerInfo after native purchase') as RevenueCatPurchaseResult;
+      const active = extractActive(customerInfo.customerInfo);
+      await syncToSupabase();
+      return active;
+    } catch (e) {
+      rememberRevenueCatError('RevenueCat sync after native purchase', e);
+      await syncToSupabase();
+      return { isPremium: true, productId: productIdentifier, expiresAt: null };
+    }
+  } catch (e) {
+    rememberRevenueCatError('Native StoreKit purchase', e);
+    log('ERROR', e);
+    throw e;
+  }
+}
+
 async function syncToSupabase() {
   const { data: auth } = await supabase.auth.getUser();
   const user = auth.user;
