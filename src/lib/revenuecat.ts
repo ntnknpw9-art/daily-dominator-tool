@@ -142,7 +142,7 @@ let initializeStartedAt = 0;
 // App Store Connect In-App Purchase Key setup. StoreKit 1 is the safest path
 // for App Review/TestFlight product lookup and avoids StoreKit 2 key issues.
 const IOS_STOREKIT_VERSION = 'STOREKIT_1' as const;
-const APP_BUILD_MARKER = 'rc-native-storekit-fallback-2026-05-31-1755';
+const APP_BUILD_MARKER = 'rc-native-storekit1-fallback-2026-06-02-1815';
 const INIT_TIMEOUT_MS = 30000;
 const STOREKIT_FETCH_TIMEOUT_MS = 60000;
 const PURCHASE_TIMEOUT_MS = 120000;
