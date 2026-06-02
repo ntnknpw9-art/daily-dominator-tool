@@ -252,39 +252,6 @@ const isIOS = () =>
   Capacitor.isNativePlatform() &&
   Capacitor.getPlatform() === 'ios';
 
-type CapacitorWindow = Window & {
-  Capacitor?: {
-    Plugins?: Record<string, Record<string, (options?: unknown) => Promise<unknown>>>;
-    nativePromise?: (pluginName: string, methodName: string, options?: unknown) => Promise<unknown>;
-  };
-};
-
-type DailyDominatorStoreKitPlugin = {
-  diagnostics(): Promise<Record<string, unknown>>;
-  getProducts(options: { productIdentifiers: string[] }): Promise<{ products?: NativeStoreKitProduct[] }>;
-  purchase(options: { productIdentifier: string }): Promise<NativeStoreKitPurchaseResult>;
-};
-
-const DailyDominatorStoreKit = registerPlugin<DailyDominatorStoreKitPlugin>('DailyDominatorStoreKit');
-
-const callNativeStoreKit = async <T,>(methodName: string, options?: unknown): Promise<T> => {
-  const registeredMethod = DailyDominatorStoreKit[methodName as keyof DailyDominatorStoreKitPlugin] as
-    | ((options?: unknown) => Promise<T>)
-    | undefined;
-  if (typeof registeredMethod === 'function') {
-    return registeredMethod(options);
-  }
-
-  const capacitorWindow = window as CapacitorWindow;
-  const plugin = capacitorWindow.Capacitor?.Plugins?.DailyDominatorStoreKit;
-  const method = plugin?.[methodName];
-  if (typeof method === 'function') return method(options) as Promise<T>;
-  if (typeof capacitorWindow.Capacitor?.nativePromise === 'function') {
-    return capacitorWindow.Capacitor.nativePromise('DailyDominatorStoreKit', methodName, options) as Promise<T>;
-  }
-  throw new Error('DailyDominatorStoreKit native plugin is unavailable. Run npx cap sync ios and archive a fresh build.');
-};
-
 async function ensureInit(userId?: string) {
   if (!isIOS()) return null;
   if (!REVENUECAT_IOS_API_KEY) {
