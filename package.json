@@ -11,6 +11,8 @@
     "build:dev": "vite build --mode development",
     "cap:sync:ios": "npx cap sync ios",
     "cap:sync:ios:store": "CAP_ENV=production npm run build && CAP_ENV=production npx cap sync ios",
+    "ios:open": "npm run cap:sync:ios && npx cap open ios",
+    "ios:run": "npm run cap:sync:ios && npx cap run ios",
     "capacitor:sync:before": "node scripts/ensure-capacitor-web-assets.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
