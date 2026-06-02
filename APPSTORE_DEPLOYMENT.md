@@ -35,14 +35,12 @@ npm install
 git pull
 npm install
 rm -rf dist ios/App/App/public
-npm run build
-npx cap sync ios
-npx cap open ios
+npm run ios:open:store
 ```
 
-**הסבר:** מוחקים את `dist` ואת `ios/App/App/public` לפני הבנייה כדי לוודא שהארכיון הבא מכיל בדיוק את הקוד החדש — ולא Web assets ישנים מבילד קודם. הקובץ `capacitor.config.ts` מוגדר כך שה-`server.url` נטען רק כש-`CAP_ENV=development`. ברירת המחדל היא בנייה מקומית מתוך `dist/` — בדיוק מה שאפל דורשת.
+**הסבר:** `npm run ios:open:store` מוחק assets ישנים, בונה עם `CAP_ENV=production`, מסנכרן ל-iOS ופותח את Xcode. זה חשוב כי רק `CAP_ENV=production` מסיר את `server.url` ומכניס לארכיון App Store את קבצי ה־`dist/` המקומיים — בדיוק מה שאפל דורשת.
 
-לפני העלאה חוזרת ל-TestFlight, פתח את אבחון המנויים באפליקציה וודא שמופיע `Build marker: rc-native-storekit-fallback-2026-05-31-1755` ושבדיקת `StoreKit Native ישירה` עוברת. אם הסימון לא מופיע — זה עדיין הבילד הישן.
+לפני העלאה חוזרת ל-TestFlight, פתח את אבחון המנויים באפליקציה וודא שמופיע `Build marker: rc-native-storekit1-fallback-2026-06-02-1815`, ש־`nativeFallback` הוא `StoreKit1`, ושבדיקת `StoreKit Native ישירה` עוברת. אם הסימון לא מופיע — זה עדיין הבילד הישן.
 
 אם תרצה Hot-reload בזמן פיתוח על המכשיר:
 ```bash
