@@ -435,9 +435,12 @@ ${splitHint}
             <span className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground font-semibold">
               שלב <span className="text-foreground">{step + 1}</span> / {total}
             </span>
-            <span className="text-xs font-black bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              {Math.round(progress)}%
-            </span>
+            <button
+              onClick={skip}
+              className="text-[11px] text-muted-foreground/70 hover:text-primary transition-colors underline underline-offset-2"
+            >
+              דלג לעכשיו
+            </button>
           </div>
           <div className="relative h-1 bg-secondary/60 rounded-full overflow-hidden">
             <div
