@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 import { getTheme, applyTheme } from '@/lib/theme';
 import { useHealthSync } from '@/hooks/useHealthSync';
 import { usePremium } from '@/hooks/usePremium';
-import { getOfferings, getStoreProducts, purchasePackage, purchaseNativeStoreKitProduct, purchaseStoreProduct, restorePurchases, isIOSNative, PRODUCT_MONTHLY, PRODUCT_YEARLY } from '@/lib/revenuecat';
+import { getOfferings, getStoreProducts, purchasePackage, purchaseStoreProduct, restorePurchases, isIOSNative, PRODUCT_MONTHLY, PRODUCT_YEARLY } from '@/lib/revenuecat';
 import { SubscriptionDiagnostics } from './SubscriptionDiagnostics';
 
 const NO_MERCY_KEY = 'app_no_mercy_mode';
@@ -178,28 +178,15 @@ const SettingsTab = () => {
       let selectedPackage = findPackage(productKey);
       let selectedProduct = findStoreProduct(productKey);
 
-      // אם אין מוצר טעון מראש — נפתח את חלון התשלום של אפל מיד דרך StoreKit הנייטיב,
-      // בלי לחכות לטעינת קטלוג. אפל תציג את ה-sheet ישירות.
       if (!selectedPackage && !selectedProduct) {
-        console.log('[RC UI] no preloaded product — invoking native StoreKit purchase immediately', { productKey });
-        let res;
-        try {
-          res = await purchaseNativeStoreKitProduct(productKey);
-        } catch (immediateErr) {
-          // אם הרכישה הנייטיבית הישירה נכשלה (למשל המוצר לא קיים) — ננסה לטעון קטלוג ולנסות שוב
-          console.log('[RC UI] immediate native purchase failed, falling back to catalog load', immediateErr);
-          const fresh = await loadSubscriptionProducts('purchase');
-          selectedPackage = findPackage(productKey, fresh.offering);
-          selectedProduct = fresh.products.find((p) => p?.identifier === productKey) ?? findStoreProduct(productKey);
-          if (!selectedPackage && !selectedProduct) {
-            throw immediateErr;
-          }
-          res = selectedPackage
-            ? await purchasePackage(selectedPackage)
-            : selectedProduct?.source === 'native-storekit'
-              ? await purchaseNativeStoreKitProduct(selectedProduct.identifier)
-              : await purchaseStoreProduct(selectedProduct);
-        }
+        console.log('[RC UI] no preloaded product — loading RevenueCat catalog before purchase', { productKey });
+        const fresh = await loadSubscriptionProducts('purchase');
+        selectedPackage = findPackage(productKey, fresh.offering);
+        selectedProduct = fresh.products.find((p) => p?.identifier === productKey) ?? findStoreProduct(productKey);
+        if (!selectedPackage && !selectedProduct) throw new Error(SUBSCRIPTION_PRODUCTS_UNAVAILABLE);
+        const res = selectedPackage
+          ? await purchasePackage(selectedPackage)
+          : await purchaseStoreProduct(selectedProduct);
         console.log('[RC UI] purchase success', res);
         if (res.isPremium) {
           toast.success('תודה רבה על התמיכה! 💜');
@@ -219,13 +206,6 @@ const SettingsTab = () => {
           productIdentifier: selectedPackage?.product?.identifier,
         });
         res = await purchasePackage(selectedPackage);
-      } else if (selectedProduct?.source === 'native-storekit') {
-        console.log('[RC UI] purchase native StoreKit fallback product', {
-          requestedProductKey: productKey,
-          productIdentifier: selectedProduct?.identifier,
-          priceString: selectedProduct?.priceString,
-        });
-        res = await purchaseNativeStoreKitProduct(selectedProduct.identifier);
       } else {
         console.log('[RC UI] purchase direct StoreKit product fallback', {
           requestedProductKey: productKey,
