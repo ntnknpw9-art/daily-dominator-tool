@@ -18,8 +18,8 @@ public class DailyDominatorStoreKit: CAPPlugin, CAPBridgedPlugin, SKProductsRequ
         CAPPluginMethod(name: "purchase", returnType: CAPPluginReturnPromise)
     ]
 
-    private var activeProductRequests: [ObjectIdentifier: SKProductsRequest] = [:]
-    private var requestContexts: [ObjectIdentifier: StoreKitRequestContext] = [:]
+    private var activeProductRequests: [String: SKProductsRequest] = [:]
+    private var requestContexts: [String: StoreKitRequestContext] = [:]
     private var pendingPurchaseCalls: [String: CAPPluginCall] = [:]
     private let priceFormatter = NumberFormatter()
 
@@ -82,7 +82,7 @@ public class DailyDominatorStoreKit: CAPPlugin, CAPBridgedPlugin, SKProductsRequ
 
     private func startProductsRequest(identifiers: [String], call: CAPPluginCall, purchaseIdentifier: String?) {
         let request = SKProductsRequest(productIdentifiers: Set(identifiers))
-        let key = ObjectIdentifier(request)
+        let key = requestKey(request)
         activeProductRequests[key] = request
         requestContexts[key] = StoreKitRequestContext(
             call: call,
@@ -94,7 +94,7 @@ public class DailyDominatorStoreKit: CAPPlugin, CAPBridgedPlugin, SKProductsRequ
     }
 
     private func stringArrayOption(_ call: CAPPluginCall, key: String) -> [String] {
-        if let values = call.options[key] as? [String] {
+        if let values = call.getArray(key, String.self) {
             return values
         }
 
@@ -105,8 +105,12 @@ public class DailyDominatorStoreKit: CAPPlugin, CAPBridgedPlugin, SKProductsRequ
         return []
     }
 
+    private func requestKey(_ request: SKRequest) -> String {
+        return String(UInt(bitPattern: ObjectIdentifier(request)))
+    }
+
     public func productsRequest(_ request: SKProductsRequest, didReceive response: SKProductsResponse) {
-        let key = ObjectIdentifier(request)
+        let key = requestKey(request)
         guard let context = requestContexts.removeValue(forKey: key) else { return }
         activeProductRequests.removeValue(forKey: key)
 
@@ -132,7 +136,7 @@ public class DailyDominatorStoreKit: CAPPlugin, CAPBridgedPlugin, SKProductsRequ
 
     public func request(_ request: SKRequest, didFailWithError error: Error) {
         guard let productsRequest = request as? SKProductsRequest else { return }
-        let key = ObjectIdentifier(productsRequest)
+        let key = requestKey(productsRequest)
         let context = requestContexts.removeValue(forKey: key)
         activeProductRequests.removeValue(forKey: key)
         context?.call.reject("StoreKit products failed: \(error.localizedDescription)")
