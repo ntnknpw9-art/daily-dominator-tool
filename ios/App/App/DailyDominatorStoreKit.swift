@@ -44,8 +44,7 @@ public class DailyDominatorStoreKit: CAPPlugin, CAPBridgedPlugin, SKProductsRequ
     }
 
     @objc func getProducts(_ call: CAPPluginCall) {
-        let rawArray = call.getArray("productIdentifiers") ?? []
-        let productIdentifiers = rawArray.compactMap { $0 as? String }
+        let productIdentifiers = call.getArray("productIdentifiers", String.self) ?? []
         guard !productIdentifiers.isEmpty else {
             call.reject("Missing productIdentifiers")
             return
