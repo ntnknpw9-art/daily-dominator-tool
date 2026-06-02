@@ -679,7 +679,7 @@ export async function purchasePackage(pkg: RevenueCatPackage) {
     });
     // Validate package shape BEFORE calling StoreKit — a malformed package is a
     // common cause of "unspecified error" rejections from Apple reviewers.
-    if (!pkg || !pkg.identifier || !pkg.product?.identifier || !pkg.presentedOfferingContext) {
+    if (!pkg || !pkg.identifier || !pkg.product?.identifier) {
       log('INVALID PACKAGE — missing identifier or product.identifier', {
         hasPackage: !!pkg,
         identifier: pkg?.identifier,
