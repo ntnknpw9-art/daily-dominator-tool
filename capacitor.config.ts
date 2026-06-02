@@ -3,18 +3,18 @@ import type { CapacitorConfig } from '@capacitor/cli';
 // =============================================================
 // Capacitor configuration
 // =============================================================
-// בפיתוח (hot-reload מהסנדבוקס של Lovable): הסירו את ההערות מ-server
-// בבנייה לאפל סטור: השאירו את server מוסתר כדי שהאפליקציה תטען
-// את הקבצים מתוך dist/ המקומי (חובה לאישור בחנות).
+// ברירת המחדל לריצה מ-Xcode היא טעינה ישירה מהאפליקציה ב-Lovable.
+// זה מונע מסך שחור שנגרם כש-Xcode רץ בלי assets מקומיים מעודכנים.
+// לבניית App Store מקומית: הריצו npm run cap:sync:ios:store.
 // =============================================================
 
-const isDev = process.env.CAP_ENV === 'development';
+const isStoreBuild = process.env.CAP_ENV === 'production';
 
 const config: CapacitorConfig = {
   appId: 'com.natanknafo.dailydominator',
   appName: 'Daily Dominator',
   webDir: 'dist',
-  ...(isDev && {
+  ...(!isStoreBuild && {
     server: {
       url: 'https://296df08a-68ba-481e-b169-30e2cb9c50f6.lovableproject.com?forceHideBadge=true',
       cleartext: true,
