@@ -1,7 +1,7 @@
 // RevenueCat integration — iOS only. No-op on web/Android.
 // Premium is purely optional: nothing in the app changes based on status.
 
-import { Capacitor, registerPlugin } from '@capacitor/core';
+import { Capacitor } from '@capacitor/core';
 import { supabase } from '@/integrations/supabase/client';
 
 export type RevenueCatProduct = {
@@ -59,18 +59,6 @@ type RevenueCatPurchaseResult = {
 
 type RevenueCatProductsResult = {
   products?: RevenueCatStoreProduct[];
-};
-
-type NativeStoreKitProduct = RevenueCatStoreProduct & {
-  source?: 'native-storekit';
-  displayName?: string;
-  displayPrice?: string;
-};
-
-type NativeStoreKitPurchaseResult = {
-  status?: 'success' | 'pending' | 'cancelled';
-  productIdentifier?: string;
-  transactionIdentifier?: string;
 };
 
 type RevenueCatError = Error & {
@@ -142,13 +130,12 @@ let initializeStartedAt = 0;
 // App Store Connect In-App Purchase Key setup. StoreKit 1 is the safest path
 // for App Review/TestFlight product lookup and avoids StoreKit 2 key issues.
 const IOS_STOREKIT_VERSION = 'STOREKIT_1' as const;
-const APP_BUILD_MARKER = 'rc-native-storekit1-fallback-2026-06-02-1815';
+const APP_BUILD_MARKER = 'rc-official-sdk-only-2026-06-02-1919';
 const INIT_TIMEOUT_MS = 30000;
 const STOREKIT_FETCH_TIMEOUT_MS = 60000;
 const PURCHASE_TIMEOUT_MS = 120000;
 const RUNTIME_DIAGNOSTIC_TIMEOUT_MS = 6000;
 const REST_SNAPSHOT_TIMEOUT_MS = 10000;
-const NATIVE_STOREKIT_TIMEOUT_MS = 12000;
 
 const safeJson = (value: unknown) => {
   try {
@@ -200,7 +187,6 @@ export const getRevenueCatClientConfig = () => ({
   purchaseTimeoutMs: PURCHASE_TIMEOUT_MS,
   runtimeDiagnosticTimeoutMs: RUNTIME_DIAGNOSTIC_TIMEOUT_MS,
   restSnapshotTimeoutMs: REST_SNAPSHOT_TIMEOUT_MS,
-  nativeStoreKitTimeoutMs: NATIVE_STOREKIT_TIMEOUT_MS,
   expectedBundleId: 'com.natanknafo.dailydominator',
   expectedDefaultOfferingId: 'default',
   expectedPackages: ['$rc_monthly', '$rc_annual'],
