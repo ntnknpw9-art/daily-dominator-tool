@@ -5,7 +5,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 // =============================================================
 // ברירת המחדל לריצה מ-Xcode היא טעינה ישירה מהאפליקציה ב-Lovable.
 // זה מונע מסך שחור שנגרם כש-Xcode רץ בלי assets מקומיים מעודכנים.
-// לבניית App Store מקומית: הריצו CAP_ENV=production npm run cap:sync:ios.
+// לבניית App Store מקומית: הריצו npm run cap:sync:ios:store.
 // =============================================================
 
 const isStoreBuild = process.env.CAP_ENV === 'production';
