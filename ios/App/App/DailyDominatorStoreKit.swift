@@ -22,7 +22,7 @@ public class DailyDominatorStoreKit: CAPPlugin, CAPBridgedPlugin {
     }
 
     @objc func getProducts(_ call: CAPPluginCall) {
-        guard let productIdentifiers = call.getStringArray("productIdentifiers"), !productIdentifiers.isEmpty else {
+        guard let productIdentifiers = call.getArray("productIdentifiers", String.self), !productIdentifiers.isEmpty else {
             call.reject("Missing productIdentifiers")
             return
         }
