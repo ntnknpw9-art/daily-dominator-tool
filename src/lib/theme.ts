@@ -24,9 +24,7 @@ const syncNativeStatusBar = async (theme: 'dark' | 'light') => {
     }
     console.log(`[StatusBar] synced -> ${theme} on ${Capacitor.getPlatform()}`);
   } catch (e) {
-    // לוג רועש בלי fallback שקט במכשיר נטיב
     console.error('[StatusBar] native call failed:', e);
-    throw e;
   }
 };
 
@@ -38,7 +36,7 @@ export const applyTheme = (theme: 'dark' | 'light') => {
     document.documentElement.classList.remove('light');
   }
   // עדכון של ה-Status Bar במכשיר נטיב (iOS/Android)
-  syncNativeStatusBar(theme);
+  void syncNativeStatusBar(theme);
 };
 
 export const initTheme = () => {
