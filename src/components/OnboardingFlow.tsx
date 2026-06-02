@@ -388,6 +388,11 @@ ${splitHint}
     onComplete();
   };
 
+  const skip = () => {
+    if (user) localStorage.setItem(`onboarding_done_${user.id}`, '1');
+    onComplete();
+  };
+
   if (generating && !showApply) {
     return (
       <div className="fixed inset-0 z-50 bg-background flex items-center justify-center p-6">
