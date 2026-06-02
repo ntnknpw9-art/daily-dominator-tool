@@ -236,7 +236,14 @@ const Index = () => {
 
 const OnboardingGate = () => {
   const { user } = useAuth();
-  const [done, setDone] = useState(() => !!localStorage.getItem(`onboarding_done_${user!.id}`));
+  const onboardingKey = user ? `onboarding_done_${user.id}` : null;
+  const [done, setDone] = useState(() => (onboardingKey ? localStorage.getItem(onboardingKey) === '1' : false));
+
+  useEffect(() => {
+    setDone(onboardingKey ? localStorage.getItem(onboardingKey) === '1' : false);
+  }, [onboardingKey]);
+
+  if (!user) return <AuthPage />;
   if (!done) return <OnboardingFlow onComplete={() => setDone(true)} />;
   return <AppContent />;
 };
