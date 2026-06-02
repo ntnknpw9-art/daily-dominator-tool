@@ -16,8 +16,8 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   ...(!isStoreBuild && {
     server: {
-      url: 'https://296df08a-68ba-481e-b169-30e2cb9c50f6.lovableproject.com?forceHideBadge=true',
-      cleartext: true,
+      url: 'https://daily-dominator-tool.lovable.app',
+      cleartext: false,
     },
   }),
   ios: {
