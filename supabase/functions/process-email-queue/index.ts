@@ -34,22 +34,21 @@ function getRetryAfterSeconds(error: unknown): number {
   return 60
 }
 
-function parseJwtClaims(token: string): Record<string, unknown> | null {
-  const parts = token.split('.')
-  if (parts.length < 2) {
-    return null
+// Verify that the caller's Bearer token is the project's service role key.
+// Manual base64 decoding of the JWT (without signature verification) is unsafe
+// because verify_jwt defaults to false on Lovable-managed edge functions, so an
+// attacker could forge a payload with role:service_role. Comparing against the
+// known SERVICE_ROLE_KEY value is a signature-equivalent check: only callers
+// that already hold the secret can match it.
+function isAuthorizedServiceRoleToken(token: string, serviceRoleKey: string): boolean {
+  if (!token || !serviceRoleKey) return false
+  if (token.length !== serviceRoleKey.length) return false
+  // Constant-time-ish comparison to avoid trivial timing leaks.
+  let mismatch = 0
+  for (let i = 0; i < token.length; i++) {
+    mismatch |= token.charCodeAt(i) ^ serviceRoleKey.charCodeAt(i)
   }
-
-  try {
-    const payload = parts[1]
-      .replaceAll('-', '+')
-      .replaceAll('_', '/')
-      .padEnd(Math.ceil(parts[1].length / 4) * 4, '=')
-
-    return JSON.parse(atob(payload)) as Record<string, unknown>
-  } catch {
-    return null
-  }
+  return mismatch === 0
 }
 
 // Move a message to the dead letter queue and log the reason.
@@ -99,12 +98,11 @@ Deno.serve(async (req) => {
     )
   }
 
-  // Defense in depth: verify_jwt=true already requires a valid JWT at the
-  // gateway layer. This adds an explicit role check so only service-role
-  // callers can trigger queue processing.
+  // Require the caller to present the project's service-role key as a Bearer
+  // token. This is a cryptographically meaningful check because the key is a
+  // signed JWT held only by trusted backend callers (cron / internal jobs).
   const token = authHeader.slice('Bearer '.length).trim()
-  const claims = parseJwtClaims(token)
-  if (claims?.role !== 'service_role') {
+  if (!isAuthorizedServiceRoleToken(token, supabaseServiceKey)) {
     return new Response(
       JSON.stringify({ error: 'Forbidden' }),
       { status: 403, headers: { 'Content-Type': 'application/json' } }
