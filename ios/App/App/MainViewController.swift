@@ -6,7 +6,6 @@ class MainViewController: CAPBridgeViewController {
     override func capacitorDidLoad() {
         super.capacitorDidLoad()
         bridge?.registerPluginInstance(PurchasesPlugin())
-        bridge?.registerPluginInstance(DailyDominatorStoreKit())
         bridge?.registerPluginInstance(InstagramStories())
     }
 }

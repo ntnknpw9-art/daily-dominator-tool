@@ -12,7 +12,6 @@ import {
   getRevenueCatClientConfig,
   getRevenueCatRemoteOfferingSnapshot,
   getRevenueCatRuntimeDiagnostics,
-  getNativeStoreKitDiagnostics,
   PRODUCT_MONTHLY,
   PRODUCT_YEARLY,
   ALL_PRODUCT_IDS,
@@ -34,7 +33,6 @@ const INITIAL_STEPS: Step[] = [
   { key: 'plugin', label: 'טעינת פלאגין RevenueCat', status: 'idle' },
   { key: 'remoteOffering', label: 'בדיקת RevenueCat REST: Default Offering', status: 'idle' },
   { key: 'runtime', label: 'בדיקת Runtime: configured / appUserID / storefront', status: 'idle' },
-  { key: 'nativeStoreKit', label: 'בדיקת StoreKit Native ישירה', status: 'idle' },
   { key: 'offerings', label: 'קריאת Offerings מ-RevenueCat', status: 'idle' },
   { key: 'packages', label: 'בדיקת Packages זמינים', status: 'idle' },
   { key: 'directProducts', label: 'בדיקת Products ישירה מ-StoreKit', status: 'idle' },
@@ -176,25 +174,6 @@ export const SubscriptionDiagnostics = ({ autoRun = false }: { autoRun?: boolean
         ].filter(Boolean).join('\n'),
       });
       errors.push('RevenueCat runtime diagnostics נכשל: ' + (err?.message ?? ''));
-    }
-
-    // Native StoreKit fallback diagnostics — independent from RevenueCat SDK runtime.
-    update('nativeStoreKit', { status: 'running' });
-    try {
-      const start = Date.now();
-      const nativeDiagnostics = await getNativeStoreKitDiagnostics();
-      update('nativeStoreKit', {
-        status: nativeDiagnostics ? 'ok' : 'fail',
-        detail: nativeDiagnostics
-          ? JSON.stringify(nativeDiagnostics, null, 2)
-          : 'DailyDominatorStoreKit לא זמין בבילד הזה. צריך להעלות בילד חדש אחרי npx cap sync ios.',
-        durationMs: Date.now() - start,
-      });
-      if (!nativeDiagnostics) errors.push('StoreKit Native fallback לא זמין בבילד הזה.');
-    } catch (e) {
-      const err = e as Error;
-      update('nativeStoreKit', { status: 'fail', detail: `שגיאה: ${err?.message ?? String(e)}` });
-      errors.push('StoreKit Native diagnostics נכשל: ' + (err?.message ?? ''));
     }
 
     // 6. Offerings from SDK/StoreKit
