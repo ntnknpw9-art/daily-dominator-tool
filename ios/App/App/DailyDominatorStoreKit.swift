@@ -44,7 +44,7 @@ public class DailyDominatorStoreKit: CAPPlugin, CAPBridgedPlugin, SKProductsRequ
     }
 
     @objc func getProducts(_ call: CAPPluginCall) {
-        let productIdentifiers = call.getArray("productIdentifiers", String.self) ?? []
+        let productIdentifiers = stringArrayOption(call, key: "productIdentifiers")
         guard !productIdentifiers.isEmpty else {
             call.reject("Missing productIdentifiers")
             return
@@ -91,6 +91,18 @@ public class DailyDominatorStoreKit: CAPPlugin, CAPBridgedPlugin, SKProductsRequ
         )
         request.delegate = self
         request.start()
+    }
+
+    private func stringArrayOption(_ call: CAPPluginCall, key: String) -> [String] {
+        if let values = call.options[key] as? [String] {
+            return values
+        }
+
+        if let values = call.options[key] as? [Any] {
+            return values.compactMap { $0 as? String }
+        }
+
+        return []
     }
 
     public func productsRequest(_ request: SKProductsRequest, didReceive response: SKProductsResponse) {
