@@ -8,6 +8,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+        window = UIWindow(frame: UIScreen.main.bounds)
+        window?.rootViewController = MainViewController()
+        window?.makeKeyAndVisible()
+
         // Disable the iOS WebView rubber-band bounce so fixed bottom navigation stays pinned.
         DispatchQueue.main.async { [weak self] in
             if let bridgeViewController = self?.window?.rootViewController as? CAPBridgeViewController {
