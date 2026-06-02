@@ -106,7 +106,7 @@ public class DailyDominatorStoreKit: CAPPlugin, CAPBridgedPlugin, SKProductsRequ
     }
 
     private func requestKey(_ request: SKRequest) -> String {
-        return String(UInt(bitPattern: ObjectIdentifier(request)))
+        return String(describing: ObjectIdentifier(request))
     }
 
     public func productsRequest(_ request: SKProductsRequest, didReceive response: SKProductsResponse) {
