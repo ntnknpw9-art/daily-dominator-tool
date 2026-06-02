@@ -9,6 +9,12 @@ type AppErrorBoundaryState = {
   error: Error | null;
 };
 
+declare global {
+  interface Window {
+    __showDailyDominatorStartupError?: (message: string) => void;
+  }
+}
+
 export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorBoundaryState> {
   state: AppErrorBoundaryState = { error: null };
 
