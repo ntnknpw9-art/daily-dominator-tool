@@ -92,6 +92,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 504EC3161FED79650016851F /* Build configuration list for PBXNativeTarget "App" */;
 			buildPhases = (
+				DD0A0B0C0D0E0F1011121314 /* Build Web Assets */,
 				504EC3001FED79650016851F /* Sources */,
 				504EC3011FED79650016851F /* Frameworks */,
 				504EC3021FED79650016851F /* Resources */,
@@ -165,6 +166,27 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		DD0A0B0C0D0E0F1011121314 /* Build Web Assets */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Build Web Assets";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -e\nROOT_DIR=\"$(cd \"${SRCROOT}/../..\" && pwd)\"\nPUBLIC_DIR=\"${SRCROOT}/App/public\"\nif [ ! -f \"${ROOT_DIR}/package.json\" ]; then\n  echo \"error: Could not find package.json at ${ROOT_DIR}. Open ios/App/App.xcodeproj from inside the project checkout.\"\n  exit 1\nfi\nif ! command -v npm >/dev/null 2>&1; then\n  echo \"error: npm is missing. Install Node.js, then run npm install in the project root.\"\n  exit 1\nfi\ncd \"${ROOT_DIR}\"\nif [ ! -d node_modules ]; then\n  echo \"error: node_modules is missing. Run npm install in the project root before building in Xcode.\"\n  exit 1\nfi\nnpm run build\nif [ ! -f dist/index.html ] || [ ! -d dist/assets ]; then\n  echo \"error: Vite build did not create dist/index.html and dist/assets.\"\n  exit 1\nfi\nrm -rf \"${PUBLIC_DIR}\"\nmkdir -p \"${PUBLIC_DIR}\"\ncp -R dist/. \"${PUBLIC_DIR}/\"\necho \"Synced web assets to ${PUBLIC_DIR}\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		504EC3001FED79650016851F /* Sources */ = {

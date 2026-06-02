@@ -44,6 +44,20 @@
 
     <style>
       html, body { background-color: #0a0a0a; color: #f2f2f2; }
+      #native-startup-fallback {
+        min-height: 100vh;
+        min-height: 100dvh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        box-sizing: border-box;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        text-align: center;
+      }
+      #native-startup-fallback strong { display: block; margin-bottom: 8px; font-size: 18px; }
+      #native-startup-fallback span { display: block; color: #b8b8b8; font-size: 13px; line-height: 1.6; }
+      #native-startup-fallback code { display: block; margin-top: 12px; direction: ltr; color: #ff6b6b; white-space: pre-wrap; word-break: break-word; }
     </style>
     <script>
       (function () {
@@ -59,11 +73,38 @@
         } catch (e) {}
       })();
     </script>
+    <script>
+      window.__showDailyDominatorStartupError = function (message) {
+        var el = document.getElementById('native-startup-fallback');
+        if (!el) return;
+        el.innerHTML = '<div><strong>Daily Dominator לא נטען</strong><span>קבצי האפליקציה או JavaScript לא עלו במכשיר.</span><code></code></div>';
+        el.querySelector('code').textContent = message || 'Unknown startup error';
+      };
+      window.addEventListener('error', function (event) {
+        window.__showDailyDominatorStartupError(event.message || String(event.error || event));
+      });
+      window.addEventListener('unhandledrejection', function (event) {
+        window.__showDailyDominatorStartupError((event.reason && event.reason.message) || String(event.reason || event));
+      });
+      setTimeout(function () {
+        var root = document.getElementById('root');
+        if (root && document.getElementById('native-startup-fallback')) {
+          window.__showDailyDominatorStartupError('Missing bundled assets. Run: npm install && npm run cap:sync:ios, then clean and run from Xcode.');
+        }
+      }, 8000);
+    </script>
     <script type="module" crossorigin src="/assets/index-g8lnNl7S.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-DHTK2pWE.css">
   </head>
 
   <body style="background-color:#0a0a0a;">
-    <div id="root"></div>
+    <div id="root">
+      <div id="native-startup-fallback">
+        <div>
+          <strong>Daily Dominator נטען…</strong>
+          <span>אם ההודעה נשארת על המסך, ה־build של iOS לא כולל את קבצי JavaScript/CSS.</span>
+        </div>
+      </div>
+    </div>
   </body>
 </html>

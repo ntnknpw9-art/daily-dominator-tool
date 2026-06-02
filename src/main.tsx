@@ -4,10 +4,25 @@ import App from "./App.tsx";
 import "./index.css";
 import { initTheme } from "./lib/theme";
 
-initTheme();
+declare global {
+  interface Window {
+    __showDailyDominatorStartupError?: (message: string) => void;
+  }
+}
 
-createRoot(document.getElementById("root")!).render(
-  <HelmetProvider>
-    <App />
-  </HelmetProvider>
-);
+try {
+  initTheme();
+
+  const root = document.getElementById("root");
+  if (!root) throw new Error("Root element #root was not found");
+
+  createRoot(root).render(
+    <HelmetProvider>
+      <App />
+    </HelmetProvider>
+  );
+} catch (error) {
+  const message = error instanceof Error ? error.message : String(error);
+  window.__showDailyDominatorStartupError?.(message);
+  throw error;
+}
