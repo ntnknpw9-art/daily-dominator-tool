@@ -461,9 +461,9 @@ export async function getStoreProducts(productIds: string[] = ALL_PRODUCT_IDS) {
   } catch (e) {
     const remembered = rememberRevenueCatError('RevenueCat initialize before getProducts', e);
     rcLog('products', 'INIT ERROR', remembered);
-    return getNativeStoreKitProducts(productIds);
+    return [] as RevenueCatStoreProduct[];
   }
-  if (!Purchases) return getNativeStoreKitProducts(productIds);
+  if (!Purchases) return [] as RevenueCatStoreProduct[];
   try {
     const start = Date.now();
     const result = await withTimeout(
@@ -480,91 +480,12 @@ export async function getStoreProducts(productIds: string[] = ALL_PRODUCT_IDS) {
     });
     if (products.length === 0) {
       rcLog('products', 'WARNING: StoreKit returned 0 products. Check Bundle ID, Paid Apps Agreement, product status, and Sandbox tester.');
-      return getNativeStoreKitProducts(productIds);
     }
     return products;
   } catch (e) {
     const remembered = rememberRevenueCatError('RevenueCat getProducts', e);
     rcLog('products', 'ERROR', remembered);
-    return getNativeStoreKitProducts(productIds);
-  }
-}
-
-export async function getNativeStoreKitDiagnostics() {
-  if (!isIOS()) return null;
-  try {
-    return await withTimeout(
-      callNativeStoreKit<Record<string, unknown>>('diagnostics'),
-      NATIVE_STOREKIT_TIMEOUT_MS,
-      'Native StoreKit diagnostics'
-    );
-  } catch (e) {
-    rememberRevenueCatError('Native StoreKit diagnostics', e);
-    return null;
-  }
-}
-
-export async function getNativeStoreKitProducts(productIds: string[] = ALL_PRODUCT_IDS) {
-  if (!isIOS()) return [] as NativeStoreKitProduct[];
-  try {
-    const start = Date.now();
-    const result = await withTimeout(
-      callNativeStoreKit<{ products?: NativeStoreKitProduct[] }>('getProducts', { productIdentifiers: productIds }),
-      NATIVE_STOREKIT_TIMEOUT_MS,
-      'Native StoreKit getProducts'
-    );
-    const products = (result?.products ?? []).map((product) => ({
-      ...product,
-      source: 'native-storekit' as const,
-      priceString: product.priceString || product.displayPrice,
-      title: product.title || product.displayName,
-    }));
-    rcLog('native-storekit', 'products loaded', {
-      elapsedMs: Date.now() - start,
-      requested: productIds,
-      count: products.length,
-      products: products.map(summarizeProduct),
-    });
-    return products;
-  } catch (e) {
-    const remembered = rememberRevenueCatError('Native StoreKit getProducts', e);
-    rcLog('native-storekit', 'products ERROR', remembered);
-    return [] as NativeStoreKitProduct[];
-  }
-}
-
-export async function purchaseNativeStoreKitProduct(productIdentifier: string) {
-  const log = (label: string, data?: unknown) => rcLog('native-purchase', label, data);
-  if (!isIOS()) throw new Error('רכישות זמינות רק באפליקציית iOS');
-  try {
-    const result = await withTimeout(
-      callNativeStoreKit<NativeStoreKitPurchaseResult>('purchase', { productIdentifier }),
-      PURCHASE_TIMEOUT_MS,
-      'Native StoreKit purchase'
-    );
-    log('purchase result', result);
-    if (result?.status === 'cancelled') {
-      const error = new Error('המשתמש ביטל את הרכישה') as RevenueCatError;
-      error.userCancelled = true;
-      throw error;
-    }
-    try {
-      const { data: auth } = await supabase.auth.getUser();
-      const Purchases = await withTimeout(ensureInit(auth.user?.id), 5000, 'RevenueCat initialize after native purchase');
-      await withTimeout(Purchases.syncPurchases(), 15000, 'RevenueCat syncPurchases after native purchase');
-      const customerInfo = await withTimeout(Purchases.getCustomerInfo(), 15000, 'RevenueCat getCustomerInfo after native purchase') as RevenueCatPurchaseResult;
-      const active = extractActive(customerInfo.customerInfo);
-      await syncToSupabase();
-      return active;
-    } catch (e) {
-      rememberRevenueCatError('RevenueCat sync after native purchase', e);
-      await syncToSupabase();
-      return { isPremium: true, productId: productIdentifier, expiresAt: null };
-    }
-  } catch (e) {
-    rememberRevenueCatError('Native StoreKit purchase', e);
-    log('ERROR', e);
-    throw e;
+    return [] as RevenueCatStoreProduct[];
   }
 }
 
