@@ -143,7 +143,7 @@ let initializeStartedAt = 0;
 // for App Review/TestFlight product lookup and avoids StoreKit 2 key issues.
 const IOS_STOREKIT_VERSION = 'STOREKIT_1' as const;
 const APP_BUILD_MARKER = 'rc-native-storekit-fallback-2026-05-31-1755';
-const INIT_TIMEOUT_MS = 8000;
+const INIT_TIMEOUT_MS = 30000;
 const STOREKIT_FETCH_TIMEOUT_MS = 60000;
 const PURCHASE_TIMEOUT_MS = 120000;
 const RUNTIME_DIAGNOSTIC_TIMEOUT_MS = 6000;
