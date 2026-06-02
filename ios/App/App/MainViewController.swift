@@ -4,7 +4,7 @@ import Capacitor
 class MainViewController: CAPBridgeViewController {
     override func capacitorDidLoad() {
         super.capacitorDidLoad()
-        for purchasesPluginClassName in ["PurchasesPlugin", "RevenuecatPurchasesCapacitor.PurchasesPlugin"] {
+        for purchasesPluginClassName in ["PurchasesPlugin", "RevenuecatPurchasesCapacitor.PurchasesPlugin", "RCPurchases"] {
             if let purchasesPluginType = NSClassFromString(purchasesPluginClassName) as? CAPPlugin.Type {
                 bridge?.registerPluginInstance(purchasesPluginType.init())
                 break
