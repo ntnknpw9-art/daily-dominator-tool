@@ -59,6 +59,12 @@ const subscriptionDebug = (label: string, data?: unknown) => {
 
 const subscriptionErrorDebug = (label: string, error: unknown) => {
   const e = error as { message?: string; code?: string | number; readableErrorCode?: string; readable_error_code?: string; underlyingErrorMessage?: string; userCancelled?: boolean; stack?: string; name?: string };
+  let raw: string;
+  try {
+    raw = typeof error === 'object' ? JSON.stringify(error, Object.getOwnPropertyNames(error)) : String(error);
+  } catch {
+    raw = String(error);
+  }
   console.error('[SUBSCRIPTION DEBUG][UI ERROR]', label, {
     message: e?.message ?? String(error),
     code: e?.code,
@@ -68,7 +74,7 @@ const subscriptionErrorDebug = (label: string, error: unknown) => {
     userCancelled: e?.userCancelled,
     name: e?.name,
     stack: e?.stack,
-    raw: typeof error === 'object' ? JSON.stringify(error, Object.getOwnPropertyNames(error)) : String(error),
+    raw,
   });
 };
 
