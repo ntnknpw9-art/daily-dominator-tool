@@ -419,10 +419,11 @@ export async function getRevenueCatRemoteOfferingSnapshot() {
 export async function getOfferings() {
   let Purchases = null;
   try {
+    rcLog('offerings', 'START getOfferings', { timeoutMs: STOREKIT_FETCH_TIMEOUT_MS, expectedProductIds: ALL_PRODUCT_IDS });
     Purchases = await withTimeout(ensureInit(), INIT_TIMEOUT_MS, 'RevenueCat initialize');
   } catch (e) {
     const remembered = rememberRevenueCatError('RevenueCat initialize before getOfferings', e);
-    rcLog('offerings', 'INIT ERROR', remembered);
+    console.error('[SUBSCRIPTION DEBUG][RC offerings] INIT ERROR', remembered);
     return null;
   }
   if (!Purchases) {
@@ -456,6 +457,7 @@ export async function getOfferings() {
         Object.entries(allOfferings).map(([key, offering]) => [key, summarizeOffering(offering)])
       ),
       expectedProductIds: ALL_PRODUCT_IDS,
+      rawOfferings: offerings,
     });
     rcLog('offerings', 'packages count', pkgCount);
     if (!defaultOffering && current) {
@@ -472,7 +474,7 @@ export async function getOfferings() {
     return current;
   } catch (e) {
     const remembered = rememberRevenueCatError('RevenueCat getOfferings', e);
-    rcLog('offerings', 'ERROR', remembered);
+    console.error('[SUBSCRIPTION DEBUG][RC offerings] ERROR', remembered);
     return null;
   }
 }
@@ -480,13 +482,17 @@ export async function getOfferings() {
 export async function getStoreProducts(productIds: string[] = ALL_PRODUCT_IDS) {
   let Purchases = null;
   try {
+    rcLog('products', 'START getProducts', { requestedProductIds: productIds, timeoutMs: STOREKIT_FETCH_TIMEOUT_MS });
     Purchases = await withTimeout(ensureInit(), INIT_TIMEOUT_MS, 'RevenueCat initialize');
   } catch (e) {
     const remembered = rememberRevenueCatError('RevenueCat initialize before getProducts', e);
-    rcLog('products', 'INIT ERROR', remembered);
+    console.error('[SUBSCRIPTION DEBUG][RC products] INIT ERROR', remembered);
     return [] as RevenueCatStoreProduct[];
   }
-  if (!Purchases) return [] as RevenueCatStoreProduct[];
+  if (!Purchases) {
+    rcLog('products', 'not initialized', { requestedProductIds: productIds });
+    return [] as RevenueCatStoreProduct[];
+  }
   try {
     const start = Date.now();
     const result = await withTimeout(
@@ -500,6 +506,7 @@ export async function getStoreProducts(productIds: string[] = ALL_PRODUCT_IDS) {
       requested: productIds,
       count: products.length,
       products: products.map(summarizeProduct),
+      rawResult: result,
     });
     if (products.length === 0) {
       rcLog('products', 'WARNING: StoreKit returned 0 products. Check Bundle ID, Paid Apps Agreement, product status, and Sandbox tester.');
@@ -507,7 +514,7 @@ export async function getStoreProducts(productIds: string[] = ALL_PRODUCT_IDS) {
     return products;
   } catch (e) {
     const remembered = rememberRevenueCatError('RevenueCat getProducts', e);
-    rcLog('products', 'ERROR', remembered);
+    console.error('[SUBSCRIPTION DEBUG][RC products] ERROR', remembered);
     return [] as RevenueCatStoreProduct[];
   }
 }
@@ -515,19 +522,30 @@ export async function getStoreProducts(productIds: string[] = ALL_PRODUCT_IDS) {
 async function syncToSupabase() {
   const { data: auth } = await supabase.auth.getUser();
   const user = auth.user;
-  if (!user) return;
+  rcLog('sync', 'START backend sync', { userId: user?.id ?? null, email: user?.email ?? null });
+  if (!user) {
+    rcLog('sync', 'SKIP backend sync: no authenticated user');
+    return;
+  }
   // Subscriptions are written server-side after verifying with RevenueCat.
   // Clients cannot insert/update user_subscriptions directly.
   try {
-    await supabase.functions.invoke('sync-subscription');
+    const started = Date.now();
+    const result = await supabase.functions.invoke('sync-subscription');
+    rcLog('sync', 'backend sync result', {
+      elapsedMs: Date.now() - started,
+      data: result.data,
+      error: result.error,
+    });
   } catch (e) {
-    console.warn('sync-subscription failed', e);
+    console.error('[SUBSCRIPTION DEBUG][RC sync] sync-subscription failed', errorDebug(e));
   }
 }
 
 export const PREMIUM_ENTITLEMENT = 'Daily Dominator AI Pro';
 
 function extractActive(customerInfo?: RevenueCatCustomerInfo): { isPremium: boolean; productId: string | null; expiresAt: string | null } {
+  rcLog('customer-info', 'extractActive input', customerInfo);
   const active = customerInfo?.entitlements?.active || {};
   // Prefer the explicit "premium" entitlement configured in RevenueCat
   const premium = active[PREMIUM_ENTITLEMENT];
@@ -606,19 +624,7 @@ export async function purchasePackage(pkg: RevenueCatPackage) {
     log('synced to backend');
     return active;
   } catch (e) {
-    const error = e as RevenueCatError;
-    log('ERROR', {
-      message: error?.message,
-      code: error?.code,
-      underlyingErrorMessage: error?.underlyingErrorMessage,
-      userCancelled: error?.userCancelled,
-      readableErrorCode: error?.readableErrorCode,
-      readable_error_code: error?.readable_error_code,
-      domain: error?.domain,
-      name: error?.name,
-      stack: error?.stack,
-      raw: typeof error === 'object' ? JSON.stringify(error, Object.getOwnPropertyNames(error)) : String(error),
-    });
+    console.error('[SUBSCRIPTION DEBUG][RC purchase] ERROR', errorDebug(e));
     throw e;
   }
 }
@@ -652,19 +658,7 @@ export async function purchaseStoreProduct(product: RevenueCatStoreProduct) {
     log('synced to backend');
     return active;
   } catch (e) {
-    const error = e as RevenueCatError;
-    log('ERROR', {
-      message: error?.message,
-      code: error?.code,
-      underlyingErrorMessage: error?.underlyingErrorMessage,
-      userCancelled: error?.userCancelled,
-      readableErrorCode: error?.readableErrorCode,
-      readable_error_code: error?.readable_error_code,
-      domain: error?.domain,
-      name: error?.name,
-      stack: error?.stack,
-      raw: typeof error === 'object' ? JSON.stringify(error, Object.getOwnPropertyNames(error)) : String(error),
-    });
+    console.error('[SUBSCRIPTION DEBUG][RC purchase-product] ERROR', errorDebug(e));
     throw e;
   }
 }
@@ -689,42 +683,42 @@ export async function restorePurchases() {
     log('synced to backend');
     return active;
   } catch (e) {
-    const error = e as RevenueCatError;
-    log('ERROR', {
-      message: error?.message,
-      code: error?.code,
-      underlyingErrorMessage: error?.underlyingErrorMessage,
-      readableErrorCode: error?.readableErrorCode,
-      readable_error_code: error?.readable_error_code,
-      domain: error?.domain,
-      name: error?.name,
-      raw: typeof error === 'object' ? JSON.stringify(error, Object.getOwnPropertyNames(error)) : String(error),
-    });
+    console.error('[SUBSCRIPTION DEBUG][RC restore] ERROR', errorDebug(e));
     throw e;
   }
 }
 
 export async function refreshPremiumStatus() {
   const { data: auth } = await supabase.auth.getUser();
+  rcLog('customer-info', 'START refreshPremiumStatus', { userId: auth.user?.id ?? null, email: auth.user?.email ?? null });
   let Purchases = null;
   try {
     Purchases = await withTimeout(ensureInit(auth.user?.id), INIT_TIMEOUT_MS, 'RevenueCat initialize before getCustomerInfo');
   } catch (e) {
-    rememberRevenueCatError('RevenueCat initialize before getCustomerInfo', e);
+    const remembered = rememberRevenueCatError('RevenueCat initialize before getCustomerInfo', e);
+    console.error('[SUBSCRIPTION DEBUG][RC customer-info] INIT ERROR', remembered);
     return null;
   }
-  if (!Purchases) return null;
+  if (!Purchases) {
+    rcLog('customer-info', 'not initialized');
+    return null;
+  }
   try {
+    const started = Date.now();
     const result: RevenueCatPurchaseResult = await withTimeout(
       Purchases.getCustomerInfo(),
       STOREKIT_FETCH_TIMEOUT_MS,
       'RevenueCat getCustomerInfo'
     );
+    rcLog('customer-info', 'raw getCustomerInfo result', { elapsedMs: Date.now() - started, result });
     const info = result.customerInfo;
     const active = extractActive(info);
+    rcLog('customer-info', 'extracted active result', active);
     await syncToSupabase();
     return active;
-  } catch {
+  } catch (e) {
+    const remembered = rememberRevenueCatError('RevenueCat getCustomerInfo', e);
+    console.error('[SUBSCRIPTION DEBUG][RC customer-info] ERROR', remembered);
     return null;
   }
 }
