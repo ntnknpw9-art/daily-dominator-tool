@@ -73,6 +73,12 @@ type RevenueCatError = Error & {
 
 const errorDebug = (error: unknown) => {
   const e = error as RevenueCatError;
+  let raw: string;
+  try {
+    raw = typeof error === 'object' ? JSON.stringify(error, Object.getOwnPropertyNames(error)) : String(error);
+  } catch {
+    raw = String(error);
+  }
   return {
     message: e?.message ?? String(error),
     code: e?.code,
@@ -84,7 +90,7 @@ const errorDebug = (error: unknown) => {
     name: e?.name,
     details: e?.details,
     stack: e?.stack,
-    raw: typeof error === 'object' ? JSON.stringify(error, Object.getOwnPropertyNames(error)) : String(error),
+    raw,
   };
 };
 
