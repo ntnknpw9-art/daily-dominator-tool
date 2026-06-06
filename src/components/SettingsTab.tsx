@@ -49,6 +49,29 @@ type RevenueCatStoreProduct = RevenueCatPackage['product'] & {
 const SUBSCRIPTION_PRODUCTS_UNAVAILABLE = 'מוצרי המנוי לא זמינים כרגע מ-App Store. נסה לרענן או לבדוק שוב בעוד רגע.';
 const SUBSCRIPTION_PRODUCTS_LOADING = 'טוען את מוצרי המנוי מ-App Store...';
 
+const subscriptionDebug = (label: string, data?: unknown) => {
+  try {
+    console.log('[SUBSCRIPTION DEBUG][UI]', label, JSON.stringify({ at: new Date().toISOString(), data }, null, 2));
+  } catch {
+    console.log('[SUBSCRIPTION DEBUG][UI]', label, data);
+  }
+};
+
+const subscriptionErrorDebug = (label: string, error: unknown) => {
+  const e = error as { message?: string; code?: string | number; readableErrorCode?: string; readable_error_code?: string; underlyingErrorMessage?: string; userCancelled?: boolean; stack?: string; name?: string };
+  console.error('[SUBSCRIPTION DEBUG][UI ERROR]', label, {
+    message: e?.message ?? String(error),
+    code: e?.code,
+    readableErrorCode: e?.readableErrorCode,
+    readable_error_code: e?.readable_error_code,
+    underlyingErrorMessage: e?.underlyingErrorMessage,
+    userCancelled: e?.userCancelled,
+    name: e?.name,
+    stack: e?.stack,
+    raw: typeof error === 'object' ? JSON.stringify(error, Object.getOwnPropertyNames(error)) : String(error),
+  });
+};
+
 const SettingsTab = () => {
   const { signOut, user } = useAuth();
   const { syncHealthData, isSyncing } = useHealthSync();
@@ -70,10 +93,10 @@ const SettingsTab = () => {
       setOfferingsLoaded(false);
       setOfferingsError(null);
       try {
-        console.log('[RC UI] loading subscription catalog', { reason });
+        subscriptionDebug('loading subscription catalog', { reason, userId: user?.id, expectedProducts: [PRODUCT_MONTHLY, PRODUCT_YEARLY] });
         const offering = await getOfferings();
           const packages = offering?.availablePackages ?? [];
-          console.log('[RC UI] offerings loaded', offering ? {
+          subscriptionDebug('offerings loaded result', offering ? {
             identifier: offering?.identifier,
             packagesCount: packages.length,
             availablePackages: packages.map((p: RevenueCatPackage) => ({
@@ -84,14 +107,14 @@ const SettingsTab = () => {
             })) ?? [],
             expectedProducts: [PRODUCT_MONTHLY, PRODUCT_YEARLY],
           } : null);
-          console.log('[RC UI] packages count', packages.length);
+          subscriptionDebug('packages count', packages.length);
           setOfferings(offering);
 
           let products: RevenueCatStoreProduct[] = [];
           if (!offering || packages.length < 2) {
-            console.log('[RC UI] offerings missing packages; trying direct StoreKit product load', { reason, packagesCount: packages.length });
+            subscriptionDebug('offerings missing packages; trying direct StoreKit product load', { reason, packagesCount: packages.length });
             products = await getStoreProducts();
-            console.log('[RC UI] direct products loaded', products.map((p) => ({
+            subscriptionDebug('direct products loaded result', products.map((p) => ({
               identifier: p.identifier,
               priceString: p.priceString,
               title: p.title,
@@ -103,7 +126,7 @@ const SettingsTab = () => {
           return { offering, products };
       } catch (e) {
         const error = e as { message?: string };
-        console.log('[RC UI] subscription catalog load failed', error);
+        subscriptionErrorDebug('subscription catalog load failed', e);
         setOfferingsError(error?.message || SUBSCRIPTION_PRODUCTS_UNAVAILABLE);
         return { offering: null, products: [] };
       } finally {
@@ -179,7 +202,7 @@ const SettingsTab = () => {
       let selectedProduct = findStoreProduct(productKey);
 
       if (!selectedPackage && !selectedProduct) {
-        console.log('[RC UI] no preloaded product — loading RevenueCat catalog before purchase', { productKey });
+        subscriptionDebug('no preloaded product — loading RevenueCat catalog before purchase', { productKey });
         const fresh = await loadSubscriptionProducts('purchase');
         selectedPackage = findPackage(productKey, fresh.offering);
         selectedProduct = fresh.products.find((p) => p?.identifier === productKey) ?? findStoreProduct(productKey);
@@ -187,7 +210,7 @@ const SettingsTab = () => {
         const res = selectedPackage
           ? await purchasePackage(selectedPackage)
           : await purchaseStoreProduct(selectedProduct);
-        console.log('[RC UI] purchase success', res);
+        subscriptionDebug('purchase success', res);
         if (res.isPremium) {
           toast.success('תודה רבה על התמיכה! 💜');
           reloadPremium();
@@ -199,7 +222,7 @@ const SettingsTab = () => {
 
       let res;
       if (selectedPackage) {
-        console.log('[RC UI] purchase package from offering', {
+        subscriptionDebug('purchase package from offering', {
           requestedProductKey: productKey,
           packageIdentifier: selectedPackage?.identifier,
           offeringIdentifier: selectedPackage?.offeringIdentifier,
@@ -207,14 +230,14 @@ const SettingsTab = () => {
         });
         res = await purchasePackage(selectedPackage);
       } else {
-        console.log('[RC UI] purchase direct StoreKit product fallback', {
+        subscriptionDebug('purchase direct StoreKit product fallback', {
           requestedProductKey: productKey,
           productIdentifier: selectedProduct?.identifier,
           priceString: selectedProduct?.priceString,
         });
         res = await purchaseStoreProduct(selectedProduct);
       }
-      console.log('[RC UI] purchase success', res);
+      subscriptionDebug('purchase success', res);
       if (res.isPremium) {
         toast.success('תודה רבה על התמיכה! 💜');
         reloadPremium();
@@ -223,7 +246,7 @@ const SettingsTab = () => {
       }
     } catch (e) {
       const error = e as { message?: string; code?: string | number; readableErrorCode?: string; readable_error_code?: string; underlyingErrorMessage?: string; userCancelled?: boolean };
-      console.log('[RC UI] full purchase error', error);
+      subscriptionErrorDebug('full purchase error', e);
       const msg = error?.message || '';
       if (!msg.toLowerCase().includes('cancel') && !error?.userCancelled) {
         const message = getPurchaseErrorMessage(error);
