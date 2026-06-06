@@ -137,7 +137,7 @@ const SettingsTab = () => {
 
     catalogLoadPromiseRef.current = promise;
     return promise;
-  }, []);
+  }, [user?.id]);
 
   useEffect(() => {
     if (subOpen && isIOSNative() && !offeringsLoaded && !offerings && storeProducts.length === 0) {
@@ -265,7 +265,9 @@ const SettingsTab = () => {
     }
     try {
       setRestoring(true);
+      subscriptionDebug('restore purchases start', { userId: user?.id });
       const res = await restorePurchases();
+      subscriptionDebug('restore purchases result', res);
       if (res.isPremium) {
         toast.success('הרכישה שוחזרה בהצלחה');
       } else {
@@ -274,6 +276,7 @@ const SettingsTab = () => {
       reloadPremium();
     } catch (e) {
       const error = e as { message?: string };
+      subscriptionErrorDebug('restore purchases failed', e);
       toast.error('שחזור נכשל: ' + (error?.message || ''));
     } finally {
       setRestoring(false);
