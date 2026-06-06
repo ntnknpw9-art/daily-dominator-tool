@@ -25,6 +25,11 @@ type RevenueCatSubscriber = {
 };
 
 const extractPremium = (subscriber: RevenueCatSubscriber) => {
+  console.log("[SUBSCRIPTION DEBUG][sync-subscription] extractPremium input", JSON.stringify({
+    entitlementKeys: Object.keys(subscriber?.entitlements ?? {}),
+    subscriptionKeys: Object.keys(subscriber?.subscriptions ?? {}),
+    subscriber,
+  }));
   const entitlements = subscriber?.entitlements ?? {};
   const activeEntitlement = Object.values(entitlements).find((ent) => {
     const expires = getTime(ent?.expires_date);
@@ -61,6 +66,11 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    console.log("[SUBSCRIPTION DEBUG][sync-subscription] START", JSON.stringify({
+      method: req.method,
+      at: new Date().toISOString(),
+      hasAuthorization: Boolean(req.headers.get("Authorization")),
+    }));
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -75,6 +85,11 @@ Deno.serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
     const { data: { user }, error: userErr } = await userClient.auth.getUser();
+    console.log("[SUBSCRIPTION DEBUG][sync-subscription] auth result", JSON.stringify({
+      userId: user?.id ?? null,
+      email: user?.email ?? null,
+      authError: userErr ? { message: userErr.message, name: userErr.name, status: userErr.status } : null,
+    }));
     if (userErr || !user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
@@ -89,18 +104,29 @@ Deno.serve(async (req) => {
     let expiresAt: string | null = null;
 
     if (rcSecret) {
+      const rcStarted = Date.now();
+      console.log("[SUBSCRIPTION DEBUG][sync-subscription] calling RevenueCat REST", JSON.stringify({ subscriberId }));
       const rcRes = await fetch(`https://api.revenuecat.com/v1/subscribers/${encodeURIComponent(subscriberId)}`, {
         headers: { Authorization: `Bearer ${rcSecret}` },
       });
+      const rawText = await rcRes.text();
+      console.log("[SUBSCRIPTION DEBUG][sync-subscription] RevenueCat REST response", JSON.stringify({
+        status: rcRes.status,
+        ok: rcRes.ok,
+        elapsedMs: Date.now() - rcStarted,
+        bodyPreview: rawText.slice(0, 5000),
+      }));
       if (!rcRes.ok) {
         return new Response(JSON.stringify({ error: "RevenueCat verification failed" }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
-      const body = await rcRes.json();
+      const body = JSON.parse(rawText);
       const premium = extractPremium(body?.subscriber ?? {});
       isPremium = premium.isPremium;
       productId = premium.productId;
       expiresAt = premium.expiresAt;
+      console.log("[SUBSCRIPTION DEBUG][sync-subscription] extracted premium", JSON.stringify({ isPremium, productId, expiresAt }));
     } else {
+      console.error("[SUBSCRIPTION DEBUG][sync-subscription] missing REVENUECAT_SECRET_API_KEY");
       return new Response(JSON.stringify({ error: "Server missing REVENUECAT_SECRET_API_KEY" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
@@ -114,15 +140,17 @@ Deno.serve(async (req) => {
     }, { onConflict: "user_id" });
 
     if (upsertError) {
-      console.error("subscription upsert failed", upsertError);
+      console.error("[SUBSCRIPTION DEBUG][sync-subscription] subscription upsert failed", JSON.stringify(upsertError));
       return new Response(JSON.stringify({ error: "Subscription sync failed" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
+
+    console.log("[SUBSCRIPTION DEBUG][sync-subscription] upsert OK", JSON.stringify({ userId: user.id, isPremium, productId, expiresAt }));
 
     return new Response(JSON.stringify({ isPremium, productId, expiresAt }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
-    console.error('sync-subscription: unhandled error', e);
+    console.error('[SUBSCRIPTION DEBUG][sync-subscription] unhandled error', e);
     return new Response(JSON.stringify({ error: 'An internal error occurred. Please try again.' }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });
