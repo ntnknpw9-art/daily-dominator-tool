@@ -71,6 +71,23 @@ type RevenueCatError = Error & {
   details?: unknown;
 };
 
+const errorDebug = (error: unknown) => {
+  const e = error as RevenueCatError;
+  return {
+    message: e?.message ?? String(error),
+    code: e?.code,
+    underlyingErrorMessage: e?.underlyingErrorMessage,
+    userCancelled: e?.userCancelled,
+    readableErrorCode: e?.readableErrorCode,
+    readable_error_code: e?.readable_error_code,
+    domain: e?.domain,
+    name: e?.name,
+    details: e?.details,
+    stack: e?.stack,
+    raw: typeof error === 'object' ? JSON.stringify(error, Object.getOwnPropertyNames(error)) : String(error),
+  };
+};
+
 type RevenueCatLastError = {
   operation: string;
   message?: string;
@@ -147,9 +164,14 @@ const safeJson = (value: unknown) => {
 
 const rcLog = (scope: string, label: string, data?: unknown) => {
   try {
-    console.log(`[RC ${scope}] ${label}`, data !== undefined ? safeJson(data) : '');
+    console.log(`[SUBSCRIPTION DEBUG][RC ${scope}] ${label}`, data !== undefined ? safeJson({
+      at: new Date().toISOString(),
+      platform: Capacitor.getPlatform(),
+      native: Capacitor.isNativePlatform(),
+      data,
+    }) : '');
   } catch {
-    console.log(`[RC ${scope}] ${label}`, data);
+    console.log(`[SUBSCRIPTION DEBUG][RC ${scope}] ${label}`, data);
   }
 };
 
@@ -165,9 +187,10 @@ const rememberRevenueCatError = (operation: string, error: unknown, elapsedMs?: 
     domain: e?.domain,
     name: e?.name,
     elapsedMs,
-    raw: typeof error === 'object' ? safeJson(error) : String(error),
+    raw: typeof error === 'object' ? safeJson(errorDebug(error)) : String(error),
     at: new Date().toISOString(),
   };
+  console.error(`[SUBSCRIPTION DEBUG][RC ERROR] ${operation}`, lastRevenueCatError);
   return lastRevenueCatError;
 };
 
