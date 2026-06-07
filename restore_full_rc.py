@@ -1,4 +1,6 @@
-// RevenueCat integration — iOS only. No-op on web/Android.
+import sys
+
+full_content = r"""// RevenueCat integration — iOS only. No-op on web/Android.
 // Premium is purely optional: nothing in the app changes based on status.
 
 import { Capacitor } from '@capacitor/core';
@@ -503,3 +505,7 @@ export async function refreshPremiumStatus() {
 }
 
 export const isIOSNative = isIOS;
+"""
+
+with open('src/lib/revenuecat.ts', 'w') as f:
+    f.write(full_content)
