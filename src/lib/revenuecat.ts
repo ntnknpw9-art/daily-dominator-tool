@@ -319,17 +319,29 @@ async function ensureInit(userId?: string) {
         } catch (e) {
           rcLog('init', 'setLogLevel failed but continuing', e);
         }
-        await withTimeout(
-          Purchases.configure({
-            apiKey: REVENUECAT_IOS_API_KEY,
-            appUserID: userId,
-            storeKitVersion: IOS_STOREKIT_VERSION,
-            diagnosticsEnabled: true,
-            preferredUILocaleOverride: 'he-IL',
-          } as never),
-          INIT_TIMEOUT_MS,
-          'RevenueCat configure'
-        );
+        try {
+          await withTimeout(
+            Purchases.configure({
+              apiKey: REVENUECAT_IOS_API_KEY,
+              appUserID: userId,
+              storeKitVersion: IOS_STOREKIT_VERSION,
+              shouldShowInAppMessagesAutomatically: true,
+            } as never),
+            CONFIGURE_TIMEOUT_MS,
+            'RevenueCat configure'
+          );
+        } catch (e) {
+          const postTimeoutConfigured = await withTimeout(
+            Purchases.isConfigured(),
+            3000,
+            'RevenueCat isConfigured after configure timeout'
+          ).catch(() => null);
+          if (!postTimeoutConfigured?.isConfigured) {
+            throw e;
+          }
+          rememberRevenueCatError('RevenueCat configure timed out but SDK is configured', e);
+          rcLog('init', 'configure promise timed out, but native SDK reports configured — continuing');
+        }
         initialized = true;
         configuredAppUserID = userId ?? null;
         rcLog('init', 'configure resolved', { storeKitVersion: IOS_STOREKIT_VERSION });
