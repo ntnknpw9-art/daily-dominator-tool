@@ -3,20 +3,20 @@ import type { CapacitorConfig } from '@capacitor/cli';
 // =============================================================
 // Capacitor configuration
 // =============================================================
-// ברירת המחדל לריצה מ-Xcode היא טעינה ישירה מהאפליקציה ב-Lovable.
-// זה מונע מסך שחור שנגרם כש-Xcode רץ בלי assets מקומיים מעודכנים.
-// לבניית App Store מקומית: הריצו npm run cap:sync:ios:store.
+// ברירת המחדל לריצה מ-Xcode היא טעינת ה-assets המקומיים שסונכרנו לאפליקציה.
+// חשוב במיוחד ל-RevenueCat: אחרת Xcode עלול לטעון גרסה ישנה מהאתר המפורסם.
+// לפיתוח מול URL חי בלבד: CAP_SERVER_URL=https://... npx cap sync ios
 // =============================================================
 
-const isStoreBuild = process.env.CAP_ENV === 'production';
+const liveServerUrl = process.env.CAP_SERVER_URL;
 
 const config: CapacitorConfig = {
   appId: 'com.natanknafo.dailydominator',
   appName: 'Daily Dominator',
   webDir: 'dist',
-  ...(!isStoreBuild && {
+  ...(liveServerUrl && {
     server: {
-      url: 'https://daily-dominator-tool.lovable.app',
+      url: liveServerUrl,
       cleartext: false,
     },
   }),
