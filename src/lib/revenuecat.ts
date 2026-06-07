@@ -139,7 +139,7 @@ let lastRevenueCatError: RevenueCatLastError | null = null;
 let initializeStartedAt = 0;
 
 const IOS_STOREKIT_VERSION = 'STOREKIT_1' as const;
-const APP_BUILD_MARKER = 'rc-force-storekit1-after-single-plugin-2026-06-07-1852';
+const APP_BUILD_MARKER = 'rc-explicit-spm-native-registration-2026-06-07-1905';
 const INIT_TIMEOUT_MS = 30000;
 const CONFIGURE_TIMEOUT_MS = 10000;
 const STOREKIT_FETCH_TIMEOUT_MS = 60000;
