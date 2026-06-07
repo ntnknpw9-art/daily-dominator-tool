@@ -153,8 +153,9 @@ let initializeStartedAt = 0;
 // App Store Connect In-App Purchase Key setup. StoreKit 1 is the safest path
 // for App Review/TestFlight product lookup and avoids StoreKit 2 key issues.
 const IOS_STOREKIT_VERSION = 'STOREKIT_1' as const;
-const APP_BUILD_MARKER = 'rc-official-sdk-only-2026-06-02-1919';
+const APP_BUILD_MARKER = 'rc-configure-timeout-recovery-2026-06-07-1755';
 const INIT_TIMEOUT_MS = 30000;
+const CONFIGURE_TIMEOUT_MS = 10000;
 const STOREKIT_FETCH_TIMEOUT_MS = 60000;
 const PURCHASE_TIMEOUT_MS = 120000;
 const RUNTIME_DIAGNOSTIC_TIMEOUT_MS = 6000;
@@ -212,6 +213,7 @@ export const getRevenueCatClientConfig = () => ({
   apiKeyLooksLikeIOS: REVENUECAT_IOS_API_KEY.startsWith('appl_'),
   storeKitVersion: IOS_STOREKIT_VERSION,
   initTimeoutMs: INIT_TIMEOUT_MS,
+  configureTimeoutMs: CONFIGURE_TIMEOUT_MS,
   storeKitFetchTimeoutMs: STOREKIT_FETCH_TIMEOUT_MS,
   purchaseTimeoutMs: PURCHASE_TIMEOUT_MS,
   runtimeDiagnosticTimeoutMs: RUNTIME_DIAGNOSTIC_TIMEOUT_MS,
