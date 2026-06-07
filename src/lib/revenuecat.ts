@@ -124,6 +124,9 @@ export const PRODUCTS = {
 export type ProductKey = keyof typeof PRODUCTS;
 export const ALL_PRODUCT_IDS = Object.values(PRODUCTS).map((p) => p.id);
 
+export const PRODUCT_MONTHLY = PRODUCTS.monthly.id;
+export const PRODUCT_YEARLY = PRODUCTS.yearly.id;
+
 export const getProductById = (id: string | null | undefined) =>
   Object.values(PRODUCTS).find((p) => p.id === id) ?? null;
 
@@ -136,7 +139,7 @@ let lastRevenueCatError: RevenueCatLastError | null = null;
 let initializeStartedAt = 0;
 
 const IOS_STOREKIT_VERSION = 'DEFAULT' as const;
-const APP_BUILD_MARKER = 'rc-iap-fixed-v1-2026-06-07';
+const APP_BUILD_MARKER = 'rc-export-products-fix-2026-06-07-1848';
 const INIT_TIMEOUT_MS = 30000;
 const CONFIGURE_TIMEOUT_MS = 10000;
 const STOREKIT_FETCH_TIMEOUT_MS = 60000;
