@@ -5,11 +5,6 @@ import path from 'node:path';
 const platform = process.env.CAPACITOR_PLATFORM_NAME ?? '';
 const shouldBuild = platform === 'ios' || platform === 'android' || platform === '';
 
-if (process.env.CAP_ENV !== 'production') {
-  console.log('Skipping local Capacitor web asset build; native debug uses the live Lovable URL.');
-  process.exit(0);
-}
-
 if (!shouldBuild) {
   process.exit(0);
 }
