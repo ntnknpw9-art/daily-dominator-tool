@@ -4,7 +4,9 @@ import Capacitor
 class MainViewController: CAPBridgeViewController {
     override func capacitorDidLoad() {
         super.capacitorDidLoad()
-        if let purchasesPlugin = NSClassFromString("RevenuecatPurchasesCapacitor.PurchasesPlugin") as? CAPPlugin.Type {
+        let revenueCatPluginClass = NSClassFromString("RevenuecatPurchasesCapacitor.PurchasesPlugin")
+            ?? NSClassFromString("PurchasesPlugin")
+        if let purchasesPlugin = revenueCatPluginClass as? CAPPlugin.Type {
             bridge?.registerPluginInstance(purchasesPlugin.init())
         }
         bridge?.registerPluginInstance(InstagramStories())
