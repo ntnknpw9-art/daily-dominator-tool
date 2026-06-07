@@ -51,7 +51,7 @@
          </BuildableReference>
       </BuildableProductRunnable>
       <StoreKitConfigurationFileReference
-         identifier = "../DailyDominator.storekit">
+         identifier = "../../../DailyDominator.storekit">
       </StoreKitConfigurationFileReference>
    </LaunchAction>
    <ProfileAction
