@@ -1,0 +1,87 @@
+{
+  "identifier" : "DAILYDOMINATORSTOREKIT",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+
+  ],
+  "settings" : {
+
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "DAILYDOMINATORPRO",
+      "localizations" : [
+
+      ],
+      "name" : "Daily Dominator AI Pro",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "19.90",
+          "familyShareable" : false,
+          "groupNumber" : 2,
+          "internalID" : "DDMONTHLY001",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Daily Dominator AI Pro monthly access",
+              "displayName" : "Daily Dominator Pro Monthly",
+              "locale" : "en_US"
+            },
+            {
+              "description" : "גישה חודשית ל-Daily Dominator AI Pro",
+              "displayName" : "Daily Dominator Pro חודשי",
+              "locale" : "he_IL"
+            }
+          ],
+          "productID" : "com.natanknafo.dailydominator",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Monthly Pro",
+          "subscriptionGroupID" : "DAILYDOMINATORPRO",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "199.90",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "DDANNUAL001",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Daily Dominator AI Pro annual access",
+              "displayName" : "Daily Dominator Pro Annual",
+              "locale" : "en_US"
+            },
+            {
+              "description" : "גישה שנתית ל-Daily Dominator AI Pro",
+              "displayName" : "Daily Dominator Pro שנתי",
+              "locale" : "he_IL"
+            }
+          ],
+          "productID" : "com.natanknafo.dailydominatork",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Annual Pro",
+          "subscriptionGroupID" : "DAILYDOMINATORPRO",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 2,
+    "minor" : 0
+  }
+}
