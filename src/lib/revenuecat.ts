@@ -138,8 +138,8 @@ let configuredAppUserID: string | null = null;
 let lastRevenueCatError: RevenueCatLastError | null = null;
 let initializeStartedAt = 0;
 
-const IOS_STOREKIT_VERSION = 'DEFAULT' as const;
-const APP_BUILD_MARKER = 'rc-export-products-fix-2026-06-07-1848';
+const IOS_STOREKIT_VERSION = 'STOREKIT_1' as const;
+const APP_BUILD_MARKER = 'rc-force-storekit1-after-single-plugin-2026-06-07-1852';
 const INIT_TIMEOUT_MS = 30000;
 const CONFIGURE_TIMEOUT_MS = 10000;
 const STOREKIT_FETCH_TIMEOUT_MS = 60000;
