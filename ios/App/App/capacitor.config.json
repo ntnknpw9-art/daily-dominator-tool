@@ -26,6 +26,6 @@
 		"StatusBarPlugin",
 		"HealthPlugin",
 		"SocialLoginPlugin",
-		"RevenuecatPurchasesCapacitor.PurchasesPlugin"
+		"PurchasesPlugin"
 	]
 }
