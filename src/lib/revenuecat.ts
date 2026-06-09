@@ -155,10 +155,43 @@ const safeJson = (value: unknown) => {
   }
 };
 
+export type RcTraceEntry = {
+  at: string;
+  tMs: number;
+  scope: string;
+  label: string;
+  data?: string;
+};
+const RC_TRACE_MAX = 200;
+let rcTraceBuffer: RcTraceEntry[] = [];
+let rcTraceStartedAt = Date.now();
+const rcTraceListeners = new Set<() => void>();
+
+export const getRevenueCatInitTrace = (): RcTraceEntry[] => rcTraceBuffer.slice();
+export const clearRevenueCatInitTrace = () => {
+  rcTraceBuffer = [];
+  rcTraceStartedAt = Date.now();
+  rcTraceListeners.forEach((l) => { try { l(); } catch {} });
+};
+export const subscribeRevenueCatInitTrace = (listener: () => void) => {
+  rcTraceListeners.add(listener);
+  return () => { rcTraceListeners.delete(listener); };
+};
+
 const rcLog = (scope: string, label: string, data?: unknown) => {
+  const entry: RcTraceEntry = {
+    at: new Date().toISOString(),
+    tMs: Date.now() - rcTraceStartedAt,
+    scope,
+    label,
+    data: data !== undefined ? safeJson(data) : undefined,
+  };
+  if (rcTraceBuffer.length >= RC_TRACE_MAX) rcTraceBuffer.shift();
+  rcTraceBuffer.push(entry);
+  rcTraceListeners.forEach((l) => { try { l(); } catch {} });
   try {
     console.log(`[SUBSCRIPTION DEBUG][RC ${scope}] ${label}`, data !== undefined ? safeJson({
-      at: new Date().toISOString(),
+      at: entry.at,
       platform: Capacitor.getPlatform(),
       native: Capacitor.isNativePlatform(),
       data,
