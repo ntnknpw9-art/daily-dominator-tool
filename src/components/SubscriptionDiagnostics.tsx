@@ -58,7 +58,15 @@ export const SubscriptionDiagnostics = ({ autoRun = false }: { autoRun?: boolean
   const [lastRunAt, setLastRunAt] = useState<string | null>(null);
   const [summary, setSummary] = useState<string | null>(null);
   const [premiumCheckedAt, setPremiumCheckedAt] = useState<string | null>(null);
+  const [trace, setTrace] = useState<RcTraceEntry[]>(() => getRevenueCatInitTrace());
   const autoRunRef = useRef(false);
+
+  useEffect(() => {
+    const unsub = subscribeRevenueCatInitTrace(() => {
+      setTrace(getRevenueCatInitTrace());
+    });
+    return unsub;
+  }, []);
 
   const update = (key: string, patch: Partial<Step>) => {
     setSteps((prev) => prev.map((s) => (s.key === key ? { ...s, ...patch } : s)));
