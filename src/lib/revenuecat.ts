@@ -139,7 +139,7 @@ let lastRevenueCatError: RevenueCatLastError | null = null;
 let initializeStartedAt = 0;
 
 const IOS_STOREKIT_VERSION = 'STOREKIT_1' as const;
-const APP_BUILD_MARKER = 'rc-init-trace-ui-2026-06-09';
+const APP_BUILD_MARKER = 'rc-post-import-trace-2026-06-09';
 const INIT_TIMEOUT_MS = 30000;
 const CONFIGURE_TIMEOUT_MS = 10000;
 const STOREKIT_FETCH_TIMEOUT_MS = 60000;
@@ -318,28 +318,62 @@ async function ensureInit(userId?: string) {
     hasGetAppUserID: typeof Purchases?.getAppUserID === 'function',
     hasGetStorefront: typeof Purchases?.getStorefront === 'function',
   });
+  rcLog('init-trace', 'post-import checkpoint: module bindings selected', {
+    purchasesType: typeof Purchases,
+    logLevelType: typeof LOG_LEVEL,
+    hasVerboseLogLevel: Boolean(LOG_LEVEL?.VERBOSE),
+  });
+  rcLog('init-trace', 'post-import checkpoint: runtime platform state', {
+    platform: Capacitor.getPlatform(),
+    isNative: Capacitor.isNativePlatform(),
+    isIOS: isIOS(),
+  });
+  rcLog('init-trace', 'post-import checkpoint: initialized flag read', { initialized });
   if (!initialized) {
+    rcLog('init-trace', 'post-import checkpoint: entered !initialized branch');
+    rcLog('init-trace', 'post-import checkpoint: initializePromise state before stale check', {
+      hasInitializePromise: Boolean(initializePromise),
+      initializeStartedAt,
+      elapsedMs: initializeStartedAt ? Date.now() - initializeStartedAt : null,
+      staleThresholdMs: INIT_TIMEOUT_MS + 2000,
+    });
     if (initializePromise && initializeStartedAt && Date.now() - initializeStartedAt > INIT_TIMEOUT_MS + 2000) {
       rcLog('init-trace', 'discarding stale initializePromise', {
         elapsedMs: Date.now() - initializeStartedAt,
       });
       initializePromise = null;
       initializeStartedAt = 0;
+      rcLog('init-trace', 'post-import checkpoint: stale initializePromise cleared');
     }
+    rcLog('init-trace', 'post-import checkpoint: initializePromise state after stale check', {
+      hasInitializePromise: Boolean(initializePromise),
+      initializeStartedAt,
+    });
     if (!initializePromise) {
+      rcLog('init-trace', 'post-import checkpoint: entered !initializePromise branch');
       initializeStartedAt = Date.now();
+      rcLog('init-trace', 'post-import checkpoint: initializeStartedAt assigned', { initializeStartedAt });
+      const configureOptions = {
+        apiKey: REVENUECAT_IOS_API_KEY,
+        appUserID: userId,
+        storeKitVersion: IOS_STOREKIT_VERSION,
+      } as never;
+      rcLog('init-trace', 'post-import checkpoint: configure options built', {
+        apiKeyPrefix: REVENUECAT_IOS_API_KEY.slice(0, 10),
+        apiKeyLength: REVENUECAT_IOS_API_KEY.length,
+        hasUserId: Boolean(userId),
+        appUserID: userId ?? '(anonymous)',
+        storeKitVersion: IOS_STOREKIT_VERSION,
+      });
       initializePromise = (async () => {
+        rcLog('init-trace', 'post-import checkpoint: initializePromise async body entered');
         try {
           rcLog('init-trace', 'before configure', {
             storeKitVersion: IOS_STOREKIT_VERSION,
             appUserID: userId ?? '(anonymous)',
           });
           await withTimeout(
-            Purchases.configure({
-              apiKey: REVENUECAT_IOS_API_KEY,
-              appUserID: userId,
-              storeKitVersion: IOS_STOREKIT_VERSION,
-            } as never),
+            Purchases.configure(configureOptions),
             CONFIGURE_TIMEOUT_MS,
             'RevenueCat configure'
           );
