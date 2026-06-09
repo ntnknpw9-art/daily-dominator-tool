@@ -270,14 +270,26 @@ const isIOS = () =>
   Capacitor.getPlatform() === 'ios';
 
 async function ensureInit(userId?: string) {
+  rcLog('init-trace', 'ensureInit entered', { userId: userId ?? '(anonymous)' });
   if (!isIOS()) return null;
   if (!REVENUECAT_IOS_API_KEY) {
     rcLog('init', 'NO API KEY configured');
     return null;
   }
+  rcLog('init-trace', 'before import @revenuecat/purchases-capacitor');
   const { Purchases, LOG_LEVEL } = await import('@revenuecat/purchases-capacitor');
+  rcLog('init-trace', 'after import @revenuecat/purchases-capacitor', {
+    hasPurchases: Boolean(Purchases),
+    hasConfigure: typeof Purchases?.configure === 'function',
+    hasIsConfigured: typeof Purchases?.isConfigured === 'function',
+    hasGetAppUserID: typeof Purchases?.getAppUserID === 'function',
+    hasGetStorefront: typeof Purchases?.getStorefront === 'function',
+  });
   if (!initialized) {
     if (initializePromise && initializeStartedAt && Date.now() - initializeStartedAt > INIT_TIMEOUT_MS + 2000) {
+      rcLog('init-trace', 'discarding stale initializePromise', {
+        elapsedMs: Date.now() - initializeStartedAt,
+      });
       initializePromise = null;
       initializeStartedAt = 0;
     }
@@ -285,6 +297,10 @@ async function ensureInit(userId?: string) {
       initializeStartedAt = Date.now();
       initializePromise = (async () => {
         try {
+          rcLog('init-trace', 'before configure', {
+            storeKitVersion: IOS_STOREKIT_VERSION,
+            appUserID: userId ?? '(anonymous)',
+          });
           await withTimeout(
             Purchases.configure({
               apiKey: REVENUECAT_IOS_API_KEY,
@@ -294,24 +310,51 @@ async function ensureInit(userId?: string) {
             CONFIGURE_TIMEOUT_MS,
             'RevenueCat configure'
           );
+          rcLog('init-trace', 'after configure');
         } catch (e) {
+          rcLog('init-trace', 'configure threw/timed out; before isConfigured fallback', errorDebug(e));
           const postTimeoutConfigured = await withTimeout(
             Purchases.isConfigured(),
             3000,
             'RevenueCat isConfigured after configure timeout'
           ).catch(() => null);
+          rcLog('init-trace', 'after isConfigured fallback', postTimeoutConfigured);
           if (!postTimeoutConfigured?.isConfigured) {
             throw e;
           }
         }
+        rcLog('init-trace', 'before isConfigured post-config');
+        const configuredStatus = await withTimeout(
+          Purchases.isConfigured(),
+          3000,
+          'RevenueCat isConfigured post-config trace'
+        );
+        rcLog('init-trace', 'after isConfigured post-config', configuredStatus);
+        rcLog('init-trace', 'before getAppUserID');
+        const appUserID = await withTimeout(
+          Purchases.getAppUserID(),
+          3000,
+          'RevenueCat getAppUserID post-config trace'
+        );
+        rcLog('init-trace', 'after getAppUserID', appUserID);
+        rcLog('init-trace', 'before getStorefront');
+        const storefront = await withTimeout(
+          Purchases.getStorefront(),
+          3000,
+          'RevenueCat getStorefront post-config trace'
+        );
+        rcLog('init-trace', 'after getStorefront', storefront);
         initialized = true;
         void Purchases.setLogLevel({ level: LOG_LEVEL.VERBOSE }).catch(() => {});
         configuredAppUserID = userId ?? null;
       })();
     }
     try {
+      rcLog('init-trace', 'before await initializePromise');
       await initializePromise;
+      rcLog('init-trace', 'after await initializePromise');
     } catch (e) {
+      rcLog('init-trace', 'initializePromise rejected', errorDebug(e));
       initialized = false;
       initializePromise = null;
       initializeStartedAt = 0;
@@ -320,7 +363,9 @@ async function ensureInit(userId?: string) {
     }
   } else if (userId && configuredAppUserID !== userId) {
     try {
+      rcLog('init-trace', 'before logIn', { appUserID: userId });
       const result = await Purchases.logIn({ appUserID: userId });
+      rcLog('init-trace', 'after logIn', result);
       configuredAppUserID = userId;
     } catch (e) {
       rememberRevenueCatError('logIn', e);
