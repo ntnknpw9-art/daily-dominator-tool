@@ -402,6 +402,44 @@ ${directProducts.map((p) => `• ${p.identifier} ${p.priceString ? '· ' + p.pri
         ))}
       </div>
 
+      <div className="rounded border border-accent/40 bg-background/40 p-2 space-y-1">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-semibold text-accent">RC Init Trace ({trace.length})</span>
+          <span className="text-[10px] text-muted-foreground">לוג שלב-אחר-שלב של ensureInit</span>
+        </div>
+        {trace.length === 0 ? (
+          <div className="text-[10px] text-muted-foreground">אין עדיין רישומים. הרץ אבחון.</div>
+        ) : (
+          <div className="space-y-0.5 max-h-80 overflow-y-auto font-mono">
+            {trace.map((t, i) => {
+              const isInit = t.scope === 'init-trace';
+              const isLast = i === trace.length - 1;
+              return (
+                <div
+                  key={i}
+                  className={`text-[10px] leading-snug ${isInit ? 'text-foreground' : 'text-muted-foreground'} ${isLast ? 'bg-accent/10 rounded px-1' : ''}`}
+                >
+                  <span className="text-accent">[+{t.tMs}ms]</span>{' '}
+                  <span className="opacity-60">[{t.scope}]</span>{' '}
+                  <span className="font-semibold">{t.label}</span>
+                  {t.data && (
+                    <pre className="text-[9px] opacity-70 whitespace-pre-wrap mr-3">{t.data}</pre>
+                  )}
+                </div>
+              );
+            })}
+            {running && (
+              <div className="text-[10px] text-accent animate-pulse">⏳ ממתין לשלב הבא…</div>
+            )}
+          </div>
+        )}
+        {trace.length > 0 && !running && (
+          <div className="text-[10px] text-accent font-semibold border-t border-accent/30 pt-1 mt-1">
+            ⬅ השלב האחרון שהושלם: {trace[trace.length - 1].label}
+          </div>
+        )}
+      </div>
+
       {summary && (
         <pre className="text-[11px] whitespace-pre-wrap font-mono p-2 rounded border border-border/40 bg-background/50 leading-relaxed">
           {summary}
