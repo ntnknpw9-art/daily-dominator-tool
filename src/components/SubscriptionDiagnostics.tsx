@@ -349,6 +349,9 @@ ${directProducts.map((p) => `• ${p.identifier} ${p.priceString ? '· ' + p.pri
         return `${icon} ${s.label}${s.durationMs ? ` (${s.durationMs}ms)` : ''}\n${s.detail ?? ''}`;
       }),
       ``,
+      `--- RC Init Trace (${trace.length} entries) ---`,
+      ...trace.map((t) => `[+${t.tMs}ms] [${t.scope}] ${t.label}${t.data ? `\n    ${t.data.replace(/\n/g, '\n    ')}` : ''}`),
+      ``,
       `--- Summary ---`,
       summary ?? '',
     ].join('\n');
