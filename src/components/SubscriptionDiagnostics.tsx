@@ -403,14 +403,32 @@ ${directProducts.map((p) => `• ${p.identifier} ${p.priceString ? '· ' + p.pri
       </div>
 
       <div className="rounded border border-accent/40 bg-background/40 p-2 space-y-1">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-2">
           <span className="text-xs font-semibold text-accent">RC Init Trace ({trace.length})</span>
-          <span className="text-[10px] text-muted-foreground">לוג שלב-אחר-שלב של ensureInit</span>
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={trace.length === 0}
+            onClick={async () => {
+              const text = trace
+                .map((t) => `[+${t.tMs}ms] [${t.scope}] ${t.label}${t.data ? `\n    ${t.data.replace(/\n/g, '\n    ')}` : ''}`)
+                .join('\n');
+              try {
+                await navigator.clipboard.writeText(text || '(empty)');
+                toast.success(`הועתקו ${trace.length} שלבים`);
+              } catch {
+                toast.error('העתקה נכשלה');
+              }
+            }}
+            className="h-6 text-[10px] gap-1"
+          >
+            <Copy className="w-3 h-3" /> העתק Trace
+          </Button>
         </div>
         {trace.length === 0 ? (
           <div className="text-[10px] text-muted-foreground">אין עדיין רישומים. הרץ אבחון.</div>
         ) : (
-          <div className="space-y-0.5 max-h-80 overflow-y-auto font-mono">
+          <div className="space-y-0.5 max-h-[600px] overflow-y-auto font-mono border border-border/20 rounded p-1">
             {trace.map((t, i) => {
               const isInit = t.scope === 'init-trace';
               const isLast = i === trace.length - 1;
