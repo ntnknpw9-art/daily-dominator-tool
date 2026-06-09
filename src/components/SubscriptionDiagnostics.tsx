@@ -12,6 +12,10 @@ import {
   getRevenueCatClientConfig,
   getRevenueCatRemoteOfferingSnapshot,
   getRevenueCatRuntimeDiagnostics,
+  getRevenueCatInitTrace,
+  clearRevenueCatInitTrace,
+  subscribeRevenueCatInitTrace,
+  type RcTraceEntry,
   PRODUCT_MONTHLY,
   PRODUCT_YEARLY,
   ALL_PRODUCT_IDS,
@@ -54,7 +58,15 @@ export const SubscriptionDiagnostics = ({ autoRun = false }: { autoRun?: boolean
   const [lastRunAt, setLastRunAt] = useState<string | null>(null);
   const [summary, setSummary] = useState<string | null>(null);
   const [premiumCheckedAt, setPremiumCheckedAt] = useState<string | null>(null);
+  const [trace, setTrace] = useState<RcTraceEntry[]>(() => getRevenueCatInitTrace());
   const autoRunRef = useRef(false);
+
+  useEffect(() => {
+    const unsub = subscribeRevenueCatInitTrace(() => {
+      setTrace(getRevenueCatInitTrace());
+    });
+    return unsub;
+  }, []);
 
   const update = (key: string, patch: Partial<Step>) => {
     setSteps((prev) => prev.map((s) => (s.key === key ? { ...s, ...patch } : s)));
@@ -64,6 +76,7 @@ export const SubscriptionDiagnostics = ({ autoRun = false }: { autoRun?: boolean
     setRunning(true);
     setSummary(null);
     setSteps(INITIAL_STEPS.map((s) => ({ ...s })));
+    clearRevenueCatInitTrace();
     const errors: string[] = [];
 
     // 1. ENV
@@ -336,6 +349,9 @@ ${directProducts.map((p) => `• ${p.identifier} ${p.priceString ? '· ' + p.pri
         return `${icon} ${s.label}${s.durationMs ? ` (${s.durationMs}ms)` : ''}\n${s.detail ?? ''}`;
       }),
       ``,
+      `--- RC Init Trace (${trace.length} entries) ---`,
+      ...trace.map((t) => `[+${t.tMs}ms] [${t.scope}] ${t.label}${t.data ? `\n    ${t.data.replace(/\n/g, '\n    ')}` : ''}`),
+      ``,
       `--- Summary ---`,
       summary ?? '',
     ].join('\n');
@@ -384,6 +400,44 @@ ${directProducts.map((p) => `• ${p.identifier} ${p.priceString ? '· ' + p.pri
             )}
           </div>
         ))}
+      </div>
+
+      <div className="rounded border border-accent/40 bg-background/40 p-2 space-y-1">
+        <div className="flex items-center justify-between">
+          <span className="text-xs font-semibold text-accent">RC Init Trace ({trace.length})</span>
+          <span className="text-[10px] text-muted-foreground">לוג שלב-אחר-שלב של ensureInit</span>
+        </div>
+        {trace.length === 0 ? (
+          <div className="text-[10px] text-muted-foreground">אין עדיין רישומים. הרץ אבחון.</div>
+        ) : (
+          <div className="space-y-0.5 max-h-80 overflow-y-auto font-mono">
+            {trace.map((t, i) => {
+              const isInit = t.scope === 'init-trace';
+              const isLast = i === trace.length - 1;
+              return (
+                <div
+                  key={i}
+                  className={`text-[10px] leading-snug ${isInit ? 'text-foreground' : 'text-muted-foreground'} ${isLast ? 'bg-accent/10 rounded px-1' : ''}`}
+                >
+                  <span className="text-accent">[+{t.tMs}ms]</span>{' '}
+                  <span className="opacity-60">[{t.scope}]</span>{' '}
+                  <span className="font-semibold">{t.label}</span>
+                  {t.data && (
+                    <pre className="text-[9px] opacity-70 whitespace-pre-wrap mr-3">{t.data}</pre>
+                  )}
+                </div>
+              );
+            })}
+            {running && (
+              <div className="text-[10px] text-accent animate-pulse">⏳ ממתין לשלב הבא…</div>
+            )}
+          </div>
+        )}
+        {trace.length > 0 && !running && (
+          <div className="text-[10px] text-accent font-semibold border-t border-accent/30 pt-1 mt-1">
+            ⬅ השלב האחרון שהושלם: {trace[trace.length - 1].label}
+          </div>
+        )}
       </div>
 
       {summary && (
