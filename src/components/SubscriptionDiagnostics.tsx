@@ -76,6 +76,7 @@ export const SubscriptionDiagnostics = ({ autoRun = false }: { autoRun?: boolean
     setRunning(true);
     setSummary(null);
     setSteps(INITIAL_STEPS.map((s) => ({ ...s })));
+    clearRevenueCatInitTrace();
     const errors: string[] = [];
 
     // 1. ENV
