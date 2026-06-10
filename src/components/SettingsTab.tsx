@@ -650,117 +650,124 @@ const SettingsTab = () => {
       </Card>
 
       <Dialog open={subOpen} onOpenChange={setSubOpen}>
-        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto" dir="rtl">
-          <DialogHeader className="text-right">
-            <DialogTitle className="flex items-center gap-2">
-              <Crown className="w-5 h-5 text-accent" />
-              מנוי תמיכה
-            </DialogTitle>
-            <DialogDescription className="text-right">
-              כל פיצ׳רי האפליקציה זמינים לכולם בחינם. המנוי הוא דרך אופציונלית לתמוך בפיתוח.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="flex items-center justify-between bg-background/40 border border-border/40 rounded-lg p-3">
-            <div className="text-sm">
-              <div className="font-medium">סטטוס</div>
-              <div className="text-xs text-muted-foreground">
-                {isPremium ? 'תומך פעיל — תודה!' : 'לא רשום'}
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto p-0" dir="rtl">
+          <div className="flex flex-col px-6 pb-6 pt-6">
+            <DialogHeader className="text-center items-center space-y-3">
+              <div className="grid place-items-center size-20 rounded-[22px] bg-gradient-to-br from-accent/30 to-accent/10 border border-accent/40 shadow-[0_0_30px_-5px_hsl(var(--accent)/0.5)]">
+                <Crown className="w-10 h-10 text-accent" />
               </div>
-            </div>
-            <span className={`text-xs font-bold px-2 py-1 rounded-full border ${isPremium ? 'bg-accent/10 text-accent border-accent/30' : 'bg-muted text-muted-foreground border-border'}`}>
-              {isPremium ? 'תומך' : 'חינמי'}
-            </span>
-          </div>
+              <DialogTitle className="text-2xl font-bold tracking-tight text-center w-full">
+                מנוי תמיכה
+              </DialogTitle>
+              <DialogDescription className="text-sm text-muted-foreground text-center w-full">
+                כל פיצ׳רי האפליקציה זמינים לכולם בחינם. המנוי הוא דרך אופציונלית לתמוך בפיתוח.
+              </DialogDescription>
+            </DialogHeader>
 
-          {(() => {
-            const monthlyPkg = findPackage(PRODUCT_MONTHLY);
-            const yearlyPkg = findPackage(PRODUCT_YEARLY);
-            const monthlyProduct = findStoreProduct(PRODUCT_MONTHLY);
-            const yearlyProduct = findStoreProduct(PRODUCT_YEARLY);
-            const blockMonthly = isIOSNative() && offeringsLoaded && !monthlyPkg && !monthlyProduct;
-            const blockYearly = isIOSNative() && offeringsLoaded && !yearlyPkg && !yearlyProduct;
-            return (
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  disabled={!!purchasing || isPremium || blockMonthly}
-                  onClick={() => handlePurchase(PRODUCT_MONTHLY)}
-                  className="relative flex flex-col items-center justify-center gap-1 rounded-lg border border-border/60 bg-background/40 p-4 transition hover:border-accent/40 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <span className="text-xs text-muted-foreground">חודשי</span>
-                  <span className="font-bold text-base">
-                    {purchasing === PRODUCT_MONTHLY
-                      ? 'רוכש...'
-                      : getPriceLabel(PRODUCT_MONTHLY)}
-                  </span>
-                  <span className="text-[11px] text-muted-foreground">לחודש</span>
-                </button>
-                <button
-                  type="button"
-                  disabled={!!purchasing || isPremium || blockYearly}
-                  onClick={() => handlePurchase(PRODUCT_YEARLY)}
-                  className="relative flex flex-col items-center justify-center gap-1 rounded-lg border border-border/60 bg-background/40 p-4 transition hover:border-accent/40 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <span className="absolute -top-2 left-1/2 -translate-x-1/2 text-[10px] font-bold bg-accent/20 text-accent border border-accent/40 px-2 py-0.5 rounded-full whitespace-nowrap">
-                    חיסכון 62%
-                  </span>
-                  <span className="text-xs text-muted-foreground">שנתי</span>
-                  <span className="font-bold text-base">
-                    {purchasing === PRODUCT_YEARLY
-                      ? 'רוכש...'
-                      : getPriceLabel(PRODUCT_YEARLY)}
-                  </span>
-                  <span className="text-[11px] text-muted-foreground">לשנה</span>
-                </button>
+            <div className="mt-5 flex items-center justify-between bg-background/40 border border-border/40 rounded-lg p-3">
+              <div className="text-sm">
+                <div className="font-medium">סטטוס</div>
+                <div className="text-xs text-muted-foreground">
+                  {isPremium ? 'תומך פעיל — תודה!' : 'לא רשום'}
+                </div>
               </div>
-            );
-          })()}
-
-          {isIOSNative() && !offeringsLoaded && !findPackage(PRODUCT_MONTHLY) && !findPackage(PRODUCT_YEARLY) && (
-            <div className="text-[11px] text-muted-foreground text-center">
-              טוען מחירים מ-App Store... אפשר ללחוץ, הרכישה תנסה לטעון מחדש.
+              <span className={`text-xs font-bold px-2 py-1 rounded-full border ${isPremium ? 'bg-accent/10 text-accent border-accent/30' : 'bg-muted text-muted-foreground border-border'}`}>
+                {isPremium ? 'תומך' : 'חינמי'}
+              </span>
             </div>
-          )}
 
-          {isIOSNative() && offeringsLoaded && !findPackage(PRODUCT_MONTHLY) && !findPackage(PRODUCT_YEARLY) && !findStoreProduct(PRODUCT_MONTHLY) && !findStoreProduct(PRODUCT_YEARLY) && (
-            <div className="text-[11px] text-destructive text-center">
-              {offeringsError || SUBSCRIPTION_PRODUCTS_UNAVAILABLE}
+            {(() => {
+              const monthlyPkg = findPackage(PRODUCT_MONTHLY);
+              const yearlyPkg = findPackage(PRODUCT_YEARLY);
+              const monthlyProduct = findStoreProduct(PRODUCT_MONTHLY);
+              const yearlyProduct = findStoreProduct(PRODUCT_YEARLY);
+              const blockMonthly = isIOSNative() && offeringsLoaded && !monthlyPkg && !monthlyProduct;
+              const blockYearly = isIOSNative() && offeringsLoaded && !yearlyPkg && !yearlyProduct;
+              const activeProductKey = selectedPlan === 'monthly' ? PRODUCT_MONTHLY : PRODUCT_YEARLY;
+              const activeBlocked = selectedPlan === 'monthly' ? blockMonthly : blockYearly;
+              return (
+                <>
+                  <div className="mt-5 space-y-2.5">
+                    <PlanRow
+                      selected={selectedPlan === 'yearly'}
+                      onSelect={() => setSelectedPlan('yearly')}
+                      title="שנתי"
+                      badge="חיסכון 62%"
+                      price={getPriceLabel(PRODUCT_YEARLY)}
+                      period="לשנה"
+                    />
+                    <PlanRow
+                      selected={selectedPlan === 'monthly'}
+                      onSelect={() => setSelectedPlan('monthly')}
+                      title="חודשי"
+                      price={getPriceLabel(PRODUCT_MONTHLY)}
+                      period="לחודש"
+                    />
+                  </div>
+
+                  <button
+                    onClick={() => handlePurchase(activeProductKey)}
+                    disabled={!!purchasing || isPremium || activeBlocked}
+                    className="mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-accent text-base font-semibold text-accent-foreground shadow-[0_0_30px_-5px_hsl(var(--accent)/0.6)] transition active:scale-[0.98] disabled:opacity-60"
+                  >
+                    {purchasing ? (
+                      <Loader2 className="size-5 animate-spin" />
+                    ) : (
+                      <>
+                        <Sparkles className="size-5" />
+                        <span>המשך</span>
+                      </>
+                    )}
+                  </button>
+                </>
+              );
+            })()}
+
+            {isIOSNative() && !offeringsLoaded && !findPackage(PRODUCT_MONTHLY) && !findPackage(PRODUCT_YEARLY) && (
+              <div className="mt-3 text-[11px] text-muted-foreground text-center">
+                טוען מחירים מ-App Store... אפשר ללחוץ, הרכישה תנסה לטעון מחדש.
+              </div>
+            )}
+
+            {isIOSNative() && offeringsLoaded && !findPackage(PRODUCT_MONTHLY) && !findPackage(PRODUCT_YEARLY) && !findStoreProduct(PRODUCT_MONTHLY) && !findStoreProduct(PRODUCT_YEARLY) && (
+              <div className="mt-3 text-[11px] text-destructive text-center">
+                {offeringsError || SUBSCRIPTION_PRODUCTS_UNAVAILABLE}
+              </div>
+            )}
+
+            <button
+              onClick={handleRestore}
+              disabled={restoring}
+              className="mt-3 text-center text-sm text-muted-foreground underline-offset-4 hover:underline disabled:opacity-60"
+            >
+              {restoring ? 'משחזר...' : 'שחזר רכישות'}
+            </button>
+
+            <div className="mt-5 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+              <ShieldCheck className="size-3.5" />
+              <span>תשלום מאובטח דרך App Store</span>
             </div>
-          )}
 
-          <div className="text-[11px] text-muted-foreground leading-relaxed bg-background/30 border border-border/30 rounded-lg p-3">
-            התשלום יחויב דרך חשבון ה-Apple ID שלך בעת אישור הרכישה. המנוי מתחדש אוטומטית בסוף כל תקופה (חודשי/שנתי) באותו מחיר, אלא אם בוטל לפחות 24 שעות לפני תום התקופה. ניתן לנהל ולבטל את המנוי בכל עת דרך הגדרות חשבון ה-Apple ID.
+            <p className="mt-4 text-[11px] leading-5 text-muted-foreground/80 text-center">
+              התשלום יחויב דרך חשבון ה-Apple ID שלך בעת אישור הרכישה. המנוי מתחדש אוטומטית בסוף כל תקופה (חודשי/שנתי) באותו מחיר, אלא אם בוטל לפחות 24 שעות לפני תום התקופה. ניתן לנהל ולבטל את המנוי בכל עת דרך הגדרות חשבון ה-Apple ID.
+            </p>
+
+            <div className="mt-4 flex items-center justify-center gap-4 text-[11px] text-muted-foreground pt-3 border-t border-border/30">
+              <a href="/terms" target="_blank" rel="noopener noreferrer" className="hover:text-foreground underline-offset-2 hover:underline">
+                תנאי שימוש (EULA)
+              </a>
+              <span>·</span>
+              <a href="/privacy" target="_blank" rel="noopener noreferrer" className="hover:text-foreground underline-offset-2 hover:underline">
+                מדיניות פרטיות
+              </a>
+            </div>
+
+            {!isIOSNative() && (
+              <div className="mt-3 text-[11px] text-muted-foreground text-center">
+                רכישות זמינות באפליקציה על iPhone בלבד
+              </div>
+            )}
           </div>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full gap-2"
-            onClick={handleRestore}
-            disabled={restoring}
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${restoring ? 'animate-spin' : ''}`} />
-            {restoring ? 'משחזר...' : 'שחזר רכישות'}
-          </Button>
-
-          <div className="flex items-center justify-center gap-4 text-[11px] text-muted-foreground pt-1 border-t border-border/30">
-            <a href="/terms" target="_blank" rel="noopener noreferrer" className="hover:text-foreground underline-offset-2 hover:underline">
-              תנאי שימוש (EULA)
-            </a>
-            <span>·</span>
-            <a href="/privacy" target="_blank" rel="noopener noreferrer" className="hover:text-foreground underline-offset-2 hover:underline">
-              מדיניות פרטיות
-            </a>
-          </div>
-
-          {!isIOSNative() && (
-            <div className="text-[11px] text-muted-foreground text-center">
-              רכישות זמינות באפליקציה על iPhone בלבד
-            </div>
-          )}
-
-          <SubscriptionDiagnostics />
         </DialogContent>
       </Dialog>
 
