@@ -818,3 +818,58 @@ const SettingsTab = () => {
 };
 
 export default SettingsTab;
+
+function PlanRow({
+  selected,
+  onSelect,
+  title,
+  badge,
+  price,
+  period,
+}: {
+  selected: boolean;
+  onSelect: () => void;
+  title: string;
+  badge?: string;
+  price: string;
+  period: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-pressed={selected}
+      className={[
+        'relative flex w-full items-center justify-between rounded-2xl border p-4 text-right transition',
+        selected
+          ? 'border-accent bg-card shadow-[0_0_20px_-8px_hsl(var(--accent)/0.7)]'
+          : 'border-border bg-card/60 hover:bg-card',
+      ].join(' ')}
+    >
+      <div className="flex items-center gap-3">
+        <span
+          className={[
+            'grid size-6 place-items-center rounded-full border-2 transition',
+            selected ? 'border-accent bg-accent' : 'border-muted-foreground/40',
+          ].join(' ')}
+        >
+          {selected && <Check className="size-3.5 text-accent-foreground" strokeWidth={3} />}
+        </span>
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="text-base font-semibold">{title}</span>
+            {badge && (
+              <span className="rounded-full bg-accent/15 px-2 py-0.5 text-[11px] font-medium text-accent border border-accent/30">
+                {badge}
+              </span>
+            )}
+          </div>
+          <div className="text-xs text-muted-foreground">{period}</div>
+        </div>
+      </div>
+      <div className="text-left">
+        <div className="text-lg font-bold tracking-tight">{price}</div>
+      </div>
+    </button>
+  );
+}
