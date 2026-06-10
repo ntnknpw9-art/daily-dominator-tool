@@ -89,6 +89,7 @@ const SettingsTab = () => {
   const [purchasing, setPurchasing] = useState<string | null>(null);
   const [restoring, setRestoring] = useState(false);
   const [subOpen, setSubOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('yearly');
   const catalogLoadPromiseRef = useRef<Promise<{ offering: RevenueCatOffering | null; products: RevenueCatStoreProduct[] }> | null>(null);
 
   const loadSubscriptionProducts = useCallback(async (reason: 'auto' | 'purchase' | 'refresh' = 'auto') => {
