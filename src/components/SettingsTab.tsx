@@ -17,7 +17,7 @@ import { getTheme, applyTheme } from '@/lib/theme';
 import { useHealthSync } from '@/hooks/useHealthSync';
 import { usePremium } from '@/hooks/usePremium';
 import { getOfferings, getStoreProducts, purchasePackage, purchaseStoreProduct, restorePurchases, isIOSNative, PRODUCT_MONTHLY, PRODUCT_YEARLY } from '@/lib/revenuecat';
-import { SubscriptionDiagnostics } from './SubscriptionDiagnostics';
+
 
 const NO_MERCY_KEY = 'app_no_mercy_mode';
 
