@@ -184,8 +184,8 @@ const SettingsTab = () => {
     storeProducts.find((p) => p?.identifier === productKey) ?? null;
 
   const FALLBACK_PRICES: Record<string, string> = {
-    [PRODUCT_MONTHLY]: '₪19.90',
-    [PRODUCT_YEARLY]: '₪199.90',
+    [PRODUCT_MONTHLY]: '₪39.90',
+    [PRODUCT_YEARLY]: '₪179.90',
   };
 
   const getPriceLabel = (productKey: string) =>
