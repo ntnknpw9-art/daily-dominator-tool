@@ -183,8 +183,15 @@ const SettingsTab = () => {
   const findStoreProduct = (productKey: string) =>
     storeProducts.find((p) => p?.identifier === productKey) ?? null;
 
+  const FALLBACK_PRICES: Record<string, string> = {
+    [PRODUCT_MONTHLY]: '₪19.90',
+    [PRODUCT_YEARLY]: '₪199.90',
+  };
+
   const getPriceLabel = (productKey: string) =>
-    findPackage(productKey)?.product?.priceString || findStoreProduct(productKey)?.priceString || (isIOSNative() && !offeringsLoaded ? 'טוען...' : 'רכוש');
+    findPackage(productKey)?.product?.priceString
+    || findStoreProduct(productKey)?.priceString
+    || (isIOSNative() && !offeringsLoaded ? 'טוען...' : FALLBACK_PRICES[productKey] ?? 'רכוש');
 
   const getPurchaseErrorMessage = (error: { message?: string; code?: string | number; readableErrorCode?: string; readable_error_code?: string; underlyingErrorMessage?: string }) => {
     const msg = error?.message || '';
