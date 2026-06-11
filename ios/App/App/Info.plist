@@ -58,8 +58,6 @@
 	<array>
 		<string>arm64</string>
 	</array>
-	<key>NSUserTrackingUsageDescription</key>
-	<string>אנו משתמשים בנתונים כדי להתאים אישית פרסומות ותוכן.</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
