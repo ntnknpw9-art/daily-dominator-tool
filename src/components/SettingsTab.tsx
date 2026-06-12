@@ -752,8 +752,23 @@ const SettingsTab = () => {
             )}
 
             {isIOSNative() && offeringsLoaded && offeringsError && (
-              <div className="mt-3 text-[11px] text-destructive text-center">
-                {offeringsError}
+              <div className="mt-3 flex flex-col items-center gap-2">
+                <div className="text-[11px] text-destructive text-center">
+                  {offeringsError}
+                </div>
+                <button
+                  onClick={() => {
+                    setOfferings(null);
+                    setStoreProducts([]);
+                    setOfferingsLoaded(false);
+                    setOfferingsError(null);
+                    void loadSubscriptionProducts('refresh');
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-accent/10 px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/20 transition"
+                >
+                  <RefreshCw className="size-3.5" />
+                  נסה שוב
+                </button>
               </div>
             )}
 
