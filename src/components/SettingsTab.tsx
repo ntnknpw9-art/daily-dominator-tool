@@ -152,6 +152,18 @@ const SettingsTab = () => {
     }
   }, [subOpen, offeringsLoaded, offerings, storeProducts.length, loadSubscriptionProducts]);
 
+  // Hard timeout: if RevenueCat doesn't return within 9s after opening the
+  // dialog, stop the spinner and surface a clear error — never leave the UI
+  // stuck on "loading". Fallback prices are already shown via getPriceLabel.
+  useEffect(() => {
+    if (!subOpen || !isIOSNative() || offeringsLoaded) return;
+    const t = setTimeout(() => {
+      setOfferingsLoaded(true);
+      setOfferingsError((prev) => prev || 'לא הצלחנו לטעון מחירים מ-App Store. המחירים המוצגים הם מחירי ברירת מחדל. נסה שוב או "שחזר רכישות".');
+    }, 9000);
+    return () => clearTimeout(t);
+  }, [subOpen, offeringsLoaded]);
+
   const findPackage = (productKey: string, source: RevenueCatOffering | null = offerings) => {
     if (!source) return null;
     const isMonthly = productKey === PRODUCT_MONTHLY;
