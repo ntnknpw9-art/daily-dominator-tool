@@ -792,13 +792,21 @@ const SettingsTab = () => {
             </p>
 
             <div className="mt-4 flex items-center justify-center gap-4 text-[11px] text-muted-foreground pt-3 border-t border-border/30">
-              <a href="/terms" target="_blank" rel="noopener noreferrer" className="hover:text-foreground underline-offset-2 hover:underline">
+              <button
+                type="button"
+                onClick={() => setLegalDialog('terms')}
+                className="hover:text-foreground underline-offset-2 hover:underline"
+              >
                 תנאי שימוש (EULA)
-              </a>
+              </button>
               <span>·</span>
-              <a href="/privacy" target="_blank" rel="noopener noreferrer" className="hover:text-foreground underline-offset-2 hover:underline">
+              <button
+                type="button"
+                onClick={() => setLegalDialog('privacy')}
+                className="hover:text-foreground underline-offset-2 hover:underline"
+              >
                 מדיניות פרטיות
-              </a>
+              </button>
             </div>
 
             {!isIOSNative() && (
@@ -809,6 +817,13 @@ const SettingsTab = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      <LegalDialog
+        open={legalDialog !== null}
+        onOpenChange={(open) => { if (!open) setLegalDialog(null); }}
+        kind={legalDialog ?? 'terms'}
+      />
+
 
 
 
