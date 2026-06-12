@@ -188,10 +188,14 @@ const SettingsTab = () => {
     [PRODUCT_YEARLY]: '₪179.90',
   };
 
+  // Always return a concrete price — never show a spinner-only label.
+  // If RevenueCat hasn't returned yet (or failed), display the fallback price
+  // so users (and App Review) always see a clear amount.
   const getPriceLabel = (productKey: string) =>
     findPackage(productKey)?.product?.priceString
     || findStoreProduct(productKey)?.priceString
-    || (isIOSNative() && !offeringsLoaded ? 'טוען...' : FALLBACK_PRICES[productKey] ?? 'רכוש');
+    || FALLBACK_PRICES[productKey]
+    || 'רכוש';
 
   const getPurchaseErrorMessage = (error: { message?: string; code?: string | number; readableErrorCode?: string; readable_error_code?: string; underlyingErrorMessage?: string }) => {
     const msg = error?.message || '';
