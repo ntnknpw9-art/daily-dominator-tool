@@ -48,24 +48,18 @@ const LeaguesAndSeasons = () => {
         .single();
 
       if (!data) {
-        // Get user XP to determine league
-        const { data: stats } = await supabase
-          .from('user_stats')
-          .select('xp')
+        // Ask the server to create/sync the season row (RLS forbids client writes)
+        await supabase.functions.invoke('sync-stats', {
+          body: { season_number: currentSeason },
+        }).catch((err) => console.error('sync-stats failed', err));
+
+        const { data: refreshed } = await supabase
+          .from('user_seasons')
+          .select('*')
           .eq('user_id', user.id)
-          .single();
-
-        const xp = stats?.xp || 0;
-        const league = LEAGUES.slice().reverse().find(l => xp >= l.minXp)?.id || 'bronze';
-
-        await supabase.from('user_seasons').insert({
-          user_id: user.id,
-          season_number: currentSeason,
-          league,
-          season_xp: xp,
-        });
-
-        data = { league, season_xp: xp, season_rank: null } as any;
+          .eq('season_number', currentSeason)
+          .maybeSingle();
+        data = refreshed ?? null;
       }
 
       setSeasonData(data ? { league: data.league, season_xp: data.season_xp, season_rank: data.season_rank } : null);

@@ -82,15 +82,10 @@ const GamificationBar = () => {
     };
     setDbStats(newStats);
 
-    // Save to DB
-    supabase.from('user_stats').upsert({
-      user_id: user.id,
-      xp: newStats.xp,
-      level: newStats.level,
-      current_streak: newStats.streak,
-      longest_streak: newStats.longest,
-      total_tasks_completed: newStats.total,
-    }, { onConflict: 'user_id' }).then();
+    // Save to DB via edge function (server-side authoritative recompute)
+    supabase.functions.invoke('sync-stats', {
+      body: { streak: newStats.streak },
+    }).catch((err) => console.error('sync-stats failed', err));
 
     // Check achievements with new system
     const currentStats: AchievementStats = {
