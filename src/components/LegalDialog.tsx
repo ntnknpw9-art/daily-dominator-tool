@@ -1,5 +1,4 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
 
 export type LegalKind = 'terms' | 'privacy';
 
@@ -159,14 +158,14 @@ const LegalDialog = ({ open, onOpenChange, kind }: LegalDialogProps) => {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         dir="rtl"
-        className="max-w-lg max-h-[85vh] p-0 gap-0 flex flex-col"
+        className="max-w-lg h-[85vh] max-h-[85vh] p-0 gap-0 flex flex-col overflow-hidden"
       >
         <DialogHeader className="px-5 pt-5 pb-3 border-b border-border/40 shrink-0">
           <DialogTitle className="text-right text-lg">{title}</DialogTitle>
         </DialogHeader>
-        <ScrollArea className="flex-1 px-5 py-4">
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-5 py-4">
           {kind === 'terms' ? <TermsContent /> : <PrivacyContent />}
-        </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   );
