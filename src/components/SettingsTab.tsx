@@ -700,14 +700,9 @@ const SettingsTab = () => {
             </div>
 
             {(() => {
-              const monthlyPkg = findPackage(PRODUCT_MONTHLY);
-              const yearlyPkg = findPackage(PRODUCT_YEARLY);
-              const monthlyProduct = findStoreProduct(PRODUCT_MONTHLY);
-              const yearlyProduct = findStoreProduct(PRODUCT_YEARLY);
-              const blockMonthly = isIOSNative() && offeringsLoaded && !monthlyPkg && !monthlyProduct;
-              const blockYearly = isIOSNative() && offeringsLoaded && !yearlyPkg && !yearlyProduct;
               const activeProductKey = selectedPlan === 'monthly' ? PRODUCT_MONTHLY : PRODUCT_YEARLY;
-              const activeBlocked = selectedPlan === 'monthly' ? blockMonthly : blockYearly;
+              const activePriceLabel = getPriceLabel(activeProductKey);
+              const activePeriodLabel = selectedPlan === 'monthly' ? 'לחודש' : 'לשנה';
               return (
                 <>
                   <div className="mt-5 space-y-2.5">
@@ -730,7 +725,7 @@ const SettingsTab = () => {
 
                   <button
                     onClick={() => handlePurchase(activeProductKey)}
-                    disabled={!!purchasing || isPremium || activeBlocked}
+                    disabled={!!purchasing || isPremium}
                     className="mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-accent text-base font-semibold text-accent-foreground shadow-[0_0_30px_-5px_hsl(var(--accent)/0.6)] transition active:scale-[0.98] disabled:opacity-60"
                   >
                     {purchasing ? (
@@ -738,23 +733,27 @@ const SettingsTab = () => {
                     ) : (
                       <>
                         <Sparkles className="size-5" />
-                        <span>המשך</span>
+                        <span>המשך · {activePriceLabel} {activePeriodLabel}</span>
                       </>
                     )}
                   </button>
+
+                  <p className="mt-2 text-[11px] leading-4 text-muted-foreground text-center">
+                    יחויב {activePriceLabel} בחשבון ה-Apple ID שלך בעת אישור הרכישה.
+                  </p>
                 </>
               );
             })()}
 
-            {isIOSNative() && !offeringsLoaded && !findPackage(PRODUCT_MONTHLY) && !findPackage(PRODUCT_YEARLY) && (
+            {isIOSNative() && !offeringsLoaded && (
               <div className="mt-3 text-[11px] text-muted-foreground text-center">
-                טוען מחירים מ-App Store... אפשר ללחוץ, הרכישה תנסה לטעון מחדש.
+                טוען מחירים עדכניים מ-App Store... המחירים המוצגים הם נכונים גם בלי טעינה.
               </div>
             )}
 
-            {isIOSNative() && offeringsLoaded && !findPackage(PRODUCT_MONTHLY) && !findPackage(PRODUCT_YEARLY) && !findStoreProduct(PRODUCT_MONTHLY) && !findStoreProduct(PRODUCT_YEARLY) && (
+            {isIOSNative() && offeringsLoaded && offeringsError && (
               <div className="mt-3 text-[11px] text-destructive text-center">
-                {offeringsError || SUBSCRIPTION_PRODUCTS_UNAVAILABLE}
+                {offeringsError}
               </div>
             )}
 
@@ -772,7 +771,7 @@ const SettingsTab = () => {
             </div>
 
             <p className="mt-4 text-[11px] leading-5 text-muted-foreground/80 text-center">
-              התשלום יחויב דרך חשבון ה-Apple ID שלך בעת אישור הרכישה. המנוי מתחדש אוטומטית בסוף כל תקופה (חודשי/שנתי) באותו מחיר, אלא אם בוטל לפחות 24 שעות לפני תום התקופה. ניתן לנהל ולבטל את המנוי בכל עת דרך הגדרות חשבון ה-Apple ID.
+              המחירים: חודשי {getPriceLabel(PRODUCT_MONTHLY)} לחודש, שנתי {getPriceLabel(PRODUCT_YEARLY)} לשנה. התשלום יחויב דרך חשבון ה-Apple ID שלך בעת אישור הרכישה. המנוי מתחדש אוטומטית בסוף כל תקופה באותו מחיר, אלא אם בוטל לפחות 24 שעות לפני תום התקופה. ניתן לנהל ולבטל את המנוי בכל עת דרך הגדרות חשבון ה-Apple ID &gt; Subscriptions.
             </p>
 
             <div className="mt-4 flex items-center justify-center gap-4 text-[11px] text-muted-foreground pt-3 border-t border-border/30">
