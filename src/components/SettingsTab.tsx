@@ -949,6 +949,7 @@ function PlanRow({
             )}
           </div>
           <div className="text-xs text-muted-foreground">{period}</div>
+          {subtitle && <div className="text-[11px] text-muted-foreground/80 mt-0.5">{subtitle}</div>}
         </div>
       </div>
       <div className="text-left">
