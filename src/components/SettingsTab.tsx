@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, type ReactNode } from 'react';
 import { Volume2, VolumeX, Sun, Moon, Bell, BellOff, Skull, Trash2, Watch, CheckCircle2, RefreshCw, Sparkles, Heart, Crown, Check, ShieldCheck, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -715,6 +715,12 @@ const SettingsTab = () => {
                       badge="חיסכון 62%"
                       price={getPriceLabel(PRODUCT_YEARLY)}
                       period="לשנה"
+                      subtitle={
+                        <span className="block space-y-0.5">
+                          <span className="block">מחויב פעם בשנה</span>
+                          <span className="block">שווה ערך ל־₪14.99 לחודש</span>
+                        </span>
+                      }
                     />
                     <PlanRow
                       selected={selectedPlan === 'monthly'}
@@ -902,6 +908,7 @@ function PlanRow({
   badge,
   price,
   period,
+  subtitle,
 }: {
   selected: boolean;
   onSelect: () => void;
@@ -909,6 +916,7 @@ function PlanRow({
   badge?: string;
   price: string;
   period: string;
+  subtitle?: React.ReactNode;
 }) {
   return (
     <button
@@ -941,6 +949,7 @@ function PlanRow({
             )}
           </div>
           <div className="text-xs text-muted-foreground">{period}</div>
+          {subtitle && <div className="text-[11px] text-muted-foreground/80 mt-0.5">{subtitle}</div>}
         </div>
       </div>
       <div className="text-left">
