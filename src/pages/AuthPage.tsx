@@ -259,8 +259,29 @@ const AuthPage = () => {
     setLoading(true);
 
     if (isLogin) {
-      const { error } = await signIn(email, password);
-      if (error) setError(error.message);
+      let { error } = await signIn(email, password);
+      if (error) {
+        const msg = (error.message || '').toLowerCase();
+        const isUnconfirmed =
+          msg.includes('not confirmed') ||
+          msg.includes('email_not_confirmed');
+        if (isUnconfirmed) {
+          // Legacy account stuck in unconfirmed state — try silent rescue.
+          try {
+            const { data: rescue, error: rescueError } = await supabase.functions.invoke(
+              'auth-rescue',
+              { body: { email, password } },
+            );
+            if (!rescueError && rescue && !(rescue as { error?: string }).error) {
+              const retry = await signIn(email, password);
+              error = retry.error;
+            }
+          } catch {
+            // ignore — fall through to original error
+          }
+        }
+        if (error) setError(error.message);
+      }
     } else {
       const { error } = await signUp(email, password, displayName);
       if (error) setError(error.message);
