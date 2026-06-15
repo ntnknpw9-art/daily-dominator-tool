@@ -908,6 +908,7 @@ function PlanRow({
   badge,
   price,
   period,
+  subtitle,
 }: {
   selected: boolean;
   onSelect: () => void;
@@ -915,6 +916,7 @@ function PlanRow({
   badge?: string;
   price: string;
   period: string;
+  subtitle?: React.ReactNode;
 }) {
   return (
     <button
