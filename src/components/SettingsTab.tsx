@@ -715,6 +715,12 @@ const SettingsTab = () => {
                       badge="חיסכון 62%"
                       price={getPriceLabel(PRODUCT_YEARLY)}
                       period="לשנה"
+                      subtitle={
+                        <span className="block space-y-0.5">
+                          <span className="block">מחויב פעם בשנה</span>
+                          <span className="block">שווה ערך ל־₪14.99 לחודש</span>
+                        </span>
+                      }
                     />
                     <PlanRow
                       selected={selectedPlan === 'monthly'}
