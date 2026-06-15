@@ -787,9 +787,31 @@ const SettingsTab = () => {
               <span>תשלום מאובטח דרך App Store</span>
             </div>
 
-            <p className="mt-4 text-[11px] leading-5 text-muted-foreground/80 text-center">
-              המחירים: חודשי {getPriceLabel(PRODUCT_MONTHLY)} לחודש, שנתי {getPriceLabel(PRODUCT_YEARLY)} לשנה. התשלום יחויב דרך חשבון ה-Apple ID שלך בעת אישור הרכישה. המנוי מתחדש אוטומטית בסוף כל תקופה באותו מחיר, אלא אם בוטל לפחות 24 שעות לפני תום התקופה. ניתן לנהל ולבטל את המנוי בכל עת דרך הגדרות חשבון ה-Apple ID &gt; Subscriptions.
-            </p>
+            <div className="mt-4 space-y-2 text-[11px] leading-5 text-muted-foreground/80 text-right">
+              <p className="font-medium text-foreground/90 text-center">
+                מנוי תמיכה · מתחדש אוטומטית
+              </p>
+              <ul className="list-disc pr-4 space-y-1.5 marker:text-muted-foreground/50">
+                <li>
+                  <span className="font-medium text-foreground/80">מסלול חודשי:</span> {getPriceLabel(PRODUCT_MONTHLY)} לחודש, מתחדש כל חודש.
+                </li>
+                <li>
+                  <span className="font-medium text-foreground/80">מסלול שנתי:</span> {getPriceLabel(PRODUCT_YEARLY)} לשנה, מתחדש כל שנה.
+                </li>
+                <li>
+                  התשלום יחויב מחשבון ה-Apple ID שלך עם אישור הרכישה.
+                </li>
+                <li>
+                  המנוי מתחדש אוטומטית באותו מחיר, אלא אם החידוש האוטומטי כובה לפחות 24 שעות לפני תום התקופה הנוכחית.
+                </li>
+                <li>
+                  החשבון יחויב על החידוש תוך 24 שעות לפני תום התקופה הנוכחית, במחיר זהה.
+                </li>
+                <li>
+                  ניתן לנהל את המנוי ולכבות חידוש אוטומטי בכל עת דרך הגדרות חשבון ה-Apple ID לאחר הרכישה (Settings &gt; Apple ID &gt; Subscriptions).
+                </li>
+              </ul>
+            </div>
 
             <div className="mt-4 flex items-center justify-center gap-4 text-[11px] text-muted-foreground pt-3 border-t border-border/30">
               <button
