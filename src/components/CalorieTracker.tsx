@@ -539,10 +539,34 @@ const CalorieTracker = () => {
     }
   };
   const startBarcodeScanner = async () => {
-    setBarcodeMode(true);
     setBarcodeResult(null);
     setServingCount(1);
     try {
+      const { Capacitor } = await import('@capacitor/core');
+      if (Capacitor.isNativePlatform()) {
+        // Native: use MLKit barcode scanner (Apple Vision / Google MLKit)
+        const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
+        try {
+          const { camera } = await BarcodeScanner.requestPermissions();
+          if (camera !== 'granted' && camera !== 'limited') {
+            toast.error('נדרשת הרשאת מצלמה כדי לסרוק ברקוד');
+            return;
+          }
+          const { barcodes } = await BarcodeScanner.scan();
+          if (barcodes && barcodes.length > 0) {
+            const code = barcodes[0].rawValue;
+            if (code) lookupBarcode(code);
+          }
+        } catch (err: any) {
+          if (!String(err?.message || '').toLowerCase().includes('cancel')) {
+            toast.error('שגיאה בסריקת הברקוד');
+          }
+        }
+        return;
+      }
+
+      // Web fallback: in-page camera + BarcodeDetector
+      setBarcodeMode(true);
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
       });
@@ -550,7 +574,6 @@ const CalorieTracker = () => {
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
       }
-      // Start scanning loop using BarcodeDetector API
       if ('BarcodeDetector' in window) {
         const detector = new (window as any).BarcodeDetector({
           formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39'],
