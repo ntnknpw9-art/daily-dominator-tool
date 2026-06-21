@@ -29,6 +29,17 @@ function shouldThrottle(key: string) {
   return false;
 }
 
+// Known-benign / environmental noise we never want to log
+const IGNORE_PATTERNS: RegExp[] = [
+  /Refresh Token Not Found/i,
+  /Invalid Refresh Token/i,
+  /AuthSessionMissingError/i,
+  /Auth session missing/i,
+  /ResizeObserver loop/i,
+  /Non-Error promise rejection captured/i,
+  /Failed to fetch.*lovable\.js/i,
+];
+
 export async function logError(opts: {
   message: string;
   severity?: Severity;
@@ -41,6 +52,14 @@ export async function logError(opts: {
     const severity = opts.severity || "error";
     const source = opts.source || "client";
     const stack = opts.stack ? String(opts.stack).slice(0, MAX_STACK) : null;
+
+    if (IGNORE_PATTERNS.some((re) => re.test(message) || (stack && re.test(stack)))) {
+      // Auto-recover stale auth sessions silently
+      if (/Refresh Token/i.test(message)) {
+        try { await supabase.auth.signOut(); } catch {}
+      }
+      return;
+    }
 
     const dedupKey = `${severity}|${source}|${message}`;
     if (shouldThrottle(dedupKey)) return;
