@@ -44,6 +44,10 @@ const AiCoach = () => {
   const [workouts, setWorkouts] = useState<string>('');
   const [showPlanDialog, setShowPlanDialog] = useState(false);
   const [planText, setPlanText] = useState('');
+  const [attachedImages, setAttachedImages] = useState<string[]>([]);
+  const [appliedMsgIds, setAppliedMsgIds] = useState<Set<number>>(new Set());
+  const [applyingMsgId, setApplyingMsgId] = useState<number | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!user) return;
