@@ -241,7 +241,22 @@ ${workouts}
           Authorization: `Bearer ${accessToken}`,
           apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
         },
-        body: JSON.stringify({ messages: allMsgs, context: buildContext(), mode }),
+        body: JSON.stringify({
+          messages: allMsgs.map(m => {
+            if (m.role === 'user' && m.images && m.images.length > 0) {
+              return {
+                role: 'user',
+                content: [
+                  { type: 'text', text: m.content || 'בבקשה תנתח את התמונה.' },
+                  ...m.images.map(url => ({ type: 'image_url', image_url: { url } })),
+                ],
+              };
+            }
+            return { role: m.role, content: m.content };
+          }),
+          context: buildContext(),
+          mode,
+        }),
       });
 
       if (!resp.ok) {
