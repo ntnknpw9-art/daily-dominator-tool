@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { SeoHead } from '@/components/SeoHead';
 import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { TaskProvider } from '@/context/TaskContext';
 import AuthPage from '@/pages/AuthPage';
 import DashboardTab from '@/components/DashboardTab';
