@@ -34,15 +34,19 @@ Deno.serve(async (req) => {
     const userClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: authHeader } },
     });
-    const { data: { user }, error: userErr } = await userClient.auth.getUser();
-    if (userErr || !user) return json({ error: 'Unauthorized' }, 401);
+    const token = authHeader.replace(/^Bearer\s+/i, '');
+    const { data: claimsData, error: claimsErr } = await userClient.auth.getClaims(token);
+    const userId = claimsData?.claims?.sub as string | undefined;
+    if (claimsErr || !userId) {
+      console.error('sync-stats: auth failed', claimsErr);
+      return json({ error: 'Unauthorized' }, 401);
+    }
 
     const body = req.method === 'POST' ? await req.json().catch(() => ({})) : {};
     const clientStreak = Math.max(0, Math.min(Number(body.streak ?? 0) || 0, 3650));
     const seasonNumber = Math.max(1, Math.floor(Number(body.season_number ?? 0)) || 0);
 
     const admin = createClient(supabaseUrl, serviceKey);
-    const userId = user.id;
 
     // Authoritative count from task_completions
     const { count: completionsCount, error: countErr } = await admin
