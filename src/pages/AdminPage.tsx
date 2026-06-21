@@ -367,6 +367,85 @@ export default function AdminPage() {
           <StatCard icon={MessageCircle} label="תגובות על תמונות" value={stats.total_photo_comments} accent="text-blue-500" />
           <StatCard icon={Trophy} label="אתגרים" value={stats.total_challenges} accent="text-amber-500" />
         </div>
+
+        {/* === EXPORT === */}
+        <SectionTitle>📥 ייצוא נתונים</SectionTitle>
+        <Card className="p-4 bg-card/60 backdrop-blur border-border/50">
+          <p className="text-sm text-muted-foreground mb-3">
+            הורד את כל הנתונים המצטברים מהדשבורד בלחיצה אחת. אין נתונים אישיים של משתמשים — רק אגרגציות.
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="default"
+              onClick={() => {
+                const payload = {
+                  exported_at: new Date().toISOString(),
+                  stats,
+                  signups_30d: signups,
+                  activity_30d: activity,
+                };
+                const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `admin-stats-${new Date().toISOString().slice(0, 10)}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+            >
+              <FileJson className="h-4 w-4 ml-1" /> ייצוא JSON מלא
+            </Button>
+
+            <Button
+              variant="secondary"
+              onClick={() => {
+                const rows: string[] = ["metric,value"];
+                Object.entries(stats).forEach(([k, v]) => {
+                  if (v === null || v === undefined) return;
+                  if (typeof v === "object") {
+                    rows.push(`${k},"${JSON.stringify(v).replace(/"/g, '""')}"`);
+                  } else {
+                    rows.push(`${k},${v}`);
+                  }
+                });
+                rows.push("");
+                rows.push("signups_day,signups");
+                signups.forEach((r) => rows.push(`${r.day},${r.signups}`));
+                rows.push("");
+                rows.push("activity_day,completions,active_users");
+                activity.forEach((r) => rows.push(`${r.day},${r.completions},${r.active_users}`));
+                const csv = "\uFEFF" + rows.join("\n");
+                const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `admin-stats-${new Date().toISOString().slice(0, 10)}.csv`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+            >
+              <FileSpreadsheet className="h-4 w-4 ml-1" /> ייצוא CSV
+            </Button>
+
+            <Button
+              variant="outline"
+              onClick={() => {
+                const blob = new Blob(
+                  [JSON.stringify({ signups_30d: signups, activity_30d: activity }, null, 2)],
+                  { type: "application/json" }
+                );
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `admin-timeseries-${new Date().toISOString().slice(0, 10)}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+            >
+              <Download className="h-4 w-4 ml-1" /> סדרות זמן בלבד
+            </Button>
+          </div>
+        </Card>
       </div>
     </div>
   );
