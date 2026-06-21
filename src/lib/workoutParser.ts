@@ -90,23 +90,23 @@ const buildExercise = (raw: string): ParsedExercise | null => {
 
 // Split text by numbered items "1." "2." etc. Returns the chunks (without the numbers)
 const splitByNumbers = (text: string): string[] | null => {
-  // Look for at least 2 numbered items to consider it a numbered list
-  const re = /(?:^|[\s,،])(\d+)\.\s*/g;
-  const indices: { idx: number; matchLen: number }[] = [];
+  const re = /(?:^|[\s,،])(\d{1,2})\.\s+/g;
+  const markers: { numStart: number; chunkStart: number; num: number }[] = [];
   let m: RegExpExecArray | null;
   while ((m = re.exec(text)) !== null) {
     const num = parseInt(m[1]);
-    // Skip very large numbers (probably reps "8-10") - we want sequential 1,2,3...
-    if (num >= 1 && num <= 30) {
-      indices.push({ idx: m.index + (m[0].length - m[0].trimStart().length), matchLen: m[0].length });
-    }
+    if (num < 1 || num > 30) continue;
+    // numStart = position of the digit
+    const leadLen = m[0].length - m[0].trimStart().length;
+    const numStart = m.index + leadLen;
+    const chunkStart = re.lastIndex; // position after "N. " (after the trailing whitespace)
+    markers.push({ numStart, chunkStart, num });
   }
-  if (indices.length < 2) return null;
-  // Slice between numbered markers
+  if (markers.length < 2) return null;
   const chunks: string[] = [];
-  for (let i = 0; i < indices.length; i++) {
-    const start = indices[i].idx + indices[i].matchLen;
-    const end = i + 1 < indices.length ? indices[i + 1].idx : text.length;
+  for (let i = 0; i < markers.length; i++) {
+    const start = markers[i].chunkStart;
+    const end = i + 1 < markers.length ? markers[i + 1].numStart : text.length;
     const chunk = text.slice(start, end).trim();
     if (chunk) chunks.push(chunk);
   }
