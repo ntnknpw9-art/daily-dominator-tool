@@ -5,6 +5,7 @@ import { formatDate, getDatesBetween, getNowInIsrael, getHebrewDayFromDate } fro
 import { Trash2, Timer, Check, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import NewTaskDialog from './NewTaskDialog';
+import { parseWorkoutDay } from '@/lib/workoutParser';
 
 const getCategoryColor = (cat: string) => {
   const map: Record<string, string> = {
@@ -69,22 +70,19 @@ const TaskCard = ({ task }: { task: Task }) => {
             <span className="text-[11px] uppercase tracking-[0.18em] font-bold text-accent">פירוט אימון</span>
           </div>
           {task.workoutDetails.map(wd => {
-            const parts = (wd.description || '').split(/\s*—\s*/);
-            const focus = parts.length > 1 ? parts[0] : '';
-            const rest = parts.length > 1 ? parts.slice(1).join(' — ') : wd.description;
-            const exercises = (rest || '').split(/\s*,\s*/).filter(Boolean);
+            const parsed = parseWorkoutDay(wd);
             return (
               <div key={wd.day} className="rounded-lg border border-border/40 bg-background/40 p-2.5 space-y-2">
                 <div className="flex items-center justify-between gap-2 pb-1.5 border-b border-border/30">
                   <span className="text-sm font-black text-foreground">{wd.day}</span>
-                  {focus && (
+                  {parsed.focus && (
                     <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full border border-primary/30">
-                      {focus}
+                      {parsed.focus}
                     </span>
                   )}
                 </div>
                 <ul className="space-y-1">
-                  {exercises.map((ex, i) => (
+                  {(parsed.exercises.length ? parsed.exercises.map(ex => `${ex.name} ${ex.sets}×${ex.repsMin === ex.repsMax ? ex.repsMin : `${ex.repsMin}-${ex.repsMax}`}`) : [wd.description]).map((ex, i) => (
                     <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground leading-relaxed">
                       <span className="mt-1.5 h-1 w-1 rounded-full bg-primary/60 shrink-0" />
                       <span>{ex}</span>
