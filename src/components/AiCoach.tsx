@@ -37,7 +37,7 @@ const AiCoach = () => {
   const [showModes, setShowModes] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
-  const { tasks, stats, getTotalCompletions, getTodayTasks, getDailyCompletionPercent, getCategoryStats, getFailureAnalysis } = useTaskContext();
+  const { tasks, stats, getTotalCompletions, getTodayTasks, getDailyCompletionPercent, getCategoryStats, getFailureAnalysis, addTask, updateTask, deleteTask } = useTaskContext();
   const [voiceMode, setVoiceMode] = useState(false);
   const [nutrition, setNutrition] = useState({ calories: 0, target: 0, protein: 0 });
   const [sleep, setSleep] = useState({ done: false, target: 7 });
