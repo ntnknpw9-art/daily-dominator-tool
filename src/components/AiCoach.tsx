@@ -315,13 +315,87 @@ ${workouts}
   };
 
   const send = async () => {
-    if (!input.trim() || loading) return;
-    const userMsg: Msg = { role: 'user', content: input };
+    if ((!input.trim() && attachedImages.length === 0) || loading) return;
+    const imgs = attachedImages;
+    const userMsg: Msg = { role: 'user', content: input, images: imgs.length ? imgs : undefined };
     const allMsgs = [...messages, userMsg];
     setMessages(allMsgs);
     setInput('');
-    saveMessage('user', input);
+    setAttachedImages([]);
+    const dbContent = imgs.length ? `${input}\n[צורפו ${imgs.length} תמונות]` : input;
+    saveMessage('user', dbContent);
     await streamResponse(allMsgs);
+  };
+
+  const onPickFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const out: string[] = [];
+    for (const f of Array.from(files).slice(0, 4)) {
+      if (!f.type.startsWith('image/')) continue;
+      if (f.size > 6 * 1024 * 1024) {
+        toast.error(`התמונה ${f.name} גדולה מדי (מקס׳ 6MB)`);
+        continue;
+      }
+      const dataUrl = await new Promise<string>((res, rej) => {
+        const r = new FileReader();
+        r.onload = () => res(r.result as string);
+        r.onerror = rej;
+        r.readAsDataURL(f);
+      });
+      out.push(dataUrl);
+    }
+    setAttachedImages(prev => [...prev, ...out].slice(0, 4));
+  };
+
+  const applyActions = async (msgIdx: number, actions: AiAction[]) => {
+    setApplyingMsgId(msgIdx);
+    try {
+      const todayStr = getTodayStr();
+      let okCount = 0;
+      for (const a of actions) {
+        try {
+          if (a.type === 'create_task') {
+            await addTask({
+              name: a.name,
+              meaning: a.meaning || '',
+              startTime: a.startTime,
+              endTime: a.endTime,
+              startDate: a.startDate || todayStr,
+              endDate: a.endDate || '2030-12-31',
+              category: a.category,
+              days: a.days,
+              workoutDetails: a.workoutDetails,
+            });
+            okCount++;
+          } else if (a.type === 'update_task') {
+            const t = tasks.find(x => x.id === a.id);
+            if (!t) continue;
+            const c: any = a.changes;
+            await updateTask(a.id, {
+              name: c.name ?? t.name,
+              meaning: c.meaning ?? t.meaning,
+              startTime: c.startTime ?? t.startTime,
+              endTime: c.endTime ?? t.endTime,
+              startDate: c.startDate ?? t.startDate,
+              endDate: c.endDate ?? t.endDate,
+              category: c.category ?? t.category,
+              days: Array.isArray(c.days) ? c.days.filter((d: any) => ALL_DAYS.includes(d)) : t.days,
+              workoutDetails: c.workoutDetails ?? t.workoutDetails,
+            });
+            okCount++;
+          } else if (a.type === 'delete_task') {
+            await deleteTask(a.id);
+            okCount++;
+          }
+        } catch (e) {
+          console.error('action failed', a, e);
+        }
+      }
+      toast.success(`✅ הוחלו ${okCount}/${actions.length} פעולות`);
+      setAppliedMsgIds(prev => new Set(prev).add(msgIdx));
+    } finally {
+      setApplyingMsgId(null);
+    }
   };
 
   const triggerMode = async (modeId: string, prompt: string) => {
