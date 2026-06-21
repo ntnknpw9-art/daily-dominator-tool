@@ -54,7 +54,11 @@ export const extractActionsBlock = (text: string): { actions: AiAction[]; cleanT
     } else if (a.type === 'update_task' && a.id && a.changes && typeof a.changes === 'object') {
       const changes = { ...a.changes };
       const changeDays = Array.isArray(changes.days) ? changes.days.filter((d: any) => ALL_DAYS.includes(d)) : [];
-      const workoutDetails = normalizeWorkoutDetails(changes.workoutDetails || changes.workoutPlan || changes.plan, changeDays);
+      const workoutSource = changes.workoutDetails || changes.workoutPlan || changes.plan;
+      const workoutDetails = normalizeWorkoutDetails(workoutSource, changeDays);
+      delete changes.workoutPlan;
+      delete changes.plan;
+      if (workoutSource) delete changes.workoutDetails;
       if (workoutDetails) changes.workoutDetails = workoutDetails;
       actions.push({ type: 'update_task', id: String(a.id), changes });
     } else if (a.type === 'delete_task' && a.id) {
