@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Send, Bot, User, X, MessageCircle, BarChart3, Trash2, AlertTriangle, Brain, Skull, Apple, Volume2, VolumeX } from 'lucide-react';
+import { Send, Bot, User, X, MessageCircle, BarChart3, Trash2, AlertTriangle, Brain, Skull, Apple, Volume2, VolumeX, Paperclip, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useTaskContext } from '@/context/TaskContext';
@@ -8,8 +8,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { getNowInIsrael, getTodayStr, formatDateHebrew } from '@/lib/dateUtils';
 import ReactMarkdown from 'react-markdown';
 import ApplyPlanDialog from './ApplyPlanDialog';
+import { extractActionsBlock, summarizeAction, type AiAction } from '@/lib/aiActions';
+import { toast } from 'sonner';
+import { ALL_DAYS } from '@/types/task';
 
-type Msg = { role: 'user' | 'assistant'; content: string };
+type Msg = { role: 'user' | 'assistant'; content: string; images?: string[] };
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-coach`;
 
@@ -34,13 +37,17 @@ const AiCoach = () => {
   const [showModes, setShowModes] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
-  const { tasks, stats, getTotalCompletions, getTodayTasks, getDailyCompletionPercent, getCategoryStats, getFailureAnalysis } = useTaskContext();
+  const { tasks, stats, getTotalCompletions, getTodayTasks, getDailyCompletionPercent, getCategoryStats, getFailureAnalysis, addTask, updateTask, deleteTask } = useTaskContext();
   const [voiceMode, setVoiceMode] = useState(false);
   const [nutrition, setNutrition] = useState({ calories: 0, target: 0, protein: 0 });
   const [sleep, setSleep] = useState({ done: false, target: 7 });
   const [workouts, setWorkouts] = useState<string>('');
   const [showPlanDialog, setShowPlanDialog] = useState(false);
   const [planText, setPlanText] = useState('');
+  const [attachedImages, setAttachedImages] = useState<string[]>([]);
+  const [appliedMsgIds, setAppliedMsgIds] = useState<Set<number>>(new Set());
+  const [applyingMsgId, setApplyingMsgId] = useState<number | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -195,8 +202,11 @@ ${dailyScores.join('\n')}
 - צהריים (12-17): ${timeSlots.afternoon.done}/${timeSlots.afternoon.total} הושלמו  
 - ערב (17+): ${timeSlots.evening.done}/${timeSlots.evening.total} הושלמו
 
-📋 פירוט משימות (אחוז השלמה ב-7 ימים):
-${taskStats.map(t => `- ${t.name} [${t.category}] ${t.time} | ${t.completionRate}% | פספוסים: ${t.recentMisses}`).join('\n')}
+📋 כל המשימות (כולל ID — השתמש בו לעדכון/מחיקה):
+${tasks.map(t => `- id=${t.id} | ${t.name} [${t.category}] ${t.startTime}-${t.endTime} ימים=${t.days.join(',')} ${t.workoutDetails?.length ? `[יש ${t.workoutDetails.length} ימי אימון]` : ''}`).join('\n')}
+
+📈 סטטיסטיקת ביצוע (7 ימים):
+${taskStats.map(t => `- ${t.name} | ${t.completionRate}% | פספוסים: ${t.recentMisses}`).join('\n')}
 
 📊 ביצועים לפי קטגוריה:
 ${categoryStats.map(c => `- ${c.category}: ${c.percent}%`).join('\n')}
@@ -231,7 +241,22 @@ ${workouts}
           Authorization: `Bearer ${accessToken}`,
           apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
         },
-        body: JSON.stringify({ messages: allMsgs, context: buildContext(), mode }),
+        body: JSON.stringify({
+          messages: allMsgs.map(m => {
+            if (m.role === 'user' && m.images && m.images.length > 0) {
+              return {
+                role: 'user',
+                content: [
+                  { type: 'text', text: m.content || 'בבקשה תנתח את התמונה.' },
+                  ...m.images.map(url => ({ type: 'image_url', image_url: { url } })),
+                ],
+              };
+            }
+            return { role: m.role, content: m.content };
+          }),
+          context: buildContext(),
+          mode,
+        }),
       });
 
       if (!resp.ok) {
@@ -290,13 +315,87 @@ ${workouts}
   };
 
   const send = async () => {
-    if (!input.trim() || loading) return;
-    const userMsg: Msg = { role: 'user', content: input };
+    if ((!input.trim() && attachedImages.length === 0) || loading) return;
+    const imgs = attachedImages;
+    const userMsg: Msg = { role: 'user', content: input, images: imgs.length ? imgs : undefined };
     const allMsgs = [...messages, userMsg];
     setMessages(allMsgs);
     setInput('');
-    saveMessage('user', input);
+    setAttachedImages([]);
+    const dbContent = imgs.length ? `${input}\n[צורפו ${imgs.length} תמונות]` : input;
+    saveMessage('user', dbContent);
     await streamResponse(allMsgs);
+  };
+
+  const onPickFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const out: string[] = [];
+    for (const f of Array.from(files).slice(0, 4)) {
+      if (!f.type.startsWith('image/')) continue;
+      if (f.size > 6 * 1024 * 1024) {
+        toast.error(`התמונה ${f.name} גדולה מדי (מקס׳ 6MB)`);
+        continue;
+      }
+      const dataUrl = await new Promise<string>((res, rej) => {
+        const r = new FileReader();
+        r.onload = () => res(r.result as string);
+        r.onerror = rej;
+        r.readAsDataURL(f);
+      });
+      out.push(dataUrl);
+    }
+    setAttachedImages(prev => [...prev, ...out].slice(0, 4));
+  };
+
+  const applyActions = async (msgIdx: number, actions: AiAction[]) => {
+    setApplyingMsgId(msgIdx);
+    try {
+      const todayStr = getTodayStr();
+      let okCount = 0;
+      for (const a of actions) {
+        try {
+          if (a.type === 'create_task') {
+            await addTask({
+              name: a.name,
+              meaning: a.meaning || '',
+              startTime: a.startTime,
+              endTime: a.endTime,
+              startDate: a.startDate || todayStr,
+              endDate: a.endDate || '2030-12-31',
+              category: a.category,
+              days: a.days,
+              workoutDetails: a.workoutDetails,
+            });
+            okCount++;
+          } else if (a.type === 'update_task') {
+            const t = tasks.find(x => x.id === a.id);
+            if (!t) continue;
+            const c: any = a.changes;
+            await updateTask(a.id, {
+              name: c.name ?? t.name,
+              meaning: c.meaning ?? t.meaning,
+              startTime: c.startTime ?? t.startTime,
+              endTime: c.endTime ?? t.endTime,
+              startDate: c.startDate ?? t.startDate,
+              endDate: c.endDate ?? t.endDate,
+              category: c.category ?? t.category,
+              days: Array.isArray(c.days) ? c.days.filter((d: any) => ALL_DAYS.includes(d)) : t.days,
+              workoutDetails: c.workoutDetails ?? t.workoutDetails,
+            });
+            okCount++;
+          } else if (a.type === 'delete_task') {
+            await deleteTask(a.id);
+            okCount++;
+          }
+        } catch (e) {
+          console.error('action failed', a, e);
+        }
+      }
+      toast.success(`✅ הוחלו ${okCount}/${actions.length} פעולות`);
+      setAppliedMsgIds(prev => new Set(prev).add(msgIdx));
+    } finally {
+      setApplyingMsgId(null);
+    }
   };
 
   const triggerMode = async (modeId: string, prompt: string) => {
@@ -420,35 +519,64 @@ ${workouts}
             </div>
           </div>
         )}
-        {messages.map((m, i) => (
-          <div key={i} className={`flex gap-2 ${m.role === 'user' ? 'flex-row-reverse' : ''}`}>
-            <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
-              m.role === 'user' ? 'bg-primary/20' : 'bg-accent/20'
-            }`}>
-              {m.role === 'user' ? <User className="w-4 h-4 text-primary" /> : <Bot className="w-4 h-4 text-accent" />}
+        {messages.map((m, i) => {
+          const actionsExtract = m.role === 'assistant' ? extractActionsBlock(m.content) : null;
+          const visibleText = (actionsExtract ? actionsExtract.cleanText : m.content).replace('[CREATE_PLAN]', '');
+          const applied = appliedMsgIds.has(i);
+          return (
+            <div key={i} className={`flex gap-2 ${m.role === 'user' ? 'flex-row-reverse' : ''}`}>
+              <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
+                m.role === 'user' ? 'bg-primary/20' : 'bg-accent/20'
+              }`}>
+                {m.role === 'user' ? <User className="w-4 h-4 text-primary" /> : <Bot className="w-4 h-4 text-accent" />}
+              </div>
+              <div className={`max-w-[80%] rounded-xl px-3 py-2 text-sm space-y-2 ${
+                m.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'
+              }`}>
+                {m.images && m.images.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {m.images.map((src, ix) => (
+                      <img key={ix} src={src} alt="" className="w-20 h-20 object-cover rounded-lg border border-border/50" />
+                    ))}
+                  </div>
+                )}
+                {m.role === 'assistant' ? (
+                  <>
+                    <div className="prose prose-sm prose-invert max-w-none">
+                      <ReactMarkdown>{visibleText}</ReactMarkdown>
+                    </div>
+                    {m.content.includes('[CREATE_PLAN]') && (
+                      <Button size="sm" className="w-full gap-2"
+                        onClick={() => { setPlanText(m.content); setShowPlanDialog(true); }}>
+                        <Brain className="w-4 h-4" /> צור תוכנית באפליקציה
+                      </Button>
+                    )}
+                    {actionsExtract && (
+                      <div className="rounded-lg border border-primary/30 bg-primary/5 p-2 space-y-1.5">
+                        <div className="text-xs font-bold text-primary flex items-center gap-1">
+                          <Brain className="w-3.5 h-3.5" /> {actionsExtract.actions.length} שינויים מוצעים:
+                        </div>
+                        <ul className="text-xs space-y-0.5 text-foreground/80">
+                          {actionsExtract.actions.map((a, ix) => (
+                            <li key={ix}>{summarizeAction(a, tasks)}</li>
+                          ))}
+                        </ul>
+                        <Button size="sm" className="w-full gap-2" disabled={applied || applyingMsgId === i}
+                          onClick={() => applyActions(i, actionsExtract.actions)}>
+                          {applied ? <><Check className="w-4 h-4" /> הוחל</> :
+                           applyingMsgId === i ? <><Loader2 className="w-4 h-4 animate-spin" /> מחיל...</> :
+                           <><Check className="w-4 h-4" /> אשר והחל את השינויים</>}
+                        </Button>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  visibleText && <div>{visibleText}</div>
+                )}
+              </div>
             </div>
-            <div className={`max-w-[80%] rounded-xl px-3 py-2 text-sm ${
-              m.role === 'user'
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-muted text-foreground'
-            }`}>
-              {m.role === 'assistant' ? (
-                <div className="prose prose-sm prose-invert max-w-none">
-                  <ReactMarkdown>{m.content.replace('[CREATE_PLAN]', '')}</ReactMarkdown>
-                  {m.content.includes('[CREATE_PLAN]') && (
-                    <Button 
-                      size="sm" 
-                      className="mt-2 w-full gap-2" 
-                      onClick={() => { setPlanText(m.content); setShowPlanDialog(true); }}
-                    >
-                      <Brain className="w-4 h-4" /> צור תוכנית באפליקציה
-                    </Button>
-                  )}
-                </div>
-              ) : m.content}
-            </div>
-          </div>
-        ))}
+          );
+        })}
         {loading && messages[messages.length - 1]?.role !== 'assistant' && (
           <div className="flex gap-2">
             <div className="w-7 h-7 rounded-full bg-accent/20 flex items-center justify-center">
@@ -461,17 +589,53 @@ ${workouts}
         )}
       </div>
 
+      {/* Attached images preview */}
+      {attachedImages.length > 0 && (
+        <div className="border-t border-border px-3 pt-2 flex gap-1.5 flex-wrap">
+          {attachedImages.map((src, i) => (
+            <div key={i} className="relative">
+              <img src={src} alt="" className="w-14 h-14 object-cover rounded-lg border border-border/50" />
+              <button
+                onClick={() => setAttachedImages(prev => prev.filter((_, ix) => ix !== i))}
+                className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center"
+                aria-label="הסר תמונה"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Input */}
-      <div className="border-t border-border p-3 flex gap-2">
+      <div className="border-t border-border p-3 flex gap-2 items-center">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+          onChange={e => { onPickFiles(e.target.files); e.target.value = ''; }}
+        />
+        <Button
+          size="icon"
+          variant="ghost"
+          className="shrink-0 text-muted-foreground hover:text-primary"
+          disabled={loading || attachedImages.length >= 4}
+          onClick={() => fileInputRef.current?.click()}
+          title="צרף תמונה"
+        >
+          <Paperclip className="w-4 h-4" />
+        </Button>
         <Input
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && send()}
-          placeholder="שאל את המאמן..."
+          placeholder={attachedImages.length ? 'הוסף הערה (לא חובה)...' : 'שאל את המאמן...'}
           className="flex-1 text-base md:text-sm"
           disabled={loading}
         />
-        <Button size="icon" onClick={send} disabled={loading || !input.trim()}>
+        <Button size="icon" onClick={send} disabled={loading || (!input.trim() && attachedImages.length === 0)}>
           <Send className="w-4 h-4" />
         </Button>
       </div>
