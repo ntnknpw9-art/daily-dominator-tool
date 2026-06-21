@@ -297,7 +297,7 @@ const WorkoutsTab = () => {
   const [activeKey, setActiveKey] = useState<string | null>(null);
   const [history, setHistory] = useState<HistoryRow[]>([]);
 
-  const workoutTasks = useMemo(() => tasks.filter(t => t.category === 'כושר' && t.workoutDetails && t.workoutDetails.length > 0), [tasks]);
+  const workoutTasks = useMemo(() => tasks.filter(t => parseAllDays(t.workoutDetails).length > 0), [tasks]);
   const today = getHebrewDayFromDate(getNowInIsrael());
 
   useEffect(() => {
