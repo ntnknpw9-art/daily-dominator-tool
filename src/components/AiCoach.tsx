@@ -202,8 +202,11 @@ ${dailyScores.join('\n')}
 - צהריים (12-17): ${timeSlots.afternoon.done}/${timeSlots.afternoon.total} הושלמו  
 - ערב (17+): ${timeSlots.evening.done}/${timeSlots.evening.total} הושלמו
 
-📋 פירוט משימות (אחוז השלמה ב-7 ימים):
-${taskStats.map(t => `- ${t.name} [${t.category}] ${t.time} | ${t.completionRate}% | פספוסים: ${t.recentMisses}`).join('\n')}
+📋 כל המשימות (כולל ID — השתמש בו לעדכון/מחיקה):
+${tasks.map(t => `- id=${t.id} | ${t.name} [${t.category}] ${t.startTime}-${t.endTime} ימים=${t.days.join(',')} ${t.workoutDetails?.length ? `[יש ${t.workoutDetails.length} ימי אימון]` : ''}`).join('\n')}
+
+📈 סטטיסטיקת ביצוע (7 ימים):
+${taskStats.map(t => `- ${t.name} | ${t.completionRate}% | פספוסים: ${t.recentMisses}`).join('\n')}
 
 📊 ביצועים לפי קטגוריה:
 ${categoryStats.map(c => `- ${c.category}: ${c.percent}%`).join('\n')}
