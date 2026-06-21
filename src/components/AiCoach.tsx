@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { Send, Bot, User, X, MessageCircle, BarChart3, Trash2, AlertTriangle, Brain, Skull, Apple, Volume2, VolumeX } from 'lucide-react';
+import { Send, Bot, User, X, MessageCircle, BarChart3, Trash2, AlertTriangle, Brain, Skull, Apple, Volume2, VolumeX, Paperclip, Check, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useTaskContext } from '@/context/TaskContext';
@@ -8,8 +8,11 @@ import { supabase } from '@/integrations/supabase/client';
 import { getNowInIsrael, getTodayStr, formatDateHebrew } from '@/lib/dateUtils';
 import ReactMarkdown from 'react-markdown';
 import ApplyPlanDialog from './ApplyPlanDialog';
+import { extractActionsBlock, summarizeAction, type AiAction } from '@/lib/aiActions';
+import { toast } from 'sonner';
+import { ALL_DAYS } from '@/types/task';
 
-type Msg = { role: 'user' | 'assistant'; content: string };
+type Msg = { role: 'user' | 'assistant'; content: string; images?: string[] };
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-coach`;
 
