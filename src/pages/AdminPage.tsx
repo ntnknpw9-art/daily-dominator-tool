@@ -10,6 +10,7 @@ import {
   Heart, MessageCircle, Swords, UserPlus, Apple, Target, Zap, Award,
   BarChart3, Clock, Calendar, Percent, Download, FileJson, FileSpreadsheet,
 } from "lucide-react";
+import ErrorsPanel from "@/components/admin/ErrorsPanel";
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend,
