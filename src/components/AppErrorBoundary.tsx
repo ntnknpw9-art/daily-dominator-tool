@@ -22,9 +22,18 @@ export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorB
     return { error };
   }
 
-  componentDidCatch(error: Error) {
+  componentDidCatch(error: Error, info: { componentStack?: string }) {
     console.error('[AppErrorBoundary] render failed:', error);
     window.__showDailyDominatorStartupError?.(error.message);
+    import('@/lib/errorLogger').then(({ logError }) => {
+      logError({
+        message: error.message || 'React render error',
+        severity: 'critical',
+        source: 'client',
+        stack: error.stack,
+        context: { componentStack: info?.componentStack?.slice(0, 2000) },
+      });
+    }).catch(() => {});
   }
 
   render() {
