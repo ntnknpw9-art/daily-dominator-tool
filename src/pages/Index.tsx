@@ -170,7 +170,7 @@ const AppContent = () => {
           </main>
         </div>
 
-        <QuickActionFAB setActiveTab={setActiveTab} />
+        {activeTab !== 'workouts' && <QuickActionFAB setActiveTab={setActiveTab} />}
 
         {/* Mobile bottom nav */}
         <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-card/95 backdrop-blur-md border-t border-border/50 safe-bottom">

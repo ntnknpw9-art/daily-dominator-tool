@@ -18,15 +18,17 @@ export interface ParsedDay {
 }
 
 const WEIGHTED_HINTS = [
-  'סקוואט', 'דדליפט', 'ברבל', 'דמבל', 'משקולת', 'משקולות', 'לחיצה', 'לחיצת',
-  'חתירה', 'מכונה', 'כבל', 'ברזל', 'הולטר', 'גופית', 'יד עליונה', 'יד קדמית', 'יד אחורית',
-  'curl', 'press', 'row', 'squat', 'deadlift', 'bench', 'rdl', 'lunge', 'דחיקה', 'קיק'
+  'סקוואט', 'דדליפט', 'דדליפ', 'ברבל', 'דמבל', 'דאמבל', 'משקולת', 'משקולות',
+  'לחיצה', 'לחיצת', 'חתירה', 'מכונה', 'כבל', 'קבל', 'ברזל', 'הולטר', 'מוט',
+  'יד עליונה', 'יד קדמית', 'יד אחורית', 'פושדאון', 'פולי', 'הרחקת', 'הרחקות',
+  'כפיפת', 'כפיפה', 'דחיקה', 'דחיקת', 'קיק', 'פטישים', 'rdl', 'curl', 'press',
+  'row', 'squat', 'deadlift', 'bench', 'lunge', 'hammer'
 ];
 
 const BODYWEIGHT_HINTS = [
-  'שכיבות סמיכה', 'מתח', 'פלאנק', 'בטן', 'crunches', 'pull-up', 'pull up', 'pushup',
-  'push up', 'plank', 'burpee', 'בורפי', 'סקוואט גוף', 'קליסטניקס', 'דיפס משקל גוף',
-  'jumping', 'דילוגים', 'mountain climb', 'הרים', 'גשר'
+  'שכיבות סמיכה', 'שכיבות', 'מתח', 'פלאנק', 'בטן', 'crunches', 'pull-up', 'pull up',
+  'pushup', 'push up', 'plank', 'burpee', 'בורפי', 'משקל גוף', 'קליסטניקס', 'דיפס',
+  'jumping', 'דילוגים', 'mountain climb', 'גשר', 'עליות מתח', 'עליות', 'פיסטול'
 ];
 
 export const detectWeighted = (name: string): boolean => {
@@ -36,38 +38,45 @@ export const detectWeighted = (name: string): boolean => {
   return false;
 };
 
-// Parses tokens like "4x8-12", "4×10", "3X12", "4 ש 10-15", "@RIR2", "@RIR 1"
-const parseExercise = (raw: string): ParsedExercise | null => {
-  const clean = raw.trim().replace(/\s+/g, ' ');
-  if (!clean) return null;
+// Match a sets×reps token: "4x8-10", "4×10", "3X12", "4*10", "3x12-15"
+const SETS_REPS_RE = /(\d+)\s*[x×X*]\s*(\d+)(?:\s*[-–—]\s*(\d+))?/;
 
-  // RIR
-  let rir = 2;
-  const rirMatch = clean.match(/@?\s*RIR\s*(\d+)/i) || clean.match(/רי?ר\s*(\d+)/);
-  if (rirMatch) rir = parseInt(rirMatch[1]);
+const parseSetsReps = (raw: string) => {
+  const m = raw.match(SETS_REPS_RE);
+  if (!m) return null;
+  const sets = parseInt(m[1]);
+  const repsMin = parseInt(m[2]);
+  const repsMax = m[3] ? parseInt(m[3]) : repsMin;
+  return { sets, repsMin, repsMax, matched: m[0] };
+};
 
-  // sets × reps  (supports x, X, ×, *, "על", "ש")
-  let sets = 3;
-  let repsMin = 8;
-  let repsMax = 12;
-  const setsMatch = clean.match(/(\d+)\s*[x×X*]\s*(\d+)(?:\s*[-–]\s*(\d+))?/);
-  if (setsMatch) {
-    sets = parseInt(setsMatch[1]);
-    repsMin = parseInt(setsMatch[2]);
-    repsMax = setsMatch[3] ? parseInt(setsMatch[3]) : repsMin;
-  }
+const parseRir = (raw: string): number => {
+  const m = raw.match(/@?\s*RIR\s*(\d+)/i) || raw.match(/רי?ר\s*(\d+)/);
+  return m ? parseInt(m[1]) : 2;
+};
 
-  // name = strip the tokens
-  let name = clean
+const cleanName = (raw: string): string => {
+  return raw
     .replace(/@?\s*RIR\s*\d+/gi, '')
     .replace(/רי?ר\s*\d+/g, '')
-    .replace(/\d+\s*[x×X*]\s*\d+(?:\s*[-–]\s*\d+)?/g, '')
+    .replace(SETS_REPS_RE, '')
+    .replace(/^\s*[\-–—:•·.]+\s*/, '')
+    .replace(/\s*[\-–—:•·.]+\s*$/, '')
     .replace(/[,،]/g, '')
     .replace(/\s+/g, ' ')
     .trim();
+};
 
+const buildExercise = (raw: string): ParsedExercise | null => {
+  const trimmed = raw.trim();
+  if (!trimmed) return null;
+  const sr = parseSetsReps(trimmed);
+  const rir = parseRir(trimmed);
+  const name = cleanName(trimmed);
   if (!name) return null;
-
+  const sets = sr?.sets ?? 3;
+  const repsMin = sr?.repsMin ?? 8;
+  const repsMax = sr?.repsMax ?? 12;
   return {
     name,
     sets: Math.max(1, sets),
@@ -75,17 +84,73 @@ const parseExercise = (raw: string): ParsedExercise | null => {
     repsMax,
     rir,
     weighted: detectWeighted(name),
-    raw: clean,
+    raw: trimmed,
   };
 };
 
+// Split text by numbered items "1." "2." etc. Returns the chunks (without the numbers)
+const splitByNumbers = (text: string): string[] | null => {
+  // Look for at least 2 numbered items to consider it a numbered list
+  const re = /(?:^|[\s,،])(\d+)\.\s*/g;
+  const indices: { idx: number; matchLen: number }[] = [];
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text)) !== null) {
+    const num = parseInt(m[1]);
+    // Skip very large numbers (probably reps "8-10") - we want sequential 1,2,3...
+    if (num >= 1 && num <= 30) {
+      indices.push({ idx: m.index + (m[0].length - m[0].trimStart().length), matchLen: m[0].length });
+    }
+  }
+  if (indices.length < 2) return null;
+  // Slice between numbered markers
+  const chunks: string[] = [];
+  for (let i = 0; i < indices.length; i++) {
+    const start = indices[i].idx + indices[i].matchLen;
+    const end = i + 1 < indices.length ? indices[i + 1].idx : text.length;
+    const chunk = text.slice(start, end).trim();
+    if (chunk) chunks.push(chunk);
+  }
+  return chunks.length >= 2 ? chunks : null;
+};
+
 export const parseWorkoutDay = (wd: WorkoutDetail): ParsedDay => {
-  const parts = (wd.description || '').split(/\s*—\s*/);
-  const focus = parts.length > 1 ? parts[0].trim() : '';
-  const rest = parts.length > 1 ? parts.slice(1).join(' — ') : wd.description;
-  const tokens = (rest || '').split(/\s*[,،]\s*/).filter(Boolean);
-  const exercises = tokens.map(parseExercise).filter((e): e is ParsedExercise => !!e);
-  return { day: wd.day, focus, exercises, raw: wd.description };
+  const raw = (wd.description || '').trim();
+
+  // Try to find where the exercise list starts: look for first "1." pattern
+  const firstNumMatch = raw.match(/(?:^|[\s,،])(1)\.\s+/);
+  let focus = '';
+  let exerciseText = raw;
+
+  if (firstNumMatch && firstNumMatch.index !== undefined) {
+    const before = raw.slice(0, firstNumMatch.index).trim();
+    const after = raw.slice(firstNumMatch.index + firstNumMatch[0].length - 1); // keep "1." for splitter
+    // Clean focus: strip dashes/colons/parens at edges
+    focus = before
+      .replace(/^\s*[\-–—:]+\s*/, '')
+      .replace(/\s*[\-–—:]+\s*$/, '')
+      .replace(/[()]/g, '')
+      .trim();
+    exerciseText = '1.' + after.replace(/^1\./, '');
+  } else if (raw.includes('—')) {
+    // Legacy format: "FOCUS — exercises"
+    const parts = raw.split(/\s*—\s*/);
+    focus = parts[0].trim();
+    exerciseText = parts.slice(1).join(' — ');
+  }
+
+  // Try numbered split first
+  let chunks = splitByNumbers(exerciseText);
+
+  // Fallback to comma split
+  if (!chunks) {
+    chunks = exerciseText.split(/\s*[,،]\s*/).filter(Boolean);
+  }
+
+  const exercises = chunks
+    .map(buildExercise)
+    .filter((e): e is ParsedExercise => !!e);
+
+  return { day: wd.day, focus, exercises, raw };
 };
 
 export const parseAllDays = (details: WorkoutDetail[] | undefined): ParsedDay[] => {
