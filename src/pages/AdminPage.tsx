@@ -368,6 +368,10 @@ export default function AdminPage() {
           <StatCard icon={Trophy} label="אתגרים" value={stats.total_challenges} accent="text-amber-500" />
         </div>
 
+        {/* === ERRORS === */}
+        <SectionTitle>🚨 תקלות באפליקציה</SectionTitle>
+        <ErrorsPanel />
+
         {/* === EXPORT === */}
         <SectionTitle>📥 ייצוא נתונים</SectionTitle>
         <Card className="p-4 bg-card/60 backdrop-blur border-border/50">
