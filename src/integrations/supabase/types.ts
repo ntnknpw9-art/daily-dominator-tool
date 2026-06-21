@@ -41,6 +41,48 @@ export type Database = {
         }
         Relationships: []
       }
+      app_errors: {
+        Row: {
+          context: Json | null
+          created_at: string
+          id: string
+          message: string
+          resolved: boolean
+          severity: Database["public"]["Enums"]["error_severity"]
+          source: Database["public"]["Enums"]["error_source"]
+          stack: string | null
+          url: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          context?: Json | null
+          created_at?: string
+          id?: string
+          message: string
+          resolved?: boolean
+          severity?: Database["public"]["Enums"]["error_severity"]
+          source?: Database["public"]["Enums"]["error_source"]
+          stack?: string | null
+          url?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          context?: Json | null
+          created_at?: string
+          id?: string
+          message?: string
+          resolved?: boolean
+          severity?: Database["public"]["Enums"]["error_severity"]
+          source?: Database["public"]["Enums"]["error_source"]
+          stack?: string | null
+          url?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       applied_plans: {
         Row: {
           applied_nutrition: boolean
@@ -1103,6 +1145,7 @@ export type Database = {
           day: string
         }[]
       }
+      admin_get_errors_summary: { Args: never; Returns: Json }
       admin_get_signups_daily: {
         Args: never
         Returns: {
@@ -1111,6 +1154,26 @@ export type Database = {
         }[]
       }
       admin_get_stats: { Args: never; Returns: Json }
+      admin_list_errors: {
+        Args: {
+          _limit?: number
+          _only_unresolved?: boolean
+          _severity?: string
+        }
+        Returns: {
+          context: Json
+          created_at: string
+          id: string
+          message: string
+          resolved: boolean
+          severity: string
+          source: string
+          stack: string
+          url: string
+          user_agent: string
+          user_id: string
+        }[]
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -1146,6 +1209,17 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "user"
+      error_severity: "debug" | "info" | "warn" | "error" | "critical"
+      error_source:
+        | "client"
+        | "server"
+        | "network"
+        | "auth"
+        | "db"
+        | "payment"
+        | "ai"
+        | "edge_function"
+        | "unknown"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1274,6 +1348,18 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "user"],
+      error_severity: ["debug", "info", "warn", "error", "critical"],
+      error_source: [
+        "client",
+        "server",
+        "network",
+        "auth",
+        "db",
+        "payment",
+        "ai",
+        "edge_function",
+        "unknown",
+      ],
     },
   },
 } as const
