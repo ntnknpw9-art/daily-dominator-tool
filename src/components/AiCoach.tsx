@@ -589,17 +589,53 @@ ${workouts}
         )}
       </div>
 
+      {/* Attached images preview */}
+      {attachedImages.length > 0 && (
+        <div className="border-t border-border px-3 pt-2 flex gap-1.5 flex-wrap">
+          {attachedImages.map((src, i) => (
+            <div key={i} className="relative">
+              <img src={src} alt="" className="w-14 h-14 object-cover rounded-lg border border-border/50" />
+              <button
+                onClick={() => setAttachedImages(prev => prev.filter((_, ix) => ix !== i))}
+                className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center"
+                aria-label="הסר תמונה"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
       {/* Input */}
-      <div className="border-t border-border p-3 flex gap-2">
+      <div className="border-t border-border p-3 flex gap-2 items-center">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          className="hidden"
+          onChange={e => { onPickFiles(e.target.files); e.target.value = ''; }}
+        />
+        <Button
+          size="icon"
+          variant="ghost"
+          className="shrink-0 text-muted-foreground hover:text-primary"
+          disabled={loading || attachedImages.length >= 4}
+          onClick={() => fileInputRef.current?.click()}
+          title="צרף תמונה"
+        >
+          <Paperclip className="w-4 h-4" />
+        </Button>
         <Input
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && send()}
-          placeholder="שאל את המאמן..."
+          placeholder={attachedImages.length ? 'הוסף הערה (לא חובה)...' : 'שאל את המאמן...'}
           className="flex-1 text-base md:text-sm"
           disabled={loading}
         />
-        <Button size="icon" onClick={send} disabled={loading || !input.trim()}>
+        <Button size="icon" onClick={send} disabled={loading || (!input.trim() && attachedImages.length === 0)}>
           <Send className="w-4 h-4" />
         </Button>
       </div>
