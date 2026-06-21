@@ -62,8 +62,8 @@ const cleanName = (raw: string): string => {
     .replace(/@?\s*RIR\s*\d+/gi, '')
     .replace(/רי?ר\s*\d+/g, '')
     .replace(SETS_REPS_RE, '')
-    .replace(/^\s*[\-–—:;|•·.,]+\s*/, '')
-    .replace(/\s*[\-–—:;|•·.,]+\s*$/, '')
+    .replace(/^[\s\-–—:;|•·.,]+/, '')
+    .replace(/[\s\-–—:;|•·.,]+$/, '')
     .replace(/[,،]/g, '')
     .replace(/\s+/g, ' ')
     .trim();
