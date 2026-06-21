@@ -519,35 +519,64 @@ ${workouts}
             </div>
           </div>
         )}
-        {messages.map((m, i) => (
-          <div key={i} className={`flex gap-2 ${m.role === 'user' ? 'flex-row-reverse' : ''}`}>
-            <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
-              m.role === 'user' ? 'bg-primary/20' : 'bg-accent/20'
-            }`}>
-              {m.role === 'user' ? <User className="w-4 h-4 text-primary" /> : <Bot className="w-4 h-4 text-accent" />}
+        {messages.map((m, i) => {
+          const actionsExtract = m.role === 'assistant' ? extractActionsBlock(m.content) : null;
+          const visibleText = (actionsExtract ? actionsExtract.cleanText : m.content).replace('[CREATE_PLAN]', '');
+          const applied = appliedMsgIds.has(i);
+          return (
+            <div key={i} className={`flex gap-2 ${m.role === 'user' ? 'flex-row-reverse' : ''}`}>
+              <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
+                m.role === 'user' ? 'bg-primary/20' : 'bg-accent/20'
+              }`}>
+                {m.role === 'user' ? <User className="w-4 h-4 text-primary" /> : <Bot className="w-4 h-4 text-accent" />}
+              </div>
+              <div className={`max-w-[80%] rounded-xl px-3 py-2 text-sm space-y-2 ${
+                m.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'
+              }`}>
+                {m.images && m.images.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
+                    {m.images.map((src, ix) => (
+                      <img key={ix} src={src} alt="" className="w-20 h-20 object-cover rounded-lg border border-border/50" />
+                    ))}
+                  </div>
+                )}
+                {m.role === 'assistant' ? (
+                  <>
+                    <div className="prose prose-sm prose-invert max-w-none">
+                      <ReactMarkdown>{visibleText}</ReactMarkdown>
+                    </div>
+                    {m.content.includes('[CREATE_PLAN]') && (
+                      <Button size="sm" className="w-full gap-2"
+                        onClick={() => { setPlanText(m.content); setShowPlanDialog(true); }}>
+                        <Brain className="w-4 h-4" /> צור תוכנית באפליקציה
+                      </Button>
+                    )}
+                    {actionsExtract && (
+                      <div className="rounded-lg border border-primary/30 bg-primary/5 p-2 space-y-1.5">
+                        <div className="text-xs font-bold text-primary flex items-center gap-1">
+                          <Brain className="w-3.5 h-3.5" /> {actionsExtract.actions.length} שינויים מוצעים:
+                        </div>
+                        <ul className="text-xs space-y-0.5 text-foreground/80">
+                          {actionsExtract.actions.map((a, ix) => (
+                            <li key={ix}>{summarizeAction(a, tasks)}</li>
+                          ))}
+                        </ul>
+                        <Button size="sm" className="w-full gap-2" disabled={applied || applyingMsgId === i}
+                          onClick={() => applyActions(i, actionsExtract.actions)}>
+                          {applied ? <><Check className="w-4 h-4" /> הוחל</> :
+                           applyingMsgId === i ? <><Loader2 className="w-4 h-4 animate-spin" /> מחיל...</> :
+                           <><Check className="w-4 h-4" /> אשר והחל את השינויים</>}
+                        </Button>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  visibleText && <div>{visibleText}</div>
+                )}
+              </div>
             </div>
-            <div className={`max-w-[80%] rounded-xl px-3 py-2 text-sm ${
-              m.role === 'user'
-                ? 'bg-primary text-primary-foreground'
-                : 'bg-muted text-foreground'
-            }`}>
-              {m.role === 'assistant' ? (
-                <div className="prose prose-sm prose-invert max-w-none">
-                  <ReactMarkdown>{m.content.replace('[CREATE_PLAN]', '')}</ReactMarkdown>
-                  {m.content.includes('[CREATE_PLAN]') && (
-                    <Button 
-                      size="sm" 
-                      className="mt-2 w-full gap-2" 
-                      onClick={() => { setPlanText(m.content); setShowPlanDialog(true); }}
-                    >
-                      <Brain className="w-4 h-4" /> צור תוכנית באפליקציה
-                    </Button>
-                  )}
-                </div>
-              ) : m.content}
-            </div>
-          </div>
-        ))}
+          );
+        })}
         {loading && messages[messages.length - 1]?.role !== 'assistant' && (
           <div className="flex gap-2">
             <div className="w-7 h-7 rounded-full bg-accent/20 flex items-center justify-center">
