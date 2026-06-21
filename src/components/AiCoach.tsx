@@ -176,6 +176,12 @@ const AiCoach = () => {
 
     const categoryStats = getCategoryStats();
     const failureAnalysis = getFailureAnalysis();
+    const taskListForAi = tasks.map(t => {
+      const workout = t.workoutDetails?.length
+        ? ` | workoutDetails=${t.workoutDetails.map(wd => `${wd.day}: ${wd.description}`).join(' || ')}`
+        : '';
+      return `- id=${t.id} | ${t.name} [${t.category}] ${t.startTime}-${t.endTime} ימים=${t.days.join(',')}${workout}`;
+    }).join('\n');
 
     // Detect falling pattern
     const recentScores = [];
@@ -203,7 +209,7 @@ ${dailyScores.join('\n')}
 - ערב (17+): ${timeSlots.evening.done}/${timeSlots.evening.total} הושלמו
 
 📋 כל המשימות (כולל ID — השתמש בו לעדכון/מחיקה):
-${tasks.map(t => `- id=${t.id} | ${t.name} [${t.category}] ${t.startTime}-${t.endTime} ימים=${t.days.join(',')} ${t.workoutDetails?.length ? `[יש ${t.workoutDetails.length} ימי אימון]` : ''}`).join('\n')}
+${taskListForAi}
 
 📈 סטטיסטיקת ביצוע (7 ימים):
 ${taskStats.map(t => `- ${t.name} | ${t.completionRate}% | פספוסים: ${t.recentMisses}`).join('\n')}

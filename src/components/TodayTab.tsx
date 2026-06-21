@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { playSuccessSound, playWarningSound, createParticleBurst, vibrate } from '@/lib/sounds';
+import { parseWorkoutDay } from '@/lib/workoutParser';
 
 const TodayTab = () => {
   const { user } = useAuth();
@@ -120,6 +121,7 @@ const TodayTab = () => {
       {sorted.map(task => {
         const done = task.completions[todayStr];
         const detail = task.workoutDetails?.find(wd => wd.day === hebrewDay);
+        const parsedDetail = detail ? parseWorkoutDay(detail) : null;
         const status = getTaskStatus(task.startTime, task.endTime, done);
         const progress = getTaskProgress(task.startTime, task.endTime);
         const timeRemaining = getTimeRemaining(task.endTime);
@@ -184,10 +186,10 @@ const TodayTab = () => {
             {detail && (
               <div className="text-sm bg-secondary/50 rounded-lg px-3 py-2 space-y-1.5">
                 <div className="flex items-center gap-1.5 text-accent font-bold text-xs">
-                  <span>📋</span><span>תרגילי האימון</span>
+                  <span>📋</span><span>{parsedDetail?.focus || 'תרגילי האימון'}</span>
                 </div>
                 <ul className="space-y-1">
-                  {detail.description.split(/[,،]\s*/).map(s => s.trim()).filter(Boolean).map((line, i) => (
+                  {(parsedDetail?.exercises.length ? parsedDetail.exercises.map(ex => `${ex.name} ${ex.sets}×${ex.repsMin === ex.repsMax ? ex.repsMin : `${ex.repsMin}-${ex.repsMax}`}`) : detail.description.split(/[,،]\s*/).map(s => s.trim()).filter(Boolean)).map((line, i) => (
                     <li key={i} className="flex gap-2 text-foreground/90 text-[13px] leading-relaxed">
                       <span className="text-primary mt-1.5 shrink-0">•</span>
                       <span>{line}</span>

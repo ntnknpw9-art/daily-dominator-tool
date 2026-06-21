@@ -1,4 +1,4 @@
-import { WorkoutDetail, DayOfWeek } from '@/types/task';
+import { WorkoutDetail, DayOfWeek, ALL_DAYS } from '@/types/task';
 
 export interface ParsedExercise {
   name: string;
@@ -40,6 +40,8 @@ export const detectWeighted = (name: string): boolean => {
 
 // Match a sets×reps token: "4x8-10", "4×10", "3X12", "4*10", "3x12-15"
 const SETS_REPS_RE = /(\d+)\s*[x×X*]\s*(\d+)(?:\s*[-–—]\s*(\d+))?/;
+const SETS_REPS_GLOBAL_RE = /(\d+)\s*[x×X*]\s*(\d+)(?:\s*[-–—]\s*(\d+))?/g;
+const DAY_RE = /(?:^|[\n\r,;|])\s*(?:יום\s*)?(ראשון|שני|שלישי|רביעי|חמישי|שישי|שבת)\s*[:\-–—]?/g;
 
 const parseSetsReps = (raw: string) => {
   const m = raw.match(SETS_REPS_RE);
@@ -60,8 +62,8 @@ const cleanName = (raw: string): string => {
     .replace(/@?\s*RIR\s*\d+/gi, '')
     .replace(/רי?ר\s*\d+/g, '')
     .replace(SETS_REPS_RE, '')
-    .replace(/^\s*[\-–—:•·.]+\s*/, '')
-    .replace(/\s*[\-–—:•·.]+\s*$/, '')
+    .replace(/^[\s\-–—:;|•·.,]+/, '')
+    .replace(/[\s\-–—:;|•·.,]+$/, '')
     .replace(/[,،]/g, '')
     .replace(/\s+/g, ' ')
     .trim();
@@ -113,6 +115,30 @@ const splitByNumbers = (text: string): string[] | null => {
   return chunks.length >= 2 ? chunks : null;
 };
 
+const splitByLines = (text: string): string[] | null => {
+  const lines = text.split(/[\n\r]+/).map(l => l.trim()).filter(Boolean);
+  const exerciseLines = lines.filter(l => SETS_REPS_RE.test(l));
+  return exerciseLines.length >= 2 ? exerciseLines : null;
+};
+
+const splitBySetRepsSequence = (text: string): string[] | null => {
+  const matches = Array.from(text.matchAll(SETS_REPS_GLOBAL_RE));
+  if (matches.length < 2) return null;
+
+  const chunks: string[] = [];
+  let start = 0;
+  for (const match of matches) {
+    const matchEnd = (match.index || 0) + match[0].length;
+    const rest = text.slice(matchEnd);
+    const rirAfter = rest.match(/^\s*(?:@?\s*RIR\s*\d+|רי?ר\s*\d+)/i);
+    const end = matchEnd + (rirAfter ? rirAfter[0].length : 0);
+    const chunk = text.slice(start, end).trim();
+    if (chunk) chunks.push(chunk);
+    start = end;
+  }
+  return chunks.length >= 2 ? chunks : null;
+};
+
 export const parseWorkoutDay = (wd: WorkoutDetail): ParsedDay => {
   const raw = (wd.description || '').trim();
 
@@ -141,6 +167,10 @@ export const parseWorkoutDay = (wd: WorkoutDetail): ParsedDay => {
   // Try numbered split first
   let chunks = splitByNumbers(exerciseText);
 
+  // Fallbacks for plans written naturally: one exercise per line, or "חזה 4x10 גב 3x12"
+  if (!chunks) chunks = splitByLines(exerciseText);
+  if (!chunks) chunks = splitBySetRepsSequence(exerciseText);
+
   // Fallback to comma split
   if (!chunks) {
     chunks = exerciseText.split(/\s*[,،]\s*/).filter(Boolean);
@@ -156,4 +186,34 @@ export const parseWorkoutDay = (wd: WorkoutDetail): ParsedDay => {
 export const parseAllDays = (details: WorkoutDetail[] | undefined): ParsedDay[] => {
   if (!details) return [];
   return details.map(parseWorkoutDay).filter(d => d.exercises.length > 0);
+};
+
+export const sortWorkoutDetails = (details: WorkoutDetail[]): WorkoutDetail[] => {
+  return [...details].sort((a, b) => ALL_DAYS.indexOf(a.day) - ALL_DAYS.indexOf(b.day));
+};
+
+export const parseWorkoutDetailsFromText = (text: string, fallbackDays: DayOfWeek[] = []): WorkoutDetail[] => {
+  const raw = (text || '').trim();
+  if (!raw || !SETS_REPS_RE.test(raw)) return [];
+
+  const markers: { day: DayOfWeek; start: number; end: number }[] = [];
+  let m: RegExpExecArray | null;
+  DAY_RE.lastIndex = 0;
+  while ((m = DAY_RE.exec(raw)) !== null) {
+    markers.push({ day: m[1] as DayOfWeek, start: m.index, end: DAY_RE.lastIndex });
+  }
+
+  if (markers.length > 0) {
+    const byDay = new Map<DayOfWeek, string>();
+    markers.forEach((marker, i) => {
+      const nextStart = i + 1 < markers.length ? markers[i + 1].start : raw.length;
+      const description = raw.slice(marker.end, nextStart).replace(/^\s*[:\-–—]+\s*/, '').trim();
+      if (description && SETS_REPS_RE.test(description)) byDay.set(marker.day, description);
+    });
+    return sortWorkoutDetails(Array.from(byDay, ([day, description]) => ({ day, description })));
+  }
+
+  const uniqueFallback = fallbackDays.filter((day, index, arr) => ALL_DAYS.includes(day) && arr.indexOf(day) === index);
+  if (uniqueFallback.length === 1) return [{ day: uniqueFallback[0], description: raw }];
+  return [];
 };
