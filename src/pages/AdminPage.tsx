@@ -10,6 +10,7 @@ import {
   Heart, MessageCircle, Swords, UserPlus, Apple, Target, Zap, Award,
   BarChart3, Clock, Calendar, Percent, Download, FileJson, FileSpreadsheet,
 } from "lucide-react";
+import ErrorsPanel from "@/components/admin/ErrorsPanel";
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend,
@@ -367,6 +368,10 @@ export default function AdminPage() {
           <StatCard icon={MessageCircle} label="תגובות על תמונות" value={stats.total_photo_comments} accent="text-blue-500" />
           <StatCard icon={Trophy} label="אתגרים" value={stats.total_challenges} accent="text-amber-500" />
         </div>
+
+        {/* === ERRORS === */}
+        <SectionTitle>🚨 תקלות באפליקציה</SectionTitle>
+        <ErrorsPanel />
 
         {/* === EXPORT === */}
         <SectionTitle>📥 ייצוא נתונים</SectionTitle>
