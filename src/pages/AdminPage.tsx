@@ -8,7 +8,7 @@ import {
   Loader2, LogOut, Users, TrendingUp, Activity, CreditCard, CheckCircle2,
   Dumbbell, BookOpen, Image as ImageIcon, MessageSquare, Flame, Trophy,
   Heart, MessageCircle, Swords, UserPlus, Apple, Target, Zap, Award,
-  BarChart3, Clock, Calendar, Percent,
+  BarChart3, Clock, Calendar, Percent, Download, FileJson, FileSpreadsheet,
 } from "lucide-react";
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
