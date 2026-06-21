@@ -12,6 +12,8 @@ import PrivacyPolicy from "./pages/PrivacyPolicy.tsx";
 import TermsOfService from "./pages/TermsOfService.tsx";
 import ResetPassword from "./pages/ResetPassword.tsx";
 import DiagnosticsPage from "./pages/DiagnosticsPage.tsx";
+import AdminPage from "./pages/AdminPage.tsx";
+import AdminLogin from "./pages/AdminLogin.tsx";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +32,8 @@ const App = () => (
               <Route path="/terms" element={<TermsOfService />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/diagnostics" element={<DiagnosticsPage />} />
+              <Route path="/admin/login" element={<AdminLogin />} />
+              <Route path="/admin" element={<AdminPage />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
