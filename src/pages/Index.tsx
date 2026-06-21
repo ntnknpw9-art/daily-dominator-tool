@@ -206,8 +206,30 @@ const AppContent = () => {
 
 const Index = () => {
   const { user, loading } = useAuth();
+  const [checkingAdmin, setCheckingAdmin] = useState(false);
 
-  if (loading) {
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    setCheckingAdmin(true);
+    (async () => {
+      const { data } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .maybeSingle();
+      if (cancelled) return;
+      if (data) {
+        window.location.replace('/admin');
+        return;
+      }
+      setCheckingAdmin(false);
+    })();
+    return () => { cancelled = true; };
+  }, [user]);
+
+  if (loading || checkingAdmin) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center animate-pulse-glow">
