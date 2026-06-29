@@ -1174,6 +1174,7 @@ export type Database = {
           user_id: string
         }[]
       }
+      claim_achievement: { Args: { _achievement_id: string }; Returns: boolean }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean

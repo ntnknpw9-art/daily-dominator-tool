@@ -20,6 +20,23 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY missing");
 
+    // Only allow image URLs from our own Supabase storage to prevent SSRF via the AI gateway.
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
+    const storagePrefix = SUPABASE_URL ? `${SUPABASE_URL.replace(/\/$/, "")}/storage/v1/object/` : "";
+    const isAllowedUrl = (u: unknown): u is string => {
+      if (typeof u !== "string" || u.length > 2000) return false;
+      try {
+        const parsed = new URL(u);
+        if (parsed.protocol !== "https:") return false;
+        return storagePrefix.length > 0 && u.startsWith(storagePrefix);
+      } catch { return false; }
+    };
+    if (!isAllowedUrl(beforeUrl) || !isAllowedUrl(afterUrl) || (targetUrl !== undefined && targetUrl !== null && targetUrl !== "" && !isAllowedUrl(targetUrl))) {
+      return new Response(JSON.stringify({ error: "Invalid image URL" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const goalText = goal === 'cut'
       ? 'חיטוב — ירידה באחוזי שומן תוך שמירה על מסת שריר'
       : goal === 'recomp'
