@@ -12,7 +12,7 @@
     --card-foreground: 0 0% 95%;
     --popover: 0 0% 7%;
     --popover-foreground: 0 0% 95%;
-    --primary: 0 72% 51%;
+    --primary: 14 100% 57%;
     --primary-foreground: 0 0% 100%;
     --secondary: 0 0% 12%;
     --secondary-foreground: 0 0% 95%;
@@ -28,16 +28,27 @@
     --warning-foreground: 0 0% 5%;
     --border: 0 0% 15%;
     --input: 0 0% 15%;
-    --ring: 0 72% 51%;
+    --ring: 14 100% 57%;
     --radius: 0.75rem;
+
+    /* Cinematic premium tokens */
+    --gradient-fire: linear-gradient(135deg, hsl(14 100% 57%) 0%, hsl(0 85% 55%) 100%);
+    --gradient-gold: linear-gradient(135deg, hsl(45 95% 60%) 0%, hsl(30 90% 50%) 100%);
+    --gradient-hero: radial-gradient(ellipse at top right, hsl(14 100% 57% / 0.18) 0%, transparent 55%), radial-gradient(ellipse at bottom left, hsl(0 80% 40% / 0.12) 0%, transparent 50%), linear-gradient(180deg, hsl(0 0% 8%) 0%, hsl(0 0% 4%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(0 0% 9%) 0%, hsl(0 0% 6%) 100%);
+    --shadow-elevated: 0 20px 60px -20px hsl(0 0% 0% / 0.8), 0 0 0 1px hsl(0 0% 100% / 0.04);
+    --shadow-fire: 0 10px 40px -10px hsl(14 100% 57% / 0.55), 0 0 80px -20px hsl(14 100% 57% / 0.3);
+    --shadow-gold: 0 10px 40px -10px hsl(45 95% 60% / 0.45);
+    --ease-out-cinematic: cubic-bezier(0.16, 1, 0.3, 1);
+
     --sidebar-background: 0 0% 6%;
     --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 0 72% 51%;
+    --sidebar-primary: 14 100% 57%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 0 0% 12%;
     --sidebar-accent-foreground: 0 0% 95%;
     --sidebar-border: 0 0% 15%;
-    --sidebar-ring: 0 72% 51%;
+    --sidebar-ring: 14 100% 57%;
   }
 
   .light {
@@ -102,17 +113,52 @@
   .glass-card {
     @apply bg-card/80 backdrop-blur-sm border border-border/50 rounded-xl;
   }
-  
-  .glow-red {
-    box-shadow: 0 0 20px hsl(0 72% 51% / 0.3);
+
+  .premium-card {
+    background: var(--gradient-card);
+    border: 1px solid hsl(0 0% 100% / 0.06);
+    border-radius: 1.5rem;
+    box-shadow: var(--shadow-elevated);
   }
-  
+
+  .hero-bg {
+    background: var(--gradient-hero);
+  }
+
+  .text-gradient-fire {
+    background: var(--gradient-fire);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .text-gradient-gold {
+    background: var(--gradient-gold);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .glow-fire {
+    box-shadow: var(--shadow-fire);
+  }
+
+  .glow-red {
+    box-shadow: 0 0 20px hsl(14 100% 57% / 0.35);
+  }
+
   .glow-green {
     box-shadow: 0 0 20px hsl(142 71% 45% / 0.3);
   }
-  
+
   .glow-gold {
-    box-shadow: 0 0 20px hsl(38 92% 50% / 0.3);
+    box-shadow: var(--shadow-gold);
+  }
+
+  .display-font {
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    font-feature-settings: "ss01";
   }
 
   .progress-bar {
