@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { playSuccessSound, playWarningSound, createParticleBurst, vibrate } from '@/lib/sounds';
 import { parseWorkoutDay } from '@/lib/workoutParser';
+import HeroStreak from '@/components/HeroStreak';
 
 const TodayTab = () => {
   const { user } = useAuth();
@@ -91,7 +92,8 @@ const TodayTab = () => {
 
   return (
     <div className="space-y-4">
-      <div className="text-center text-muted-foreground text-sm">
+      <HeroStreak />
+      <div className="text-center text-muted-foreground text-xs">
         {formatFullHebrew(now)}
       </div>
 
