@@ -375,8 +375,28 @@ ${workouts}
             okCount++;
           } else if (a.type === 'update_task') {
             const t = tasks.find(x => x.id === a.id);
-            if (!t) continue;
             const c: any = a.changes;
+            if (!t) {
+              // Stale ID (e.g. user deleted the task). Fall back to creating a new task from the changes.
+              const days = Array.isArray(c.days) ? c.days.filter((d: any) => ALL_DAYS.includes(d)) : [];
+              if (!c.name || !c.category || days.length === 0) {
+                console.warn('update_task with stale id and insufficient data to create', a);
+                continue;
+              }
+              await addTask({
+                name: c.name,
+                meaning: c.meaning || '',
+                startTime: c.startTime || '08:00',
+                endTime: c.endTime || '09:00',
+                startDate: c.startDate || todayStr,
+                endDate: c.endDate || '2030-12-31',
+                category: c.category,
+                days,
+                workoutDetails: c.workoutDetails,
+              });
+              okCount++;
+              continue;
+            }
             await updateTask(a.id, {
               name: c.name ?? t.name,
               meaning: c.meaning ?? t.meaning,
@@ -393,6 +413,7 @@ ${workouts}
             await deleteTask(a.id);
             okCount++;
           }
+
         } catch (e) {
           console.error('action failed', a, e);
         }
