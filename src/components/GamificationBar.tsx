@@ -104,11 +104,9 @@ const GamificationBar = () => {
 
     ADVANCED_ACHIEVEMENTS.forEach(a => {
       if (a.check(currentStats) && !unlockedAchievements.includes(a.id)) {
-        supabase.from('user_achievements').upsert({
-          user_id: user.id,
-          achievement_id: a.id,
-        }, { onConflict: 'user_id,achievement_id' }).then(() => {
-          setUnlockedAchievements(prev => [...prev, a.id]);
+        supabase.rpc('claim_achievement' as any, { _achievement_id: a.id }).then(({ data, error }) => {
+          if (error || !data) return;
+          setUnlockedAchievements(prev => prev.includes(a.id) ? prev : [...prev, a.id]);
           setNewAchievement(a.name);
           playAchievementSound();
           setTimeout(() => setNewAchievement(null), 3000);
