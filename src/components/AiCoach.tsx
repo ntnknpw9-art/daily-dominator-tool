@@ -377,26 +377,49 @@ ${workouts}
             const t = tasks.find(x => x.id === a.id);
             const c: any = a.changes;
             if (!t) {
-              // Stale ID (e.g. user deleted the task). Fall back to creating a new task from the changes.
-              const days = Array.isArray(c.days) ? c.days.filter((d: any) => ALL_DAYS.includes(d)) : [];
-              if (!c.name || !c.category || days.length === 0) {
-                console.warn('update_task with stale id and insufficient data to create', a);
+              // Stale/invented ID. If there's already a fitness task, redirect the update to it.
+              const fitnessTask = tasks.find(x => x.category === 'כושר');
+              if (fitnessTask && c.workoutDetails) {
+                await updateTask(fitnessTask.id, {
+                  name: c.name ?? fitnessTask.name,
+                  meaning: c.meaning ?? fitnessTask.meaning,
+                  startTime: c.startTime ?? fitnessTask.startTime,
+                  endTime: c.endTime ?? fitnessTask.endTime,
+                  startDate: c.startDate ?? fitnessTask.startDate,
+                  endDate: c.endDate ?? fitnessTask.endDate,
+                  category: 'כושר',
+                  days: Array.isArray(c.days) && c.days.length ? c.days.filter((d: any) => ALL_DAYS.includes(d)) : fitnessTask.days,
+                  workoutDetails: c.workoutDetails,
+                });
+                okCount++;
+                continue;
+              }
+              // Otherwise create a new task. Infer days from workoutDetails if needed.
+              const inferredDays = Array.isArray(c.workoutDetails)
+                ? c.workoutDetails.map((w: any) => w.day).filter((d: any) => ALL_DAYS.includes(d))
+                : [];
+              const days = Array.isArray(c.days) && c.days.length
+                ? c.days.filter((d: any) => ALL_DAYS.includes(d))
+                : inferredDays;
+              if (days.length === 0) {
+                console.warn('update_task with stale id and no days', a);
                 continue;
               }
               await addTask({
-                name: c.name,
+                name: c.name || 'אימון',
                 meaning: c.meaning || '',
                 startTime: c.startTime || '08:00',
                 endTime: c.endTime || '09:00',
                 startDate: c.startDate || todayStr,
                 endDate: c.endDate || '2030-12-31',
-                category: c.category,
+                category: c.category || 'כושר',
                 days,
                 workoutDetails: c.workoutDetails,
               });
               okCount++;
               continue;
             }
+
             await updateTask(a.id, {
               name: c.name ?? t.name,
               meaning: c.meaning ?? t.meaning,
