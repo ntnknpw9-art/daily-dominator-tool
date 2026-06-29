@@ -29,8 +29,8 @@ const HeroStreak = () => {
 
   const greeting = getGreeting(now.getHours());
   const name = user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'לוחם';
-  const streak = stats?.current_streak ?? 0;
-  const xp = stats?.xp ?? 0;
+  const streak = stats?.streak ?? 0;
+  const xp = stats?.points ?? 0;
   const level = stats?.level ?? 1;
   const todayPct = getDailyCompletionPercent(now);
 
