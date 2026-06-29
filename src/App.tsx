@@ -14,6 +14,7 @@ import ResetPassword from "./pages/ResetPassword.tsx";
 import DiagnosticsPage from "./pages/DiagnosticsPage.tsx";
 import AdminPage from "./pages/AdminPage.tsx";
 import AdminLogin from "./pages/AdminLogin.tsx";
+import SplashDemo from "./pages/SplashDemo.tsx";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +35,7 @@ const App = () => (
               <Route path="/diagnostics" element={<DiagnosticsPage />} />
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/admin" element={<AdminPage />} />
+              <Route path="/splash-demo" element={<SplashDemo />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
