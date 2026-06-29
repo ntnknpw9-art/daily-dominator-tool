@@ -113,17 +113,52 @@
   .glass-card {
     @apply bg-card/80 backdrop-blur-sm border border-border/50 rounded-xl;
   }
-  
-  .glow-red {
-    box-shadow: 0 0 20px hsl(0 72% 51% / 0.3);
+
+  .premium-card {
+    background: var(--gradient-card);
+    border: 1px solid hsl(0 0% 100% / 0.06);
+    border-radius: 1.5rem;
+    box-shadow: var(--shadow-elevated);
   }
-  
+
+  .hero-bg {
+    background: var(--gradient-hero);
+  }
+
+  .text-gradient-fire {
+    background: var(--gradient-fire);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .text-gradient-gold {
+    background: var(--gradient-gold);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .glow-fire {
+    box-shadow: var(--shadow-fire);
+  }
+
+  .glow-red {
+    box-shadow: 0 0 20px hsl(14 100% 57% / 0.35);
+  }
+
   .glow-green {
     box-shadow: 0 0 20px hsl(142 71% 45% / 0.3);
   }
-  
+
   .glow-gold {
-    box-shadow: 0 0 20px hsl(38 92% 50% / 0.3);
+    box-shadow: var(--shadow-gold);
+  }
+
+  .display-font {
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    font-feature-settings: "ss01";
   }
 
   .progress-bar {
