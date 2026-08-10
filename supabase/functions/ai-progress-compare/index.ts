@@ -183,7 +183,7 @@ ${targetUrl ? `### 🎯 חשוב: קיבלת גם תמונת יעד (תמונה 
     });
   } catch (e) {
     console.error("Error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unknown" }), {
+    return new Response(JSON.stringify({ error: "אירעה שגיאה פנימית. נסה שוב." }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
