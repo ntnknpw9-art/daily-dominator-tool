@@ -1,0 +1,236 @@
+{
+  "version": 1,
+  "sdk_version": "0.24.0",
+  "path": "/functions/v1/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://jtdxblauyfhfvszlbppz.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "daily-dominator-mcp",
+      "version": "0.1.0",
+      "title": "Daily Dominator"
+    },
+    "tools": [
+      {
+        "name": "list_tasks",
+        "title": "List tasks",
+        "description": "List the signed-in user's recurring tasks (name, category, time window, days of week and workout details).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "category": {
+              "type": "string",
+              "description": "Optional category filter: כושר, לימודים, כסף, משמעת, אישי"
+            },
+            "limit": {
+              "type": "integer",
+              "description": "Max tasks to return (default 50)."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "create_task",
+        "title": "Create task",
+        "description": "Create a new recurring task for the signed-in user. Optionally include per-day workout details.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Task name in Hebrew."
+            },
+            "category": {
+              "type": "string",
+              "enum": [
+                "כושר",
+                "לימודים",
+                "כסף",
+                "משמעת",
+                "אישי"
+              ],
+              "description": "Task category."
+            },
+            "days": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "ראשון",
+                  "שני",
+                  "שלישי",
+                  "רביעי",
+                  "חמישי",
+                  "שישי",
+                  "שבת"
+                ]
+              },
+              "description": "Days of the week the task repeats on."
+            },
+            "startTime": {
+              "type": "string",
+              "description": "Start time \"HH:MM\"."
+            },
+            "endTime": {
+              "type": "string",
+              "description": "End time \"HH:MM\"."
+            },
+            "meaning": {
+              "type": "string",
+              "description": "Why this task matters."
+            },
+            "workoutDetails": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "day": {
+                    "type": "string",
+                    "description": "Day of week in Hebrew."
+                  },
+                  "description": {
+                    "type": "string",
+                    "description": "Exercises, e.g. \"1. לחיצת חזה – 4x8-10, 2. ...\""
+                  }
+                },
+                "required": [
+                  "day",
+                  "description"
+                ],
+                "additionalProperties": false
+              },
+              "description": "Per-day workout plan, only for כושר tasks."
+            }
+          },
+          "required": [
+            "name",
+            "category",
+            "days",
+            "startTime",
+            "endTime"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "complete_task",
+        "title": "Mark task complete",
+        "description": "Mark one of the signed-in user's tasks as completed (or not completed) for a given date.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "taskId": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Task id from list_tasks."
+            },
+            "date": {
+              "type": "string",
+              "description": "Date \"YYYY-MM-DD\". Defaults to today in Asia/Jerusalem."
+            },
+            "completed": {
+              "type": "boolean",
+              "description": "Defaults to true."
+            }
+          },
+          "required": [
+            "taskId"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "get_progress",
+        "title": "Get progress & streak",
+        "description": "Get the signed-in user's discipline stats: XP, level, current and longest streak, total completed tasks, plus recent completions.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "days": {
+              "type": "integer",
+              "description": "How many past days of completions to include (default 7, max 90)."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "add_journal_entry",
+        "title": "Add reflection journal entry",
+        "description": "Create or update the signed-in user's daily reflection journal entry (what was learned, what was hard, what to improve, gratitude, day score).",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "date": {
+              "type": "string",
+              "description": "Date \"YYYY-MM-DD\". Defaults to today in Asia/Jerusalem."
+            },
+            "learned": {
+              "type": "string",
+              "description": "What the user learned today."
+            },
+            "hard": {
+              "type": "string",
+              "description": "What was hard today."
+            },
+            "improve": {
+              "type": "string",
+              "description": "What to improve tomorrow."
+            },
+            "grateful": {
+              "type": "string",
+              "description": "What the user is grateful for."
+            },
+            "score": {
+              "type": "integer",
+              "description": "Day score 1-10."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
