@@ -30,7 +30,7 @@ export default defineTool({
           completion_date: completionDate,
           completed: isDone,
         },
-        { onConflict: "user_id,task_id,completion_date" },
+        { onConflict: "task_id,completion_date" },
       )
       .select("id,task_id,completion_date,completed")
       .single();
