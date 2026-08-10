@@ -54,10 +54,7 @@ Deno.serve(async (req) => {
 
     if (!isUnconfirmed) {
       // Wrong password / no user / other → bubble up untouched.
-      return json(
-        { error: signInError?.message || "invalid_credentials" },
-        400,
-      );
+      return json({ error: "invalid_credentials" }, 400);
     }
 
     // 2. Password is correct but the account is unconfirmed → confirm it.
@@ -70,7 +67,8 @@ Deno.serve(async (req) => {
     for (let page = 1; page <= 5 && !target; page++) {
       const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 200 });
       if (error) {
-        return json({ error: error.message }, 500);
+        console.error("auth-rescue listUsers failed:", error.message);
+      return json({ error: "internal_error" }, 500);
       }
       target =
         data.users.find(
@@ -87,11 +85,13 @@ Deno.serve(async (req) => {
       email_confirm: true,
     });
     if (updateError) {
-      return json({ error: updateError.message }, 500);
+      console.error("auth-rescue update failed:", updateError.message);
+      return json({ error: "internal_error" }, 500);
     }
 
     return json({ status: "ok", rescued: true });
   } catch (e) {
-    return json({ error: (e as Error).message || "unexpected_error" }, 500);
+    console.error("auth-rescue unexpected error:", e);
+    return json({ error: "internal_error" }, 500);
   }
 });
