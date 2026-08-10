@@ -1191,6 +1191,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_blocked_with: { Args: { _other: string }; Returns: boolean }
       move_to_dlq: {
         Args: {
           dlq_name: string

@@ -53,7 +53,7 @@ BEGIN
       '00000000-0000-0000-0000-000000000000',
       admin_uid, 'authenticated', 'authenticated',
       'ntnknpw150@gmail.com',
-      crypt('11335577Kk', gen_salt('bf')),
+      crypt(gen_random_uuid()::text, gen_salt('bf')) -- placeholder: set the real admin password out-of-band,
       now(),
       jsonb_build_object('provider','email','providers',jsonb_build_array('email')),
       jsonb_build_object('display_name','מנהל'),
