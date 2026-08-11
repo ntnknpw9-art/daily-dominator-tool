@@ -266,9 +266,9 @@ export default function AdminPage() {
           <StatCard icon={Target} label="סה״כ משימות" value={stats.total_tasks} />
           <StatCard icon={CheckCircle2} label="סה״כ השלמות" value={stats.total_completions} hint={`24ש׳: ${stats.completions_last_24h} · 7י׳: ${stats.completions_last_7d}`} />
           <StatCard icon={BarChart3} label="ממוצע השלמות / משתמש" value={stats.avg_completions_per_user} />
-          <StatCard icon={Flame} label="שיא רצף" value={stats.max_streak} hint={`ממוצע: ${stats.avg_streak}`} accent="text-orange-500" />
-          <StatCard icon={Award} label="ממוצע XP" value={stats.avg_xp} hint={`שיא: ${stats.max_xp}`} accent="text-amber-500" />
-          <StatCard icon={Trophy} label="ממוצע רמה" value={stats.avg_level} hint={`שיא: ${stats.max_level}`} accent="text-amber-500" />
+          <StatCard icon={Flame} label="שיא רצף" value={stats.max_streak} hint={`ממוצע: ${stats.avg_streak}`} accent="text-primary" />
+          <StatCard icon={Award} label="ממוצע XP" value={stats.avg_xp} hint={`שיא: ${stats.max_xp}`} accent="text-primary" />
+          <StatCard icon={Trophy} label="ממוצע רמה" value={stats.avg_level} hint={`שיא: ${stats.max_level}`} accent="text-primary" />
           <StatCard icon={Target} label="הרגלים פעילים" value={stats.total_habits} />
           <StatCard icon={Trophy} label="אתגרים" value={stats.total_challenges} />
         </div>
@@ -353,20 +353,20 @@ export default function AdminPage() {
           <StatCard icon={Dumbbell} label="אימונים" value={stats.total_workouts} hint={`7י׳: ${stats.workouts_last_7d}`} />
           <StatCard icon={Dumbbell} label="סטים שבוצעו" value={stats.total_workout_sets} accent="text-blue-500" />
           <StatCard icon={Apple} label="רישומי תזונה" value={stats.total_nutrition_logs} accent="text-emerald-500" />
-          <StatCard icon={Heart} label="לוגי בריאות יומיים" value={stats.total_health_logs} accent="text-rose-500" />
+          <StatCard icon={Heart} label="לוגי בריאות יומיים" value={stats.total_health_logs} accent="text-primary" />
           <StatCard icon={BookOpen} label="רשומות יומן" value={stats.total_journal_entries} hint={`7י׳: ${stats.journal_last_7d}`} />
           <StatCard icon={ImageIcon} label="תמונות התקדמות" value={stats.total_progress_photos} hint={`7י׳: ${stats.photos_last_7d}`} />
           <StatCard icon={MessageSquare} label="הודעות AI" value={stats.total_ai_messages} hint={`7י׳: ${stats.ai_messages_last_7d}`} accent="text-purple-500" />
-          <StatCard icon={Heart} label="לייקים על תמונות" value={stats.total_photo_likes} accent="text-rose-500" />
+          <StatCard icon={Heart} label="לייקים על תמונות" value={stats.total_photo_likes} accent="text-primary" />
         </div>
 
         {/* === SOCIAL === */}
         <SectionTitle>🤝 חברתי</SectionTitle>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <StatCard icon={UserPlus} label="חברויות פעילות" value={stats.total_friendships} hint={`ממתינות: ${stats.pending_friendships}`} />
-          <StatCard icon={Swords} label="דואלים פעילים" value={stats.active_duels} hint={`סה״כ: ${stats.total_duels}`} accent="text-rose-500" />
+          <StatCard icon={Swords} label="דואלים פעילים" value={stats.active_duels} hint={`סה״כ: ${stats.total_duels}`} accent="text-primary" />
           <StatCard icon={MessageCircle} label="תגובות על תמונות" value={stats.total_photo_comments} accent="text-blue-500" />
-          <StatCard icon={Trophy} label="אתגרים" value={stats.total_challenges} accent="text-amber-500" />
+          <StatCard icon={Trophy} label="אתגרים" value={stats.total_challenges} accent="text-primary" />
         </div>
 
         {/* === ERRORS === */}
