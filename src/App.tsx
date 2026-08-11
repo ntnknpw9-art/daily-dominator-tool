@@ -38,6 +38,7 @@ const App = () => (
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/admin" element={<AdminPage />} />
               <Route path="/splash-demo" element={<SplashDemo />} />
+              <Route path="/color-demo" element={<ColorDemo />} />
               <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
