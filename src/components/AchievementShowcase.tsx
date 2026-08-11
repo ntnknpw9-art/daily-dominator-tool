@@ -9,7 +9,7 @@ const RARITY_GRADIENT: Record<AchievementRarity, string> = {
   uncommon: 'from-green-500/20 to-green-600/10',
   rare: 'from-blue-500/20 to-blue-600/10',
   epic: 'from-purple-500/25 to-purple-600/10',
-  legendary: 'from-yellow-500/30 to-amber-600/10',
+  legendary: 'from-primary/30 to-primary/10',
 };
 
 const RARITY_GLOW: Record<AchievementRarity, string> = {
@@ -17,7 +17,7 @@ const RARITY_GLOW: Record<AchievementRarity, string> = {
   uncommon: 'shadow-green-500/20',
   rare: 'shadow-blue-500/30',
   epic: 'shadow-purple-500/40',
-  legendary: 'shadow-yellow-500/50',
+  legendary: 'shadow-primary/50',
 };
 
 const RARITY_BORDER: Record<AchievementRarity, string> = {
@@ -25,7 +25,7 @@ const RARITY_BORDER: Record<AchievementRarity, string> = {
   uncommon: 'border-green-500/40',
   rare: 'border-blue-500/40',
   epic: 'border-purple-500/50',
-  legendary: 'border-yellow-500/60',
+  legendary: 'border-primary/60',
 };
 
 const RARITY_LABEL: Record<AchievementRarity, string> = {
