@@ -12,8 +12,8 @@
     --card-foreground: 0 0% 95%;
     --popover: 0 0% 7%;
     --popover-foreground: 0 0% 95%;
-    --primary: 14 100% 57%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 72 88% 46%;
+    --primary-foreground: 0 0% 5%;
     --secondary: 0 0% 12%;
     --secondary-foreground: 0 0% 95%;
     --muted: 0 0% 10%;
@@ -28,27 +28,27 @@
     --warning-foreground: 0 0% 5%;
     --border: 0 0% 15%;
     --input: 0 0% 15%;
-    --ring: 14 100% 57%;
+    --ring: 72 88% 46%;
     --radius: 0.75rem;
 
     /* Cinematic premium tokens */
-    --gradient-fire: linear-gradient(135deg, hsl(14 100% 57%) 0%, hsl(0 85% 55%) 100%);
+    --gradient-fire: linear-gradient(135deg, hsl(72 88% 46%) 0%, hsl(72 85% 38%) 100%);
     --gradient-gold: linear-gradient(135deg, hsl(45 95% 60%) 0%, hsl(30 90% 50%) 100%);
-    --gradient-hero: radial-gradient(ellipse at top right, hsl(14 100% 57% / 0.18) 0%, transparent 55%), radial-gradient(ellipse at bottom left, hsl(0 80% 40% / 0.12) 0%, transparent 50%), linear-gradient(180deg, hsl(0 0% 8%) 0%, hsl(0 0% 4%) 100%);
+    --gradient-hero: radial-gradient(ellipse at top right, hsl(72 88% 46% / 0.18) 0%, transparent 55%), radial-gradient(ellipse at bottom left, hsl(72 85% 38% / 0.12) 0%, transparent 50%), linear-gradient(180deg, hsl(0 0% 8%) 0%, hsl(0 0% 4%) 100%);
     --gradient-card: linear-gradient(145deg, hsl(0 0% 9%) 0%, hsl(0 0% 6%) 100%);
     --shadow-elevated: 0 20px 60px -20px hsl(0 0% 0% / 0.8), 0 0 0 1px hsl(0 0% 100% / 0.04);
-    --shadow-fire: 0 10px 40px -10px hsl(14 100% 57% / 0.55), 0 0 80px -20px hsl(14 100% 57% / 0.3);
+    --shadow-fire: 0 10px 40px -10px hsl(72 88% 46% / 0.55), 0 0 80px -20px hsl(72 88% 46% / 0.3);
     --shadow-gold: 0 10px 40px -10px hsl(45 95% 60% / 0.45);
     --ease-out-cinematic: cubic-bezier(0.16, 1, 0.3, 1);
 
     --sidebar-background: 0 0% 6%;
     --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 14 100% 57%;
-    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-primary: 72 88% 46%;
+    --sidebar-primary-foreground: 0 0% 5%;
     --sidebar-accent: 0 0% 12%;
     --sidebar-accent-foreground: 0 0% 95%;
     --sidebar-border: 0 0% 15%;
-    --sidebar-ring: 14 100% 57%;
+    --sidebar-ring: 72 88% 46%;
   }
 
   .light {
@@ -58,7 +58,7 @@
     --card-foreground: 0 0% 10%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 10%;
-    --primary: 0 72% 51%;
+    --primary: 72 85% 38%;
     --primary-foreground: 0 0% 100%;
     --secondary: 0 0% 94%;
     --secondary-foreground: 0 0% 15%;
@@ -74,16 +74,16 @@
     --warning-foreground: 0 0% 5%;
     --border: 0 0% 85%;
     --input: 0 0% 85%;
-    --ring: 0 72% 51%;
+    --ring: 72 85% 38%;
     --radius: 0.75rem;
     --sidebar-background: 0 0% 96%;
     --sidebar-foreground: 0 0% 10%;
-    --sidebar-primary: 0 72% 51%;
-    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-primary: 72 85% 38%;
+    --sidebar-primary-foreground: 0 0% 5%;
     --sidebar-accent: 0 0% 92%;
     --sidebar-accent-foreground: 0 0% 10%;
     --sidebar-border: 0 0% 85%;
-    --sidebar-ring: 0 72% 51%;
+    --sidebar-ring: 72 85% 38%;
   }
 }
 
@@ -144,7 +144,7 @@
   }
 
   .glow-red {
-    box-shadow: 0 0 20px hsl(14 100% 57% / 0.35);
+    box-shadow: 0 0 20px hsl(72 88% 46% / 0.35);
   }
 
   .glow-green {
