@@ -120,22 +120,67 @@ const ExerciseCard = ({
   );
 };
 
+const SESSION_KEY = 'dd_active_workout';
+
+type PersistedSession = {
+  key: string;
+  startedAt: number;
+  logsByEx: SetLog[][];
+};
+
+const readPersisted = (): PersistedSession | null => {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    const p = JSON.parse(raw) as PersistedSession;
+    if (!p?.key || !Array.isArray(p.logsByEx)) return null;
+    // Expire after 8 hours
+    if (Date.now() - p.startedAt > 8 * 60 * 60 * 1000) {
+      localStorage.removeItem(SESSION_KEY);
+      return null;
+    }
+    return p;
+  } catch { return null; }
+};
+
+const clearPersisted = () => { try { localStorage.removeItem(SESSION_KEY); } catch { /* noop */ } };
+
 const ActiveSession = ({
-  task, day, onExit,
-}: { task: Task; day: ParsedDay; onExit: () => void }) => {
+  task, day, sessionKey, onExit,
+}: { task: Task; day: ParsedDay; sessionKey: string; onExit: () => void }) => {
   const { user } = useAuth();
-  const [logsByEx, setLogsByEx] = useState<SetLog[][]>(
-    day.exercises.map(ex => Array.from({ length: ex.sets }, () => ({ reps: '', weight: '', done: false })))
-  );
+  const [logsByEx, setLogsByEx] = useState<SetLog[][]>(() => {
+    const fresh = day.exercises.map(ex => Array.from({ length: ex.sets }, () => ({ reps: '', weight: '', done: false })));
+    const p = readPersisted();
+    if (p && p.key === sessionKey && p.logsByEx.length === fresh.length) {
+      return fresh.map((sets, i) => sets.map((s, j) => p.logsByEx[i]?.[j] ?? s));
+    }
+    return fresh;
+  });
   const [prevByEx, setPrevByEx] = useState<Record<string, PreviousSet[]>>({});
   const [elapsed, setElapsed] = useState(0);
   const [saving, setSaving] = useState(false);
-  const startRef = useState(() => Date.now())[0];
+  const startRef = useState(() => {
+    const p = readPersisted();
+    return p && p.key === sessionKey ? p.startedAt : Date.now();
+  })[0];
+
+  // Persist session state (survives app backgrounding / reload)
+  useEffect(() => {
+    try {
+      localStorage.setItem(SESSION_KEY, JSON.stringify({ key: sessionKey, startedAt: startRef, logsByEx }));
+    } catch { /* noop */ }
+  }, [sessionKey, startRef, logsByEx]);
 
   useEffect(() => {
-    const id = setInterval(() => setElapsed(Math.floor((Date.now() - startRef) / 1000)), 1000);
-    return () => clearInterval(id);
+    const tick = () => setElapsed(Math.floor((Date.now() - startRef) / 1000));
+    tick();
+    const id = setInterval(tick, 1000);
+    const onVis = () => { if (document.visibilityState === 'visible') tick(); };
+    document.addEventListener('visibilitychange', onVis);
+    return () => { clearInterval(id); document.removeEventListener('visibilitychange', onVis); };
   }, [startRef]);
+
 
   // Load previous set data
   useEffect(() => {
@@ -226,7 +271,9 @@ const ActiveSession = ({
       }
 
       toast.success('האימון נשמר! 💪');
+      clearPersisted();
       onExit();
+
     } catch (e: any) {
       toast.error(e.message || 'שגיאה בשמירה');
     } finally {
@@ -294,7 +341,7 @@ interface HistoryRow {
 const WorkoutsTab = () => {
   const { tasks } = useTaskContext();
   const { user } = useAuth();
-  const [activeKey, setActiveKey] = useState<string | null>(null);
+  const [activeKey, setActiveKey] = useState<string | null>(() => readPersisted()?.key ?? null);
   const [history, setHistory] = useState<HistoryRow[]>([]);
 
   const workoutTasks = useMemo(() => tasks.filter(t => parseAllDays(t.workoutDetails).length > 0), [tasks]);
@@ -310,17 +357,23 @@ const WorkoutsTab = () => {
       .then(({ data }) => setHistory((data as any) || []));
   }, [user, activeKey]);
 
+  const exitSession = () => { clearPersisted(); setActiveKey(null); };
+
   if (activeKey) {
     const [taskId, dayName] = activeKey.split('|');
     const task = tasks.find(t => t.id === taskId);
     const days = task ? parseAllDays(task.workoutDetails) : [];
     const day = days.find(d => d.day === dayName);
     if (!task || !day) {
+      // Tasks may still be loading — don't drop a restored session prematurely
+      if (tasks.length === 0) return null;
+      clearPersisted();
       setActiveKey(null);
       return null;
     }
-    return <ActiveSession task={task} day={day} onExit={() => setActiveKey(null)} />;
+    return <ActiveSession key={activeKey} task={task} day={day} sessionKey={activeKey} onExit={exitSession} />;
   }
+
 
   return (
     <div className="space-y-4" dir="rtl">
