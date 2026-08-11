@@ -9,11 +9,11 @@ import { toast } from 'sonner';
 const PRIZES = [
   { label: 'XP x2', type: 'xp_double', value: 2, color: 'hsl(var(--primary))', emoji: '⚡' },
   { label: '+50 XP', type: 'xp_bonus', value: 50, color: '#22c55e', emoji: '✨' },
-  { label: 'דילוג עונש', type: 'skip_punishment', value: 1, color: '#f59e0b', emoji: '🛡️' },
+  { label: 'דילוג עונש', type: 'skip_punishment', value: 1, color: '#3b82f6', emoji: '🛡️' },
   { label: '+100 XP', type: 'xp_bonus', value: 100, color: '#8b5cf6', emoji: '🔥' },
   { label: 'תג מיוחד', type: 'special_badge', value: 1, color: '#ec4899', emoji: '👑' },
   { label: '+25 XP', type: 'xp_bonus', value: 25, color: '#06b6d4', emoji: '💎' },
-  { label: 'סטריק בוסט', type: 'streak_boost', value: 1, color: '#f97316', emoji: '🔥' },
+  { label: 'סטריק בוסט', type: 'streak_boost', value: 1, color: '#06b6d4', emoji: '🔥' },
   { label: '+75 XP', type: 'xp_bonus', value: 75, color: '#10b981', emoji: '⭐' },
 ];
 
