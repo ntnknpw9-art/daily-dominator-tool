@@ -168,7 +168,7 @@ const DisciplineDNA = () => {
     ctx.closePath();
     ctx.fillStyle = 'hsla(0, 70%, 50%, 0.2)';
     ctx.fill();
-    ctx.strokeStyle = 'hsl(0, 70%, 50%)';
+    ctx.strokeStyle = 'hsl(72, 88%, 46%)';
     ctx.lineWidth = 2;
     ctx.stroke();
 
@@ -181,7 +181,7 @@ const DisciplineDNA = () => {
 
       ctx.beginPath();
       ctx.arc(x, y, 4, 0, 2 * Math.PI);
-      ctx.fillStyle = 'hsl(0, 70%, 50%)';
+      ctx.fillStyle = 'hsl(72, 88%, 46%)';
       ctx.fill();
 
       // Label
