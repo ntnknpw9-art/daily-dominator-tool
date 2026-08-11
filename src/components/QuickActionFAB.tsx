@@ -61,7 +61,7 @@ export function QuickActionFAB({ setActiveTab }: { setActiveTab: (t: string) => 
               <span className="bg-background/80 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-medium border border-border/50 shadow-sm">משימה חדשה</span>
               <Button 
                 size="icon" 
-                className="rounded-full w-12 h-12 shadow-lg bg-orange-600 hover:bg-orange-700 text-white"
+                className="rounded-full w-12 h-12 shadow-lg bg-primary hover:bg-primary/90 text-primary-foreground"
                 onClick={() => {
                   setTaskDialogOpen(true);
                   setOpen(false);

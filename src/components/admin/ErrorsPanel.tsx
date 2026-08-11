@@ -40,9 +40,9 @@ type ErrorRow = {
 const SEVERITY_META: Record<string, { label: string; color: string; icon: any }> = {
   debug: { label: "Debug", color: "bg-slate-500/15 text-slate-300 border-slate-500/30", icon: Bug },
   info: { label: "Info", color: "bg-blue-500/15 text-blue-300 border-blue-500/30", icon: Info },
-  warn: { label: "אזהרה", color: "bg-amber-500/15 text-amber-300 border-amber-500/30", icon: AlertTriangle },
-  error: { label: "שגיאה", color: "bg-rose-500/15 text-rose-300 border-rose-500/30", icon: AlertCircle },
-  critical: { label: "קריטי", color: "bg-red-600/20 text-red-300 border-red-600/40", icon: Zap },
+  warn: { label: "אזהרה", color: "bg-primary/15 text-primary border-primary/30", icon: AlertTriangle },
+  error: { label: "שגיאה", color: "bg-muted-foreground/15 text-muted-foreground border-muted-foreground/30", icon: AlertCircle },
+  critical: { label: "קריטי", color: "bg-muted-foreground/25 text-foreground border-muted-foreground/40", icon: Zap },
 };
 
 const SEVERITY_ORDER = ["critical", "error", "warn", "info", "debug"] as const;
@@ -105,10 +105,10 @@ export default function ErrorsPanel() {
     <Card className="p-4 bg-card/60 backdrop-blur border-border/50">
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
         <div className="flex items-center gap-2">
-          <AlertTriangle className="h-5 w-5 text-rose-500" />
+          <AlertTriangle className="h-5 w-5 text-primary" />
           <h2 className="font-semibold">תקלות באפליקציה</h2>
           {summary?.critical_open ? (
-            <Badge className="bg-red-600/20 text-red-300 border-red-600/40">
+            <Badge className="bg-muted-foreground/20 text-muted-foreground border-muted-foreground/40">
               {summary.critical_open} קריטיות פתוחות
             </Badge>
           ) : null}
@@ -132,7 +132,7 @@ export default function ErrorsPanel() {
           </div>
           <div className="p-3 rounded-lg bg-background/40 border border-border/40">
             <div className="text-xs text-muted-foreground">פתוחות</div>
-            <div className="text-xl font-bold text-amber-400">{summary.unresolved}</div>
+            <div className="text-xl font-bold text-primary">{summary.unresolved}</div>
           </div>
           <div className="p-3 rounded-lg bg-background/40 border border-border/40">
             <div className="text-xs text-muted-foreground">24 שעות</div>
@@ -144,7 +144,7 @@ export default function ErrorsPanel() {
           </div>
           <div className="p-3 rounded-lg bg-background/40 border border-border/40">
             <div className="text-xs text-muted-foreground">קריטי פתוח</div>
-            <div className="text-xl font-bold text-red-400">{summary.critical_open}</div>
+            <div className="text-xl font-bold text-muted-foreground">{summary.critical_open}</div>
           </div>
         </div>
       )}

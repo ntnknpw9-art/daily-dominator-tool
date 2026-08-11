@@ -133,7 +133,7 @@ const SplashDemo = () => {
               }`}
               style={{
                 background:
-                  'radial-gradient(circle, hsl(14 100% 57% / 0.35) 0%, hsl(0 85% 45% / 0.15) 35%, transparent 65%)',
+                  'radial-gradient(circle, hsl(72 88% 46% / 0.35) 0%, hsl(72 88% 46% / 0.15) 35%, transparent 65%)',
                 filter: 'blur(40px)',
               }}
             />
@@ -141,7 +141,7 @@ const SplashDemo = () => {
             {Array.from({ length: 14 }).map((_, i) => (
               <span
                 key={i}
-                className="absolute rounded-full bg-orange-400"
+                className="absolute rounded-full bg-primary"
                 style={{
                   width: `${2 + (i % 4)}px`,
                   height: `${2 + (i % 4)}px`,

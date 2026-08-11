@@ -35,7 +35,7 @@ const ConfettiCanvas = ({ active }: { active: boolean }) => {
     canvas.width = canvas.offsetWidth;
     canvas.height = canvas.offsetHeight;
 
-    const colors = ['#B6DD0E', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899'];
+    const colors = ['#B6DD0E', '#06b6d4', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899'];
     const particles: Array<{
       x: number; y: number; vx: number; vy: number;
       color: string; size: number; rotation: number; rv: number; life: number;
