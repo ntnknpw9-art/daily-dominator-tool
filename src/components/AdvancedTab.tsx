@@ -123,7 +123,7 @@ const AdvancedTab = () => {
       </div>
 
       {/* 2. No Excuses */}
-      <div className={`glass-card p-5 transition-all duration-500 ${warMode ? 'bg-red-950/40 border-red-500/50 shadow-[0_0_30px_rgba(220,38,38,0.2)]' : ''}`}>
+      <div className={`glass-card p-5 transition-all duration-500 ${warMode ? 'bg-primary/10 border-primary/50 shadow-[0_0_30px_hsl(72_88%_46%_/_0.25)]' : ''}`}>
         <div className="flex justify-between items-center mb-2">
           <h3 className="text-lg font-bold">💪 מצב ללא תירוצים</h3>
           <Switch checked={warMode} onCheckedChange={(c) => {
@@ -141,8 +141,8 @@ const AdvancedTab = () => {
           {dailyPercent >= 80 ? '✅ הושג!' : `❌ עדיין נכשל (${dailyPercent}%)`}
         </div>
         {warMode && (
-          <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg animate-pulse">
-            <p className="text-xs text-red-400 font-bold uppercase text-center">הכל מוקלט. אין לאן לברוח. המאמן קשוח.</p>
+          <div className="mt-4 p-3 bg-primary/10 border border-primary/30 rounded-lg animate-pulse">
+            <p className="text-xs text-primary font-bold uppercase text-center">הכל מוקלט. אין לאן לברוח. המאמן קשוח.</p>
           </div>
         )}
       </div>

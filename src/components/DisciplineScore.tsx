@@ -199,9 +199,9 @@ const DisciplineScore = () => {
 
       drawTextWithShadow('Daily Dominator', cx, y, 'bold 48px Heebo, sans-serif', '#ffffff');
       y += 100;
-      drawTextWithShadow('ציון משמעת', cx, y, 'bold 80px Heebo, sans-serif', '#ef4444');
+      drawTextWithShadow('ציון משמעת', cx, y, 'bold 80px Heebo, sans-serif', '#B6DD0E');
       y += 250;
-      drawTextWithShadow(`${score}`, cx, y, '900 280px Heebo, sans-serif', score >= 80 ? '#4ade80' : score >= 60 ? '#facc15' : '#ef4444');
+      drawTextWithShadow(`${score}`, cx, y, '900 280px Heebo, sans-serif', score >= 80 ? '#4ade80' : score >= 60 ? '#facc15' : '#8a8f7a');
       y += 180;
       drawTextWithShadow(`🔥 רצף: ${streak} ימים`, cx, y, 'bold 64px Heebo, sans-serif', '#f97316');
       y += 120;

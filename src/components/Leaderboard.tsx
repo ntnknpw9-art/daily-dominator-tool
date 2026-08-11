@@ -35,7 +35,7 @@ const ConfettiCanvas = ({ active }: { active: boolean }) => {
     canvas.width = canvas.offsetWidth;
     canvas.height = canvas.offsetHeight;
 
-    const colors = ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899'];
+    const colors = ['#B6DD0E', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899'];
     const particles: Array<{
       x: number; y: number; vx: number; vy: number;
       color: string; size: number; rotation: number; rv: number; life: number;
@@ -307,7 +307,7 @@ const Leaderboard = () => {
 
                     {rankChange && (
                       <div className={`flex items-center gap-0.5 text-xs font-medium ${
-                        rankChange.direction === 'up' ? 'text-green-400' : 'text-red-400'
+                        rankChange.direction === 'up' ? 'text-green-400' : 'text-muted-foreground'
                       }`}>
                         {rankChange.direction === 'up'
                           ? <TrendingUp className="w-3 h-3" />

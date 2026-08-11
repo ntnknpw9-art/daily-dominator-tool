@@ -846,7 +846,7 @@ const CommunityCard = ({ before, after, photos, userId, onBlock }: {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button onClick={toggleLike} className="flex items-center gap-1 text-sm transition-colors">
-              <Heart className={`w-4 h-4 ${liked ? 'fill-red-500 text-red-500' : 'text-muted-foreground'}`} />
+              <Heart className={`w-4 h-4 ${liked ? 'fill-primary text-primary' : 'text-muted-foreground'}`} />
               <span className="text-xs text-muted-foreground">{likes.length}</span>
             </button>
             <button onClick={() => setShowComments(!showComments)} className="flex items-center gap-1 text-sm">
