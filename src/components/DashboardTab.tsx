@@ -153,12 +153,12 @@ const DashboardTab = () => {
 
             <defs>
               <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="hsl(0, 72%, 51%)" stopOpacity="0.4" />
-                <stop offset="100%" stopColor="hsl(0, 72%, 51%)" stopOpacity="0.02" />
+                <stop offset="0%" stopColor="hsl(72, 88%, 46%)" stopOpacity="0.4" />
+                <stop offset="100%" stopColor="hsl(72, 88%, 46%)" stopOpacity="0.02" />
               </linearGradient>
               <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="0">
                 <stop offset="0%" stopColor="hsl(38, 92%, 50%)" />
-                <stop offset="100%" stopColor="hsl(0, 72%, 51%)" />
+                <stop offset="100%" stopColor="hsl(72, 88%, 46%)" />
               </linearGradient>
             </defs>
 
@@ -170,7 +170,7 @@ const DashboardTab = () => {
               <g key={i}>
                 <circle
                   cx={p.x} cy={p.y} r={hoveredBar === i ? 2 : 1}
-                  fill={chartData[i].percent >= smartGoal ? 'hsl(142, 71%, 45%)' : 'hsl(0, 72%, 51%)'}
+                  fill={chartData[i].percent >= smartGoal ? 'hsl(142, 71%, 45%)' : 'hsl(72, 88%, 46%)'}
                   className="transition-all duration-200"
                   onMouseEnter={() => setHoveredBar(i)}
                   onMouseLeave={() => setHoveredBar(null)}
@@ -178,7 +178,7 @@ const DashboardTab = () => {
                 />
                 {hoveredBar === i && (
                   <circle cx={p.x} cy={p.y} r="3.5" fill="none"
-                    stroke={chartData[i].percent >= smartGoal ? 'hsl(142, 71%, 45%)' : 'hsl(0, 72%, 51%)'}
+                    stroke={chartData[i].percent >= smartGoal ? 'hsl(142, 71%, 45%)' : 'hsl(72, 88%, 46%)'}
                     strokeWidth="0.5" opacity="0.6" className="animate-ping" />
                 )}
               </g>
