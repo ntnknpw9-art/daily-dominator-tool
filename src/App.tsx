@@ -15,6 +15,7 @@ import DiagnosticsPage from "./pages/DiagnosticsPage.tsx";
 import AdminPage from "./pages/AdminPage.tsx";
 import AdminLogin from "./pages/AdminLogin.tsx";
 import SplashDemo from "./pages/SplashDemo.tsx";
+import ColorDemo from "./pages/ColorDemo.tsx";
 import OAuthConsent from "./pages/OAuthConsent.tsx";
 
 const queryClient = new QueryClient();
@@ -37,6 +38,7 @@ const App = () => (
               <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/admin" element={<AdminPage />} />
               <Route path="/splash-demo" element={<SplashDemo />} />
+              <Route path="/color-demo" element={<ColorDemo />} />
               <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
