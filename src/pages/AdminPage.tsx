@@ -208,14 +208,14 @@ export default function AdminPage() {
           <StatCard icon={Activity} label="DAU — יומי" value={stats.dau} accent="text-emerald-500" />
           <StatCard icon={Activity} label="WAU — שבועי" value={stats.wau} accent="text-blue-500" />
           <StatCard icon={Activity} label="MAU — חודשי" value={stats.mau} accent="text-purple-500" />
-          <StatCard icon={Zap} label="סטיקיות" value={`${stats.stickiness}%`} hint="DAU/MAU" accent="text-amber-500" />
+          <StatCard icon={Zap} label="סטיקיות" value={`${stats.stickiness}%`} hint="DAU/MAU" accent="text-primary" />
         </div>
 
         {/* === REVENUE === */}
         <SectionTitle>💰 מנויים והכנסות</SectionTitle>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <StatCard icon={CreditCard} label="מנויים פעילים" value={stats.active_subscriptions} accent="text-amber-500" />
-          <StatCard icon={Percent} label="המרה" value={`${stats.conversion_rate}%`} hint="פרימיום מהמשתמשים" accent="text-amber-500" />
+          <StatCard icon={CreditCard} label="מנויים פעילים" value={stats.active_subscriptions} accent="text-primary" />
+          <StatCard icon={Percent} label="המרה" value={`${stats.conversion_rate}%`} hint="פרימיום מהמשתמשים" accent="text-primary" />
           <StatCard icon={CreditCard} label="סה״כ מנויים אי-פעם" value={stats.total_subscriptions} />
           <StatCard icon={Trophy} label="פוטנציאל הכנסה ($)" value={(stats.active_subscriptions * 9.99).toFixed(2)} hint="הערכה ב-9.99$" accent="text-emerald-500" />
         </div>
