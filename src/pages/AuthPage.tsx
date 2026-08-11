@@ -422,7 +422,7 @@ const AuthPage = () => {
                 value={confirmNewPassword}
                 onChange={e => setConfirmNewPassword(e.target.value)}
                 placeholder="••••••••"
-                className="premium-input pr-11"
+                className="premium-input h-12 pr-11"
                 dir="ltr"
                 minLength={6}
                 required
@@ -545,7 +545,7 @@ const AuthPage = () => {
                 value={displayName}
                 onChange={e => setDisplayName(e.target.value)}
                 placeholder="השם שלך"
-                className="premium-input pr-11"
+                className="premium-input h-12 pr-11"
               />
             </InputField>
           )}
@@ -556,7 +556,7 @@ const AuthPage = () => {
               value={email}
               onChange={e => setEmail(e.target.value)}
               placeholder="name@example.com"
-              className="premium-input pr-11"
+              className="premium-input h-12 pr-11"
               required
               dir="ltr"
             />
@@ -568,7 +568,7 @@ const AuthPage = () => {
               value={password}
               onChange={e => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="premium-input pr-11"
+              className="premium-input h-12 pr-11"
               required
               dir="ltr"
               minLength={6}
