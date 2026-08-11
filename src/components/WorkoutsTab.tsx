@@ -341,7 +341,7 @@ interface HistoryRow {
 const WorkoutsTab = () => {
   const { tasks } = useTaskContext();
   const { user } = useAuth();
-  const [activeKey, setActiveKey] = useState<string | null>(null);
+  const [activeKey, setActiveKey] = useState<string | null>(() => readPersisted()?.key ?? null);
   const [history, setHistory] = useState<HistoryRow[]>([]);
 
   const workoutTasks = useMemo(() => tasks.filter(t => parseAllDays(t.workoutDetails).length > 0), [tasks]);
@@ -357,17 +357,23 @@ const WorkoutsTab = () => {
       .then(({ data }) => setHistory((data as any) || []));
   }, [user, activeKey]);
 
+  const exitSession = () => { clearPersisted(); setActiveKey(null); };
+
   if (activeKey) {
     const [taskId, dayName] = activeKey.split('|');
     const task = tasks.find(t => t.id === taskId);
     const days = task ? parseAllDays(task.workoutDetails) : [];
     const day = days.find(d => d.day === dayName);
     if (!task || !day) {
+      // Tasks may still be loading — don't drop a restored session prematurely
+      if (tasks.length === 0) return null;
+      clearPersisted();
       setActiveKey(null);
       return null;
     }
-    return <ActiveSession task={task} day={day} onExit={() => setActiveKey(null)} />;
+    return <ActiveSession key={activeKey} task={task} day={day} sessionKey={activeKey} onExit={exitSession} />;
   }
+
 
   return (
     <div className="space-y-4" dir="rtl">
