@@ -155,7 +155,7 @@ const DisciplineScore = () => {
   const getGlowColor = (s: number) => {
     if (s >= 80) return 'shadow-green-500/30';
     if (s >= 60) return 'shadow-accent/30';
-    if (s >= 40) return 'shadow-orange-500/30';
+    if (s >= 40) return 'shadow-primary/30';
     return 'shadow-destructive/30';
   };
 
@@ -327,7 +327,7 @@ const DisciplineScore = () => {
               <div className="text-[8px] sm:text-[9px] text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity font-bold">{s > 0 ? s : ''}</div>
               <div
                 className={`w-full rounded-md transition-all duration-500 hover:brightness-125 ${
-                  s >= 80 ? 'bg-green-500' : s >= 60 ? 'bg-accent' : s >= 40 ? 'bg-orange-500' : 'bg-destructive'
+                  s >= 80 ? 'bg-green-500' : s >= 60 ? 'bg-accent' : s >= 40 ? 'bg-primary/40' : 'bg-destructive'
                 }`}
                 style={{ height: `${Math.max(4, s * 0.4)}px` }}
               />

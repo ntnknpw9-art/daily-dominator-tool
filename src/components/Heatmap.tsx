@@ -115,7 +115,7 @@ const Heatmap = () => {
                   <div className="text-[8px] text-muted-foreground">{pct > 0 ? `${pct}%` : ''}</div>
                   <div
                     className={`w-full rounded-t transition-all ${
-                      pct >= 80 ? 'bg-green-500/70' : pct >= 60 ? 'bg-accent/70' : pct >= 30 ? 'bg-orange-500/70' : 'bg-destructive/50'
+                      pct >= 80 ? 'bg-green-500/70' : pct >= 60 ? 'bg-accent/70' : pct >= 30 ? 'bg-primary/50' : 'bg-destructive/50'
                     }`}
                     style={{ height: `${Math.max(4, pct * 0.9)}px` }}
                     title={`${h.hour}:00 — ${pct}% (${h.done}/${h.total})`}
