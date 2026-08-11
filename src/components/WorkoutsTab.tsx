@@ -271,7 +271,9 @@ const ActiveSession = ({
       }
 
       toast.success('האימון נשמר! 💪');
+      clearPersisted();
       onExit();
+
     } catch (e: any) {
       toast.error(e.message || 'שגיאה בשמירה');
     } finally {
