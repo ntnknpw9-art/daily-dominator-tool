@@ -111,81 +111,14 @@
 
 @layer utilities {
   .glass-card {
+    @apply bg-card/80 backdrop-blur-sm border border-border/50 rounded-xl;
+  }
+
+  .premium-card {
     background: var(--gradient-card);
     border: 1px solid hsl(0 0% 100% / 0.06);
     border-radius: 1.5rem;
     box-shadow: var(--shadow-elevated);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-  }
-
-  .glass-card-strong {
-    background: linear-gradient(145deg, hsl(0 0% 10.5%) 0%, hsl(0 0% 6%) 100%);
-    border: 1px solid hsl(0 0% 100% / 0.08);
-    border-radius: 1.75rem;
-    box-shadow: 0 24px 80px -24px hsl(0 0% 0% / 0.85), 0 0 0 1px hsl(0 0% 100% / 0.05);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-  }
-
-  .premium-input {
-    background: hsl(0 0% 8% / 0.7);
-    border: 1px solid hsl(0 0% 100% / 0.06);
-    border-radius: 1rem;
-    padding: 1rem 1.125rem;
-    color: hsl(0 0% 95%);
-    transition: all 0.25s var(--ease-out-cinematic);
-  }
-
-  .premium-input::placeholder {
-    color: hsl(0 0% 45%);
-  }
-
-  .premium-input:focus {
-    background: hsl(0 0% 9% / 0.85);
-    border-color: hsl(14 100% 57% / 0.45);
-    box-shadow: 0 0 0 3px hsl(14 100% 57% / 0.12);
-    outline: none;
-  }
-
-  .premium-btn {
-    position: relative;
-    background: var(--gradient-fire);
-    color: white;
-    border-radius: 1rem;
-    font-weight: 700;
-    padding: 1rem 1.5rem;
-    box-shadow: var(--shadow-fire);
-    transition: all 0.25s var(--ease-out-cinematic);
-    overflow: hidden;
-  }
-
-  .premium-btn::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-    transform: translateX(-100%);
-    transition: transform 0.6s ease;
-  }
-
-  .premium-btn:hover::before {
-    transform: translateX(100%);
-  }
-
-  .premium-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 14px 50px -12px hsl(14 100% 57% / 0.65), 0 0 80px -20px hsl(14 100% 57% / 0.35);
-  }
-
-  .premium-btn:active {
-    transform: translateY(0) scale(0.985);
-  }
-
-  .premium-btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none;
   }
 
   .hero-bg {
@@ -220,16 +153,6 @@
 
   .glow-gold {
     box-shadow: var(--shadow-gold);
-  }
-
-  .ambient-glow {
-    position: absolute;
-    width: 600px;
-    height: 600px;
-    border-radius: 50%;
-    background: radial-gradient(circle, hsl(14 100% 57% / 0.12) 0%, transparent 65%);
-    filter: blur(80px);
-    pointer-events: none;
   }
 
   .display-font {
@@ -273,36 +196,7 @@
       opacity: 1;
       transform: translateY(0);
     }
-  }
-
-  @keyframes riseIn {
-    from {
-      opacity: 0;
-      transform: translateY(20px) scale(0.98);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0) scale(1);
-    }
-  }
-
-  @keyframes floatSlow {
-    0%, 100% {
-      transform: translateY(0) rotate(0deg);
-    }
-    50% {
-      transform: translateY(-12px) rotate(2deg);
-    }
-  }
-
-  .animate-rise-in {
-    animation: riseIn 0.7s var(--ease-out-cinematic) both;
-  }
-
-  .animate-float-slow {
-    animation: floatSlow 6s ease-in-out infinite;
-  }
-
+}
 
 body.war-mode-active {
   animation: war-pulse 4s infinite alternate;
