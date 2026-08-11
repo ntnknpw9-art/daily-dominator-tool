@@ -17,7 +17,7 @@ export const useConfetti = () => {
   const [particles, setParticles] = useState<Particle[]>([]);
 
   const fire = useCallback(() => {
-    const colors = ['#ef4444', '#f59e0b', '#22c55e', '#3b82f6', '#8b5cf6', '#ec4899'];
+    const colors = ['#B6DD0E', '#f59e0b', '#22c55e', '#3b82f6', '#8b5cf6', '#ec4899'];
     const newParticles: Particle[] = [];
     for (let i = 0; i < 60; i++) {
       newParticles.push({
@@ -107,7 +107,7 @@ export const ScreenFlash = ({ color = 'green', trigger }: { color?: string; trig
 
   const colorMap: Record<string, string> = {
     green: 'rgba(34, 197, 94, 0.15)',
-    red: 'rgba(239, 68, 68, 0.15)',
+    red: 'hsl(72 88% 46% / 0.15)',
     gold: 'rgba(245, 158, 11, 0.15)',
   };
 

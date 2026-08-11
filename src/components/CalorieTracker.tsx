@@ -1032,7 +1032,7 @@ const CalorieTracker = () => {
                     )}
                     {scanResult.confidence && (
                       <p className="text-xs text-muted-foreground">
-                        🎯 רמת דיוק: <span className={`font-medium ${scanResult.confidence === 'high' ? 'text-green-400' : scanResult.confidence === 'medium' ? 'text-yellow-400' : 'text-red-400'}`}>
+                        🎯 רמת דיוק: <span className={`font-medium ${scanResult.confidence === 'high' ? 'text-green-400' : scanResult.confidence === 'medium' ? 'text-yellow-400' : 'text-muted-foreground'}`}>
                           {scanResult.confidence === 'high' ? 'גבוהה' : scanResult.confidence === 'medium' ? 'בינונית' : 'נמוכה'}
                         </span>
                       </p>
@@ -1082,7 +1082,7 @@ const CalorieTracker = () => {
                           <p className="text-xs text-green-400 font-medium">✅ {scanResult.feedback.good}</p>
                         )}
                         {scanResult.feedback.bad && (
-                          <p className="text-xs text-red-400 font-medium">⚠️ {scanResult.feedback.bad}</p>
+                          <p className="text-xs text-accent font-medium">⚠️ {scanResult.feedback.bad}</p>
                         )}
                         {scanResult.feedback.improvement && (
                           <p className="text-xs text-accent font-medium">💡 לשיפור: {scanResult.feedback.improvement}</p>
