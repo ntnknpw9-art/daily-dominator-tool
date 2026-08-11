@@ -94,7 +94,7 @@ const ProgressMap = () => {
                   complete
                     ? 'bg-green-500/20 border-2 border-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]'
                     : isActive
-                    ? 'bg-primary/20 border-2 border-primary animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.4)]'
+                    ? 'bg-primary/20 border-2 border-primary animate-pulse shadow-[0_0_15px_rgba(182,221,14,0.4)]'
                     : 'bg-muted/30 border border-border/50'
                 }`}>
                   {complete ? (

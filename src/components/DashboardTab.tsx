@@ -80,8 +80,8 @@ const DashboardTab = () => {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {/* Streak */}
         <div className="glass-card p-4 sm:p-5 flex flex-col items-center justify-center relative overflow-hidden group hover:scale-[1.02] transition-transform">
-          <div className="absolute inset-0 bg-orange-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-          <Flame className="w-6 h-6 sm:w-8 sm:h-8 text-orange-500 mb-2 drop-shadow-[0_0_8px_rgba(249,115,22,0.6)]" />
+          <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+          <Flame className="w-6 h-6 sm:w-8 sm:h-8 text-primary mb-2 drop-shadow-[0_0_8px_rgba(182,221,14,0.6)]" />
           <div className="text-3xl sm:text-4xl font-black text-foreground drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]">{stats.streak}</div>
           <div className="text-[10px] sm:text-xs text-muted-foreground font-bold tracking-widest uppercase mt-1">רצף משמעת</div>
         </div>
@@ -89,7 +89,7 @@ const DashboardTab = () => {
         {/* Tasks */}
         <div className="glass-card p-4 sm:p-5 flex flex-col items-center justify-center relative overflow-hidden group hover:scale-[1.02] transition-transform">
           <div className="absolute inset-0 bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity" />
-          <Target className="w-6 h-6 sm:w-8 sm:h-8 text-primary mb-2 drop-shadow-[0_0_8px_rgba(220,38,38,0.6)]" />
+          <Target className="w-6 h-6 sm:w-8 sm:h-8 text-primary mb-2 drop-shadow-[0_0_8px_rgba(182,221,14,0.6)]" />
           <div className="text-3xl sm:text-4xl font-black text-foreground">
             <span className={todayPercent >= smartGoal ? 'text-green-400 drop-shadow-[0_0_10px_rgba(74,222,128,0.4)]' : 'text-foreground'}>{todayPercent}%</span>
           </div>
