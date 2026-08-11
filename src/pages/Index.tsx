@@ -55,7 +55,18 @@ const mobileBottomTabs = [
 
 const AppContent = () => {
   const { signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState(() => {
+    // Resume an in-progress workout after the app was backgrounded/reloaded
+    try {
+      const raw = localStorage.getItem('dd_active_workout');
+      if (raw) {
+        const p = JSON.parse(raw);
+        if (p?.key && Date.now() - (p.startedAt ?? 0) < 8 * 60 * 60 * 1000) return 'workouts';
+      }
+    } catch { /* noop */ }
+    return 'dashboard';
+  });
+
   const [showSplash, setShowSplash] = useState(true);
   const { fire: fireConfetti, particles } = useConfetti();
 
