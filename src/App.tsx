@@ -15,6 +15,7 @@ import DiagnosticsPage from "./pages/DiagnosticsPage.tsx";
 import AdminPage from "./pages/AdminPage.tsx";
 import AdminLogin from "./pages/AdminLogin.tsx";
 import SplashDemo from "./pages/SplashDemo.tsx";
+import ColorDemo from "./pages/ColorDemo.tsx";
 import OAuthConsent from "./pages/OAuthConsent.tsx";
 
 const queryClient = new QueryClient();
