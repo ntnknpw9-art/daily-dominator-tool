@@ -44,7 +44,7 @@ const WeeklyReport = () => {
           <div className="text-xs text-muted-foreground">יום הכי טוב ({report.bestDay.percent}%)</div>
         </div>
         <div className="bg-secondary/30 rounded-lg p-3 text-center">
-          <div className="text-sm font-bold text-destructive">{report.worstDay.date}</div>
+          <div className="text-sm font-bold text-muted-foreground">{report.worstDay.date}</div>
           <div className="text-xs text-muted-foreground">יום הכי חלש ({report.worstDay.percent}%)</div>
         </div>
       </div>
@@ -58,7 +58,7 @@ const WeeklyReport = () => {
               <span className="text-[10px] text-muted-foreground">{d.percent}%</span>
               <div className="w-full flex items-end" style={{ height: '60px' }}>
                 <div
-                  className={`w-full rounded-t transition-all ${d.percent >= 80 ? 'bg-success/70' : d.percent >= 50 ? 'bg-accent/60' : 'bg-destructive/50'}`}
+                  className={`w-full rounded-t transition-all ${d.percent >= 80 ? 'bg-success/70' : d.percent >= 50 ? 'bg-accent/60' : 'bg-muted-foreground/40'}`}
                   style={{ height: `${Math.max(d.percent, 3)}%` }}
                 />
               </div>
@@ -69,7 +69,7 @@ const WeeklyReport = () => {
       </div>
 
       <div className={`mt-4 p-3 rounded-lg text-center text-sm font-bold ${
-        report.avgPercent >= 80 ? 'bg-success/15 text-success' : report.avgPercent >= 50 ? 'bg-accent/15 text-accent' : 'bg-destructive/15 text-destructive'
+        report.avgPercent >= 80 ? 'bg-success/15 text-success' : report.avgPercent >= 50 ? 'bg-accent/15 text-accent' : 'bg-muted text-muted-foreground'
       }`}>
         {report.avgPercent >= 80 ? '🏆 שבוע מעולה! המשך ככה!' : report.avgPercent >= 50 ? '⚠️ שבוע בינוני. אתה יכול יותר.' : '💀 שבוע חלש. תתעורר!'}
       </div>
