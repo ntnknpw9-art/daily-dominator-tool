@@ -27,7 +27,7 @@ const NightSummary = () => {
           <div className="text-[10px] text-muted-foreground">משימות</div>
         </div>
         <div className="bg-secondary/30 rounded-lg p-3 text-center">
-          <div className={`text-xl font-bold ${dailyPercent >= 80 ? 'text-success' : 'text-destructive'}`}>{dailyPercent}%</div>
+          <div className={`text-xl font-bold ${dailyPercent >= 80 ? 'text-success' : 'text-muted-foreground'}`}>{dailyPercent}%</div>
           <div className="text-[10px] text-muted-foreground">ביצוע</div>
         </div>
         <div className="bg-secondary/30 rounded-lg p-3 text-center">
@@ -37,7 +37,7 @@ const NightSummary = () => {
       </div>
 
       <div className={`rounded-lg p-4 text-center text-sm font-bold ${
-        dailyPercent >= 80 ? 'bg-success/15 text-success' : 'bg-destructive/15 text-destructive'
+        dailyPercent >= 80 ? 'bg-success/15 text-success' : 'bg-muted text-muted-foreground'
       }`}>
         {dailyPercent >= 90 ? '🔥 יום מטורף! אתה מפלצת!' :
          dailyPercent >= 80 ? '💪 יום טוב! המשך ככה מחר.' :
