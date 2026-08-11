@@ -120,22 +120,67 @@ const ExerciseCard = ({
   );
 };
 
+const SESSION_KEY = 'dd_active_workout';
+
+type PersistedSession = {
+  key: string;
+  startedAt: number;
+  logsByEx: SetLog[][];
+};
+
+const readPersisted = (): PersistedSession | null => {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    const p = JSON.parse(raw) as PersistedSession;
+    if (!p?.key || !Array.isArray(p.logsByEx)) return null;
+    // Expire after 8 hours
+    if (Date.now() - p.startedAt > 8 * 60 * 60 * 1000) {
+      localStorage.removeItem(SESSION_KEY);
+      return null;
+    }
+    return p;
+  } catch { return null; }
+};
+
+const clearPersisted = () => { try { localStorage.removeItem(SESSION_KEY); } catch { /* noop */ } };
+
 const ActiveSession = ({
-  task, day, onExit,
-}: { task: Task; day: ParsedDay; onExit: () => void }) => {
+  task, day, sessionKey, onExit,
+}: { task: Task; day: ParsedDay; sessionKey: string; onExit: () => void }) => {
   const { user } = useAuth();
-  const [logsByEx, setLogsByEx] = useState<SetLog[][]>(
-    day.exercises.map(ex => Array.from({ length: ex.sets }, () => ({ reps: '', weight: '', done: false })))
-  );
+  const [logsByEx, setLogsByEx] = useState<SetLog[][]>(() => {
+    const fresh = day.exercises.map(ex => Array.from({ length: ex.sets }, () => ({ reps: '', weight: '', done: false })));
+    const p = readPersisted();
+    if (p && p.key === sessionKey && p.logsByEx.length === fresh.length) {
+      return fresh.map((sets, i) => sets.map((s, j) => p.logsByEx[i]?.[j] ?? s));
+    }
+    return fresh;
+  });
   const [prevByEx, setPrevByEx] = useState<Record<string, PreviousSet[]>>({});
   const [elapsed, setElapsed] = useState(0);
   const [saving, setSaving] = useState(false);
-  const startRef = useState(() => Date.now())[0];
+  const startRef = useState(() => {
+    const p = readPersisted();
+    return p && p.key === sessionKey ? p.startedAt : Date.now();
+  })[0];
+
+  // Persist session state (survives app backgrounding / reload)
+  useEffect(() => {
+    try {
+      localStorage.setItem(SESSION_KEY, JSON.stringify({ key: sessionKey, startedAt: startRef, logsByEx }));
+    } catch { /* noop */ }
+  }, [sessionKey, startRef, logsByEx]);
 
   useEffect(() => {
-    const id = setInterval(() => setElapsed(Math.floor((Date.now() - startRef) / 1000)), 1000);
-    return () => clearInterval(id);
+    const tick = () => setElapsed(Math.floor((Date.now() - startRef) / 1000));
+    tick();
+    const id = setInterval(tick, 1000);
+    const onVis = () => { if (document.visibilityState === 'visible') tick(); };
+    document.addEventListener('visibilitychange', onVis);
+    return () => { clearInterval(id); document.removeEventListener('visibilitychange', onVis); };
   }, [startRef]);
+
 
   // Load previous set data
   useEffect(() => {
