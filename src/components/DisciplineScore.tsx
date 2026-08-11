@@ -203,7 +203,7 @@ const DisciplineScore = () => {
       y += 250;
       drawTextWithShadow(`${score}`, cx, y, '900 280px Heebo, sans-serif', score >= 80 ? '#4ade80' : score >= 60 ? '#facc15' : '#8a8f7a');
       y += 180;
-      drawTextWithShadow(`🔥 רצף: ${streak} ימים`, cx, y, 'bold 64px Heebo, sans-serif', '#f97316');
+      drawTextWithShadow(`🔥 רצף: ${streak} ימים`, cx, y, 'bold 64px Heebo, sans-serif', '#B6DD0E');
       y += 120;
       drawTextWithShadow(`דרגה: ${getRank(score)}`, cx, y, 'bold 56px Heebo, sans-serif', '#ffffff');
 

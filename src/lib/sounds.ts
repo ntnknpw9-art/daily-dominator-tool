@@ -109,7 +109,7 @@ export const vibrate = (pattern: number | number[] = 100) => {
 
 /** Create confetti particles at element position */
 export const createParticleBurst = (x: number, y: number) => {
-  const colors = ['#B6DD0E', '#f59e0b', '#22c55e', '#3b82f6', '#a855f7', '#ec4899'];
+  const colors = ['#B6DD0E', '#06b6d4', '#22c55e', '#3b82f6', '#a855f7', '#ec4899'];
   const container = document.createElement('div');
   container.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;overflow:hidden';
   document.body.appendChild(container);
