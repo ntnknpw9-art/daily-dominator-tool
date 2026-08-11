@@ -61,7 +61,7 @@ const SectionTitle = ({ children }: { children: React.ReactNode }) => (
   <h2 className="font-semibold text-sm text-muted-foreground uppercase tracking-wider mb-3 mt-2">{children}</h2>
 );
 
-const PIE_COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "#f59e0b", "#10b981", "#3b82f6", "#ec4899", "#8b5cf6", "#ef4444", "#14b8a6", "#f97316"];
+const PIE_COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "#3b82f6", "#10b981", "#06b6d4", "#ec4899", "#8b5cf6", "#84cc16", "#14b8a6", "#6366f1"];
 
 const DOW_LABELS = ["א׳", "ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳"];
 
