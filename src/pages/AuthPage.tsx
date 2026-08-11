@@ -409,7 +409,7 @@ const AuthPage = () => {
                 value={newPassword}
                 onChange={e => setNewPassword(e.target.value)}
                 placeholder="••••••••"
-                className="premium-input pr-11"
+                className="premium-input h-12 pr-11"
                 dir="ltr"
                 minLength={6}
                 required
