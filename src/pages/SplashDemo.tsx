@@ -171,11 +171,11 @@ const SplashDemo = () => {
               }`}
               style={{
                 background:
-                  'linear-gradient(135deg, hsl(14 100% 57%) 0%, hsl(0 85% 45%) 100%)',
+                  'linear-gradient(135deg, hsl(72 88% 46%) 0%, hsl(72 85% 38%) 100%)',
                 boxShadow:
                   phase === 'boot'
-                    ? '0 0 0 hsl(14 100% 57% / 0)'
-                    : '0 20px 60px -10px hsl(14 100% 57% / 0.7), 0 0 100px hsl(14 100% 57% / 0.4)',
+                    ? '0 0 0 hsl(72 88% 46% / 0)'
+                    : '0 20px 60px -10px hsl(72 88% 46% / 0.7), 0 0 100px hsl(72 88% 46% / 0.4)',
               }}
             >
               <Flame className="w-14 h-14 text-white drop-shadow-[0_0_20px_rgba(255,255,255,0.8)]" strokeWidth={2.5} />
