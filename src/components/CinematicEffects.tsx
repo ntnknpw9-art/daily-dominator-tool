@@ -108,7 +108,7 @@ export const ScreenFlash = ({ color = 'green', trigger }: { color?: string; trig
   const colorMap: Record<string, string> = {
     green: 'rgba(34, 197, 94, 0.15)',
     red: 'hsl(72 88% 46% / 0.15)',
-    gold: 'rgba(245, 158, 11, 0.15)',
+    gold: 'hsl(72 88% 46% / 0.15)',
   };
 
   return createPortal(

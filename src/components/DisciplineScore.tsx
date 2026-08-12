@@ -148,8 +148,8 @@ const DisciplineScore = () => {
   const getScoreColor = (s: number) => {
     if (s >= 80) return 'text-green-400';
     if (s >= 60) return 'text-accent';
-    if (s >= 40) return 'text-orange-400';
-    return 'text-destructive';
+    if (s >= 40) return 'text-primary';
+    return 'text-muted-foreground';
   };
 
   const getGlowColor = (s: number) => {
@@ -300,7 +300,7 @@ const DisciplineScore = () => {
             <div className="text-[8px] sm:text-[9px] text-muted-foreground font-bold uppercase">קשות</div>
           </div>
           <div className="bg-background/50 border border-border/50 rounded-xl p-2 text-center hover:bg-background/80 transition-colors">
-            <Flame className="w-3.5 h-3.5 sm:w-4 sm:h-4 mx-auto mb-1 text-orange-400" />
+            <Flame className="w-3.5 h-3.5 sm:w-4 sm:h-4 mx-auto mb-1 text-primary" />
             <div className="text-sm sm:text-base font-black">{nutritionScore}%</div>
             <div className="text-[8px] sm:text-[9px] text-muted-foreground font-bold uppercase">תזונה</div>
           </div>
