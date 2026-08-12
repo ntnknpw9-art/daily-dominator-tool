@@ -149,7 +149,7 @@ const SplashDemo = () => {
                   bottom: `-10px`,
                   opacity: 0,
                   animation: `ember-rise ${4 + (i % 5)}s linear ${i * 0.3}s infinite`,
-                  boxShadow: '0 0 8px hsl(14 100% 57% / 0.8)',
+                  boxShadow: '0 0 8px hsl(72 88% 46% / 0.8)',
                 }}
               />
             ))}
@@ -215,8 +215,8 @@ const SplashDemo = () => {
                 className="h-full rounded-full transition-all duration-200 ease-out"
                 style={{
                   width: `${progress}%`,
-                  background: 'linear-gradient(90deg, hsl(14 100% 57%), hsl(45 95% 60%))',
-                  boxShadow: '0 0 12px hsl(14 100% 57% / 0.8)',
+                  background: 'linear-gradient(90deg, hsl(72 88% 46%), hsl(72 85% 38%))',
+                  boxShadow: '0 0 12px hsl(72 88% 46% / 0.8)',
                 }}
               />
             </div>
