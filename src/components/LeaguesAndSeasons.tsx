@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Crown, Medal, Gem, Shield, Star } from 'lucide-react';
 
 const LEAGUES = [
-  { id: 'bronze', name: 'ברונזה', icon: Shield, color: 'text-amber-700', minXp: 0 },
+  { id: 'bronze', name: 'ברונזה', icon: Shield, color: 'text-primary', minXp: 0 },
   { id: 'silver', name: 'כסף', icon: Medal, color: 'text-gray-300', minXp: 500 },
   { id: 'gold', name: 'זהב', icon: Star, color: 'text-yellow-400', minXp: 1500 },
   { id: 'platinum', name: 'פלטינה', icon: Gem, color: 'text-blue-300', minXp: 3500 },
