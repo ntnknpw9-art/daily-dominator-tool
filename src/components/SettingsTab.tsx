@@ -757,6 +757,25 @@ const SettingsTab = () => {
               );
             })()}
 
+            {isPremium && (
+              <div className="mt-5 rounded-2xl border border-border/50 bg-background/40 p-4 text-right">
+                <div className="text-sm font-semibold">ניהול וביטול מנוי</div>
+                <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
+                  ביטול מנוי מתבצע דרך חשבון ה-Apple ID (אפל לא מאפשרת ביטול בתוך האפליקציה).
+                  הביטול עוצר את החידוש האוטומטי — הגישה נשארת עד סוף התקופה ששולמה.
+                  {expiresAt ? ` המנוי הנוכחי בתוקף עד ${new Date(expiresAt).toLocaleDateString('he-IL')}.` : ''}
+                </p>
+                <button
+                  onClick={() => {
+                    window.open('https://apps.apple.com/account/subscriptions', '_blank');
+                  }}
+                  className="mt-3 flex h-11 w-full items-center justify-center rounded-xl border border-primary/40 bg-primary/10 text-sm font-semibold text-primary transition active:scale-[0.98]"
+                >
+                  נהל / בטל מנוי ב-App Store
+                </button>
+              </div>
+            )}
+
             {isIOSNative() && !offeringsLoaded && (
               <div className="mt-3 text-[11px] text-muted-foreground text-center">
                 טוען מחירים עדכניים מ-App Store... המחירים המוצגים הם נכונים גם בלי טעינה.
