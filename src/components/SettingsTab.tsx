@@ -675,8 +675,8 @@ const SettingsTab = () => {
       </Card>
 
       <Dialog open={subOpen} onOpenChange={setSubOpen}>
-        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto p-0" dir="rtl">
-          <div className="flex flex-col px-6 pb-6 pt-6">
+        <DialogContent className="w-screen max-w-none h-[100dvh] sm:h-[100dvh] rounded-none border-0 translate-x-0 translate-y-0 left-0 top-0 overflow-y-auto p-0" dir="rtl">
+          <div className="flex flex-col px-6 pb-[calc(env(safe-area-inset-bottom,0px)+2rem)] pt-[calc(env(safe-area-inset-top,0px)+1.5rem)]">
             <DialogHeader className="text-center items-center space-y-3">
               <div className="grid place-items-center size-20 rounded-[22px] bg-gradient-to-br from-primary/30 to-primary/10 border border-primary/40 shadow-[0_0_30px_-5px_hsl(var(--primary)/0.5)]">
                 <Crown className="w-10 h-10 text-primary" />
