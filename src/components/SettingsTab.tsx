@@ -652,10 +652,10 @@ const SettingsTab = () => {
         </CardContent>
       </Card>
 
-      <Card className="border-accent/30 bg-gradient-to-br from-accent/5 to-card/50 backdrop-blur-sm">
+      <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-card/50 backdrop-blur-sm">
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center gap-2">
-            <Crown className="w-5 h-5 text-accent" />
+            <Crown className="w-5 h-5 text-primary" />
             מנוי
           </CardTitle>
         </CardHeader>
@@ -678,8 +678,8 @@ const SettingsTab = () => {
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto p-0" dir="rtl">
           <div className="flex flex-col px-6 pb-6 pt-6">
             <DialogHeader className="text-center items-center space-y-3">
-              <div className="grid place-items-center size-20 rounded-[22px] bg-gradient-to-br from-accent/30 to-accent/10 border border-accent/40 shadow-[0_0_30px_-5px_hsl(var(--accent)/0.5)]">
-                <Crown className="w-10 h-10 text-accent" />
+              <div className="grid place-items-center size-20 rounded-[22px] bg-gradient-to-br from-primary/30 to-primary/10 border border-primary/40 shadow-[0_0_30px_-5px_hsl(var(--primary)/0.5)]">
+                <Crown className="w-10 h-10 text-primary" />
               </div>
               <DialogTitle className="text-2xl font-bold tracking-tight text-center w-full">
                 מנוי תמיכה
@@ -696,7 +696,7 @@ const SettingsTab = () => {
                   {isPremium ? 'תומך פעיל — תודה!' : 'לא רשום'}
                 </div>
               </div>
-              <span className={`text-xs font-bold px-2 py-1 rounded-full border ${isPremium ? 'bg-accent/10 text-accent border-accent/30' : 'bg-muted text-muted-foreground border-border'}`}>
+              <span className={`text-xs font-bold px-2 py-1 rounded-full border ${isPremium ? 'bg-primary/10 text-primary border-primary/30' : 'bg-muted text-muted-foreground border-border'}`}>
                 {isPremium ? 'תומך' : 'חינמי'}
               </span>
             </div>
@@ -734,7 +734,7 @@ const SettingsTab = () => {
                   <button
                     onClick={() => handlePurchase(activeProductKey)}
                     disabled={!!purchasing || isPremium}
-                    className="mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-accent text-base font-semibold text-accent-foreground shadow-[0_0_30px_-5px_hsl(var(--accent)/0.6)] transition active:scale-[0.98] disabled:opacity-60"
+                    className="mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-primary text-base font-semibold text-primary-foreground shadow-[0_0_30px_-5px_hsl(var(--primary)/0.6)] transition active:scale-[0.98] disabled:opacity-60"
                   >
                     {purchasing ? (
                       <Loader2 className="size-5 animate-spin" />
@@ -772,7 +772,7 @@ const SettingsTab = () => {
                     setOfferingsError(null);
                     void loadSubscriptionProducts('refresh');
                   }}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-accent/10 px-3 py-1.5 text-xs font-medium text-accent hover:bg-accent/20 transition"
+                  className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20 transition"
                 >
                   <RefreshCw className="size-3.5" />
                   נסה שוב
@@ -926,7 +926,7 @@ function PlanRow({
       className={[
         'relative flex w-full items-center justify-between rounded-2xl border p-4 text-right transition',
         selected
-          ? 'border-accent bg-card shadow-[0_0_20px_-8px_hsl(var(--accent)/0.7)]'
+          ? 'border-primary bg-card shadow-[0_0_20px_-8px_hsl(var(--primary)/0.7)]'
           : 'border-border bg-card/60 hover:bg-card',
       ].join(' ')}
     >
@@ -934,16 +934,16 @@ function PlanRow({
         <span
           className={[
             'grid size-6 place-items-center rounded-full border-2 transition',
-            selected ? 'border-accent bg-accent' : 'border-muted-foreground/40',
+            selected ? 'border-primary bg-primary' : 'border-muted-foreground/40',
           ].join(' ')}
         >
-          {selected && <Check className="size-3.5 text-accent-foreground" strokeWidth={3} />}
+          {selected && <Check className="size-3.5 text-primary-foreground" strokeWidth={3} />}
         </span>
         <div>
           <div className="flex items-center gap-2">
             <span className="text-base font-semibold">{title}</span>
             {badge && (
-              <span className="rounded-full bg-accent/15 px-2 py-0.5 text-[11px] font-medium text-accent border border-accent/30">
+              <span className="rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-medium text-primary border border-primary/30">
                 {badge}
               </span>
             )}
