@@ -166,7 +166,7 @@ const DisciplineDNA = () => {
       else ctx.lineTo(x, y);
     });
     ctx.closePath();
-    ctx.fillStyle = 'hsla(0, 70%, 50%, 0.2)';
+    ctx.fillStyle = 'hsla(72, 88%, 46%, 0.2)';
     ctx.fill();
     ctx.strokeStyle = 'hsl(72, 88%, 46%)';
     ctx.lineWidth = 2;
