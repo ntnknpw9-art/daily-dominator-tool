@@ -19,6 +19,7 @@
 	},
 	"packageClassList": [
 		"SignInWithApple",
+		"BarcodeScannerPlugin",
 		"CAPBrowserPlugin",
 		"FilesystemPlugin",
 		"LocalNotificationsPlugin",
