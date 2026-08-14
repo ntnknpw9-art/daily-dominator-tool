@@ -138,7 +138,7 @@ let configuredAppUserID: string | null = null;
 let lastRevenueCatError: RevenueCatLastError | null = null;
 let initializeStartedAt = 0;
 
-const IOS_STOREKIT_VERSION = 'STOREKIT_1' as const;
+const IOS_STOREKIT_VERSION = 'STOREKIT_2' as const;
 const APP_BUILD_MARKER = 'rc-post-import-trace-2026-06-09';
 const INIT_TIMEOUT_MS = 30000;
 const CONFIGURE_TIMEOUT_MS = 10000;
@@ -538,11 +538,16 @@ async function syncToSupabase() {
   }
 }
 
-export const PREMIUM_ENTITLEMENT = 'Daily Dominator AI Pro';
+export const PREMIUM_ENTITLEMENT = 'pro';
 
 function extractActive(customerInfo?: RevenueCatCustomerInfo): { isPremium: boolean; productId: string | null; expiresAt: string | null } {
   const active = customerInfo?.entitlements?.active || {};
   const premium = active[PREMIUM_ENTITLEMENT];
+  rcLog('entitlement', 'extractActive', {
+    expectedEntitlement: PREMIUM_ENTITLEMENT,
+    activeEntitlementIds: Object.keys(active),
+    matched: Boolean(premium),
+  });
   if (premium) {
     return { isPremium: true, productId: premium?.productIdentifier ?? null, expiresAt: premium?.expirationDate ?? null };
   }
@@ -618,3 +623,18 @@ export async function refreshPremiumStatus() {
 }
 
 export const isIOSNative = isIOS;
+
+// Clears the RevenueCat identity so a purchase never leaks to the next user
+// signing in on the same device.
+export async function logOutRevenueCat() {
+  try {
+    if (!isIOS() || !initialized) return;
+    const Purchases = await ensureInit();
+    if (!Purchases) return;
+    await Purchases.logOut();
+    configuredAppUserID = null;
+    rcLog('auth', 'logOut done');
+  } catch (e) {
+    rememberRevenueCatError('logOut', e);
+  }
+}

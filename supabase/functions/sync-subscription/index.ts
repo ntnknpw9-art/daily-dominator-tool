@@ -8,6 +8,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const PREMIUM_ENTITLEMENT = "pro";
+
 const getTime = (dateValue?: string | null) => {
   if (!dateValue) return null;
   const time = new Date(dateValue).getTime();
@@ -31,31 +33,18 @@ const extractPremium = (subscriber: RevenueCatSubscriber) => {
     subscriber,
   }));
   const entitlements = subscriber?.entitlements ?? {};
-  const activeEntitlement = Object.values(entitlements).find((ent) => {
-    const expires = getTime(ent?.expires_date);
-    return ent && (!expires || expires > Date.now());
-  });
+  // Single, stable entitlement identifier. No "any active entitlement" fallback.
+  const proEntitlement = entitlements[PREMIUM_ENTITLEMENT];
+  const proExpires = getTime(proEntitlement?.expires_date);
+  const activeEntitlement = proEntitlement && (!proExpires || proExpires > Date.now())
+    ? proEntitlement
+    : null;
 
   if (activeEntitlement) {
     return {
       isPremium: true,
       productId: activeEntitlement.product_identifier ?? null,
       expiresAt: activeEntitlement.expires_date ?? null,
-    };
-  }
-
-  const subscriptions = subscriber?.subscriptions ?? {};
-  const activeSubscription = Object.entries(subscriptions).find(([, sub]) => {
-    const expires = getTime(sub?.expires_date);
-    return sub && (!expires || expires > Date.now());
-  });
-
-  if (activeSubscription) {
-    const [fallbackProductId, subscription] = activeSubscription;
-    return {
-      isPremium: true,
-      productId: subscription.product_identifier ?? fallbackProductId,
-      expiresAt: subscription.expires_date ?? null,
     };
   }
 
