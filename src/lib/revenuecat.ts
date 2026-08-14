@@ -138,8 +138,8 @@ let configuredAppUserID: string | null = null;
 let lastRevenueCatError: RevenueCatLastError | null = null;
 let initializeStartedAt = 0;
 
-const IOS_STOREKIT_VERSION = 'STOREKIT_2' as const;
-const APP_BUILD_MARKER = 'rc-post-import-trace-2026-06-09';
+const IOS_STOREKIT_VERSION = 'DEFAULT' as const;
+const APP_BUILD_MARKER = 'rc-nonblocking-configure-2026-08-14';
 const INIT_TIMEOUT_MS = 30000;
 const CONFIGURE_TIMEOUT_MS = 10000;
 const STOREKIT_FETCH_TIMEOUT_MS = 60000;
@@ -367,36 +367,24 @@ async function ensureInit(userId?: string) {
       });
       initializePromise = (async () => {
         rcLog('init-trace', 'post-import checkpoint: initializePromise async body entered');
-        try {
-          rcLog('init-trace', 'before configure', {
-            storeKitVersion: IOS_STOREKIT_VERSION,
-            appUserID: userId ?? '(anonymous)',
-          });
-          await withTimeout(
-            Purchases.configure(configureOptions),
-            CONFIGURE_TIMEOUT_MS,
-            'RevenueCat configure'
-          );
-          rcLog('init-trace', 'after configure');
-        } catch (e) {
-          rcLog('init-trace', 'configure threw/timed out; before isConfigured fallback', errorDebug(e));
-          const postTimeoutConfigured = await withTimeout(
-            Purchases.isConfigured(),
-            3000,
-            'RevenueCat isConfigured after configure timeout'
-          ).catch(() => null);
-          rcLog('init-trace', 'after isConfigured fallback', postTimeoutConfigured);
-          if (!postTimeoutConfigured?.isConfigured) {
-            throw e;
-          }
-        }
-        // Configuration is the only operation that may block product loading.
-        // Runtime diagnostics are intentionally not awaited here: StoreKit can
-        // delay getStorefront/getAppUserID while starting, even though the SDK
-        // is already configured and ready to fetch products.
+        rcLog('init-trace', 'before non-blocking configure', {
+          storeKitVersion: IOS_STOREKIT_VERSION,
+          appUserID: userId ?? '(anonymous)',
+        });
+
+        // The native RevenueCat plugin configures Purchases synchronously before
+        // resolving the Capacitor call. Some WKWebView/Capacitor combinations
+        // fail to deliver that resolution back to JavaScript, leaving the
+        // Promise pending even though the native SDK is ready. Do not gate all
+        // StoreKit calls on that bridge acknowledgement.
+        void Purchases.configure(configureOptions)
+          .then(() => rcLog('init-trace', 'configure acknowledgement received'))
+          .catch((error) => rememberRevenueCatError('RevenueCat configure acknowledgement', error));
+
         initialized = true;
         void Purchases.setLogLevel({ level: LOG_LEVEL.VERBOSE }).catch(() => {});
         configuredAppUserID = userId ?? null;
+        rcLog('init-trace', 'native configure dispatched; product loading unblocked');
         void (async () => {
           const configuredStatus = await withTimeout(
             Purchases.isConfigured(),
