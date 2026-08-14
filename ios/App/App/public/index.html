@@ -86,15 +86,9 @@
       window.addEventListener('unhandledrejection', function (event) {
         window.__showDailyDominatorStartupError((event.reason && event.reason.message) || String(event.reason || event));
       });
-      setTimeout(function () {
-        var root = document.getElementById('root');
-        if (root && document.getElementById('native-startup-fallback')) {
-          window.__showDailyDominatorStartupError('Missing bundled assets. Run: npm install && npm run cap:sync:ios, then clean and run from Xcode.');
-        }
-      }, 8000);
     </script>
-    <script type="module" crossorigin src="/assets/index-g8lnNl7S.js"></script>
-    <link rel="stylesheet" crossorigin href="/assets/index-DHTK2pWE.css">
+    <script type="module" crossorigin src="/assets/index-D85qMwF6.js"></script>
+    <link rel="stylesheet" crossorigin href="/assets/index-DMTsqj4Z.css">
   </head>
 
   <body style="background-color:#0a0a0a;">
