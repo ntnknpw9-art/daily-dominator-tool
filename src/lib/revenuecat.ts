@@ -390,30 +390,35 @@ async function ensureInit(userId?: string) {
             throw e;
           }
         }
-        rcLog('init-trace', 'before isConfigured post-config');
-        const configuredStatus = await withTimeout(
-          Purchases.isConfigured(),
-          3000,
-          'RevenueCat isConfigured post-config trace'
-        );
-        rcLog('init-trace', 'after isConfigured post-config', configuredStatus);
-        rcLog('init-trace', 'before getAppUserID');
-        const appUserID = await withTimeout(
-          Purchases.getAppUserID(),
-          3000,
-          'RevenueCat getAppUserID post-config trace'
-        );
-        rcLog('init-trace', 'after getAppUserID', appUserID);
-        rcLog('init-trace', 'before getStorefront');
-        const storefront = await withTimeout(
-          Purchases.getStorefront(),
-          3000,
-          'RevenueCat getStorefront post-config trace'
-        );
-        rcLog('init-trace', 'after getStorefront', storefront);
+        // Configuration is the only operation that may block product loading.
+        // Runtime diagnostics are intentionally not awaited here: StoreKit can
+        // delay getStorefront/getAppUserID while starting, even though the SDK
+        // is already configured and ready to fetch products.
         initialized = true;
         void Purchases.setLogLevel({ level: LOG_LEVEL.VERBOSE }).catch(() => {});
         configuredAppUserID = userId ?? null;
+        void (async () => {
+          const configuredStatus = await withTimeout(
+            Purchases.isConfigured(),
+            3000,
+            'RevenueCat isConfigured post-config trace'
+          ).catch((error) => ({ error: errorDebug(error) }));
+          rcLog('init-trace', 'post-config isConfigured diagnostic', configuredStatus);
+
+          const appUserID = await withTimeout(
+            Purchases.getAppUserID(),
+            3000,
+            'RevenueCat getAppUserID post-config trace'
+          ).catch((error) => ({ error: errorDebug(error) }));
+          rcLog('init-trace', 'post-config appUserID diagnostic', appUserID);
+
+          const storefront = await withTimeout(
+            Purchases.getStorefront(),
+            3000,
+            'RevenueCat getStorefront post-config trace'
+          ).catch((error) => ({ error: errorDebug(error) }));
+          rcLog('init-trace', 'post-config storefront diagnostic', storefront);
+        })();
       })();
     }
     try {
