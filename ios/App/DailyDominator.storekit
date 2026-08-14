@@ -1,4 +1,14 @@
 {
+  "appPolicies" : {
+    "eula" : "",
+    "policies" : [
+      {
+        "locale" : "en_US",
+        "policyText" : "",
+        "policyURL" : ""
+      }
+    ]
+  },
   "identifier" : "DAILYDOMINATORSTOREKIT",
   "nonRenewingSubscriptions" : [
 
@@ -7,11 +17,14 @@
 
   ],
   "settings" : {
+    "_billingIssuesEnabled" : false,
+    "_storeKitErrors" : [
 
+    ]
   },
   "subscriptionGroups" : [
     {
-      "id" : "DAILYDOMINATORPRO",
+      "id" : "20000001",
       "localizations" : [
 
       ],
@@ -27,25 +40,23 @@
           "displayPrice" : "39.90",
           "familyShareable" : false,
           "groupNumber" : 2,
-          "internalID" : "DDMONTHLY001",
+          "internalID" : "10000001",
           "introductoryOffer" : null,
           "localizations" : [
             {
               "description" : "Daily Dominator AI Pro monthly access",
               "displayName" : "Daily Dominator Pro Monthly",
               "locale" : "en_US"
-            },
-            {
-              "description" : "גישה חודשית ל-Daily Dominator AI Pro",
-              "displayName" : "Daily Dominator Pro חודשי",
-              "locale" : "he_IL"
             }
           ],
           "productID" : "com.natanknafo.dailydominator",
           "recurringSubscriptionPeriod" : "P1M",
           "referenceName" : "Monthly Pro",
-          "subscriptionGroupID" : "DAILYDOMINATORPRO",
-          "type" : "RecurringSubscription"
+          "subscriptionGroupID" : "20000001",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
         },
         {
           "adHocOffers" : [
@@ -57,31 +68,29 @@
           "displayPrice" : "179.90",
           "familyShareable" : false,
           "groupNumber" : 1,
-          "internalID" : "DDANNUAL001",
+          "internalID" : "10000002",
           "introductoryOffer" : null,
           "localizations" : [
             {
               "description" : "Daily Dominator AI Pro annual access",
               "displayName" : "Daily Dominator Pro Annual",
               "locale" : "en_US"
-            },
-            {
-              "description" : "גישה שנתית ל-Daily Dominator AI Pro",
-              "displayName" : "Daily Dominator Pro שנתי",
-              "locale" : "he_IL"
             }
           ],
           "productID" : "com.natanknafo.dailydominatork",
           "recurringSubscriptionPeriod" : "P1Y",
           "referenceName" : "Annual Pro",
-          "subscriptionGroupID" : "DAILYDOMINATORPRO",
-          "type" : "RecurringSubscription"
+          "subscriptionGroupID" : "20000001",
+          "type" : "RecurringSubscription",
+          "winbackOffers" : [
+
+          ]
         }
       ]
     }
   ],
   "version" : {
-    "major" : 2,
+    "major" : 4,
     "minor" : 0
   }
 }
