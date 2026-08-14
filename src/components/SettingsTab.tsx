@@ -47,6 +47,7 @@ type RevenueCatStoreProduct = RevenueCatPackage['product'] & {
   source?: string;
 };
 
+const SUBSCRIPTION_OFFERING_MISCONFIGURED = 'ה-Offering \u201Cdefault\u201D ב-RevenueCat לא הוגדר עם חבילות monthly ו-annual. המחירים נטענו ישירות מ-App Store כגיבוי.';
 const SUBSCRIPTION_PRODUCTS_UNAVAILABLE = 'מוצרי המנוי לא זמינים כרגע מ-App Store. נסה לרענן או לבדוק שוב בעוד רגע.';
 const SUBSCRIPTION_PRODUCTS_LOADING = 'טוען את מוצרי המנוי מ-App Store...';
 
@@ -129,7 +130,13 @@ const SettingsTab = () => {
               title: p.title,
             })));
             setStoreProducts(products);
-            if (products.length === 0) setOfferingsError(SUBSCRIPTION_PRODUCTS_UNAVAILABLE);
+            if (products.length === 0) {
+              setOfferingsError(SUBSCRIPTION_PRODUCTS_UNAVAILABLE);
+            } else {
+              // Products loaded, but the RevenueCat "default" Offering is not
+              // configured correctly. Surface it instead of hiding the problem.
+              setOfferingsError(SUBSCRIPTION_OFFERING_MISCONFIGURED);
+            }
           }
 
           return { offering, products };

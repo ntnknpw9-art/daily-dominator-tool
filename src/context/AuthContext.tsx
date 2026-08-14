@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { logOutRevenueCat } from '@/lib/revenuecat';
 
 interface AuthContextType {
   session: Session | null;
@@ -55,6 +56,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = async () => {
+    // Clear the RevenueCat identity first so entitlements never carry over
+    // to the next account signing in on this device.
+    await logOutRevenueCat();
     await supabase.auth.signOut();
   };
 
