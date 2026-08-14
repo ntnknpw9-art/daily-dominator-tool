@@ -139,7 +139,7 @@ let lastRevenueCatError: RevenueCatLastError | null = null;
 let initializeStartedAt = 0;
 
 const IOS_STOREKIT_VERSION = 'DEFAULT' as const;
-const APP_BUILD_MARKER = 'rc-nonblocking-configure-2026-08-14';
+const APP_BUILD_MARKER = 'rc-verified-native-configure-2026-08-14';
 const INIT_TIMEOUT_MS = 30000;
 const CONFIGURE_TIMEOUT_MS = 10000;
 const STOREKIT_FETCH_TIMEOUT_MS = 60000;
@@ -372,41 +372,31 @@ async function ensureInit(userId?: string) {
           appUserID: userId ?? '(anonymous)',
         });
 
-        // The native RevenueCat plugin configures Purchases synchronously before
-        // resolving the Capacitor call. Some WKWebView/Capacitor combinations
-        // fail to deliver that resolution back to JavaScript, leaving the
-        // Promise pending even though the native SDK is ready. Do not gate all
-        // StoreKit calls on that bridge acknowledgement.
-        void Purchases.configure(configureOptions)
-          .then(() => rcLog('init-trace', 'configure acknowledgement received'))
-          .catch((error) => rememberRevenueCatError('RevenueCat configure acknowledgement', error));
+        // Capacitor's iOS plugin resolves configure immediately after the native
+        // RevenueCat singleton is configured. Never mark the JS integration as
+        // ready before that acknowledgement, otherwise every later StoreKit call
+        // can run against an unconfigured native SDK and appear as "0 products".
+        await withTimeout(
+          Purchases.configure(configureOptions),
+          CONFIGURE_TIMEOUT_MS,
+          'RevenueCat configure acknowledgement'
+        );
+        rcLog('init-trace', 'configure acknowledgement received');
+
+        const configuredStatus = await withTimeout(
+          Purchases.isConfigured(),
+          RUNTIME_DIAGNOSTIC_TIMEOUT_MS,
+          'RevenueCat isConfigured verification'
+        );
+        rcLog('init-trace', 'post-config isConfigured verification', configuredStatus);
+        if (!configuredStatus?.isConfigured) {
+          throw new Error('RevenueCat native SDK did not report a configured state');
+        }
 
         initialized = true;
-        void Purchases.setLogLevel({ level: LOG_LEVEL.VERBOSE }).catch(() => {});
         configuredAppUserID = userId ?? null;
-        rcLog('init-trace', 'native configure dispatched; product loading unblocked');
-        void (async () => {
-          const configuredStatus = await withTimeout(
-            Purchases.isConfigured(),
-            3000,
-            'RevenueCat isConfigured post-config trace'
-          ).catch((error) => ({ error: errorDebug(error) }));
-          rcLog('init-trace', 'post-config isConfigured diagnostic', configuredStatus);
-
-          const appUserID = await withTimeout(
-            Purchases.getAppUserID(),
-            3000,
-            'RevenueCat getAppUserID post-config trace'
-          ).catch((error) => ({ error: errorDebug(error) }));
-          rcLog('init-trace', 'post-config appUserID diagnostic', appUserID);
-
-          const storefront = await withTimeout(
-            Purchases.getStorefront(),
-            3000,
-            'RevenueCat getStorefront post-config trace'
-          ).catch((error) => ({ error: errorDebug(error) }));
-          rcLog('init-trace', 'post-config storefront diagnostic', storefront);
-        })();
+        await Purchases.setLogLevel({ level: LOG_LEVEL.VERBOSE }).catch(() => {});
+        rcLog('init-trace', 'native configure verified; product loading unblocked');
       })();
     }
     try {
