@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Capacitor } from '@capacitor/core';
 import { SocialLogin } from '@capgo/capacitor-social-login';
 
-const PUBLISHED_APP_ORIGIN = 'https://daily-dominator-tool.lovable.app';
+
 const GOOGLE_IOS_CLIENT_ID = '309108409035-3sl22316bkmuom32e1c2jtjjbmgava6i.apps.googleusercontent.com';
 const GOOGLE_WEB_CLIENT_ID = '309108409035-jdt751p79apqvbsqdtmkl3vud34clqhi.apps.googleusercontent.com';
 
@@ -204,21 +204,48 @@ const AuthPage = () => {
     setAppleError('');
     setLoading(true);
     try {
-      // Use the managed Apple OAuth flow everywhere. Passing a native Apple
-      // identity token directly caused its Bundle ID audience to be rejected
-      // by the web Services ID configuration.
+      // On iOS use the NATIVE Sign in with Apple sheet and exchange the identity
+      // token directly — a browser redirect lands back inside the Capacitor
+      // webview on an unknown path and renders a 404 screen.
+      if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios') {
+        const rawNonce = generateNonce();
+        const hashedNonce = await sha256Hex(rawNonce);
+        await SocialLogin.initialize({
+          apple: {},
+        });
+        const res: any = await SocialLogin.login({
+          provider: 'apple',
+          options: { scopes: ['email', 'name'], nonce: hashedNonce },
+        });
+        const idToken = res?.result?.idToken;
+        if (!idToken) {
+          setAppleError('לא התקבל token מ-Apple. נסה שוב.');
+          return;
+        }
+        const { error } = await supabase.auth.signInWithIdToken({
+          provider: 'apple',
+          token: idToken,
+          nonce: rawNonce,
+        });
+        if (error) setAppleError(friendlyAppleError(error.message));
+        return;
+      }
+
       const result = await lovable.auth.signInWithOAuth('apple', {
-        redirect_uri: Capacitor.isNativePlatform() ? PUBLISHED_APP_ORIGIN : window.location.origin,
+        redirect_uri: window.location.origin,
       });
       if (result?.error) {
         setAppleError(friendlyAppleError(result.error.message));
       }
     } catch (e: any) {
+      const msg = (e?.message || '').toLowerCase();
+      if (msg.includes('cancel')) return;
       setAppleError(friendlyAppleError(e?.message));
     } finally {
       setLoading(false);
     }
   };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
