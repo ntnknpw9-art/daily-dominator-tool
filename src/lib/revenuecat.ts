@@ -315,15 +315,15 @@ async function ensureInit(userId?: string) {
     if (!initializePromise) {
       initializeStartedAt = Date.now();
       initializePromise = (async () => {
-        await Purchases.setLogLevel({ level: LOG_LEVEL.VERBOSE }).catch(() => {});
-        // Minimal configure — exactly like the standalone paywall that worked.
-        await Purchases.configure({
-          apiKey: REVENUECAT_IOS_API_KEY,
-          ...(userId ? { appUserID: userId } : {}),
-        } as never);
+        // EXACTLY like the standalone paywall that works: configure with the
+        // API key only. No appUserID, no extra options — anything else can make
+        // the native bridge hang before offerings are fetched.
+        await Purchases.configure({ apiKey: REVENUECAT_IOS_API_KEY } as never);
         initialized = true;
-        configuredAppUserID = userId ?? null;
+        configuredAppUserID = null;
         rcLog('init', 'configure ok');
+        // Best-effort extras — never block offerings on these.
+        Purchases.setLogLevel({ level: LOG_LEVEL.VERBOSE }).catch(() => {});
       })();
     }
     try {
@@ -335,14 +335,17 @@ async function ensureInit(userId?: string) {
       rememberRevenueCatError('RevenueCat configure', e);
       throw e;
     }
-  } else if (userId && configuredAppUserID !== userId) {
-    try {
-      await Purchases.logIn({ appUserID: userId });
-      configuredAppUserID = userId;
-    } catch (e) {
-      rememberRevenueCatError('logIn', e);
-    }
   }
+
+  if (userId && configuredAppUserID !== userId) {
+    // Identify the user in the background — offerings/purchases must not wait.
+    configuredAppUserID = userId;
+    Purchases.logIn({ appUserID: userId }).catch((e) => {
+      configuredAppUserID = null;
+      rememberRevenueCatError('logIn', e);
+    });
+  }
+
   return Purchases;
 }
 
