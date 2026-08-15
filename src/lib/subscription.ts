@@ -227,15 +227,6 @@ export async function openManageSubscriptions(): Promise<void> {
     }
 
     try {
-      const { AppLauncher } = await import('@capacitor/app-launcher');
-      const deepLink = url.replace(/^https:\/\//, 'itms-apps://');
-      const { completed } = await AppLauncher.openUrl({ url: deepLink });
-      if (completed) return;
-    } catch (e) {
-      console.warn('[SUBSCRIPTION] AppLauncher failed', e);
-    }
-
-    try {
       const { Browser } = await import('@capacitor/browser');
       await Browser.open({ url, presentationStyle: 'popover' });
       return;
