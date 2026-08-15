@@ -204,3 +204,45 @@ export async function restorePurchases(): Promise<boolean> {
 export function warmupSubscriptions() {
   void loadSubscriptionState().catch(() => {});
 }
+
+/**
+ * Apple does not allow cancelling a subscription inside the app itself.
+ * The closest supported experience is opening Apple's own subscription
+ * management screen — on device we use the RevenueCat `managementURL`
+ * (or the `itms-apps://` deep link) so it opens as a native sheet over
+ * the app instead of a browser tab.
+ */
+export async function openManageSubscriptions(): Promise<void> {
+  const rc = await loadPlugin();
+  let url = MANAGE_SUBSCRIPTIONS_URL;
+
+  if (rc) {
+    try {
+      await ensureConfigured();
+      const { customerInfo } = await rc.Purchases.getCustomerInfo();
+      const managementURL = (customerInfo as AnyRecord)?.managementURL as string | undefined;
+      if (managementURL) url = managementURL;
+    } catch (e) {
+      console.warn('[SUBSCRIPTION] managementURL unavailable', e);
+    }
+
+    try {
+      const { AppLauncher } = await import('@capacitor/app-launcher');
+      const deepLink = url.replace(/^https:\/\//, 'itms-apps://');
+      const { completed } = await AppLauncher.openUrl({ url: deepLink });
+      if (completed) return;
+    } catch (e) {
+      console.warn('[SUBSCRIPTION] AppLauncher failed', e);
+    }
+
+    try {
+      const { Browser } = await import('@capacitor/browser');
+      await Browser.open({ url, presentationStyle: 'popover' });
+      return;
+    } catch (e) {
+      console.warn('[SUBSCRIPTION] Browser failed', e);
+    }
+  }
+
+  window.open(url, '_blank', 'noopener,noreferrer');
+}
