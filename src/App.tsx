@@ -17,13 +17,13 @@ import AdminLogin from "./pages/AdminLogin.tsx";
 import SplashDemo from "./pages/SplashDemo.tsx";
 import ColorDemo from "./pages/ColorDemo.tsx";
 import OAuthConsent from "./pages/OAuthConsent.tsx";
-import { warmupRevenueCat } from "@/lib/revenuecat";
+import { warmupSubscriptions } from "@/lib/subscription";
 
 const queryClient = new QueryClient();
 
 // Warm the StoreKit catalog as early as possible: the first product request on
 // iOS can take 15-20s cold, so doing it at launch makes the paywall instant.
-void warmupRevenueCat();
+void warmupSubscriptions();
 
 const App = () => (
   <AppErrorBoundary>

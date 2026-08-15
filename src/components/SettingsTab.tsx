@@ -17,7 +17,7 @@ import { getTheme, applyTheme } from '@/lib/theme';
 import { useHealthSync } from '@/hooks/useHealthSync';
 import { usePremium } from '@/hooks/usePremium';
 import { getOfferings, getStoreProducts, purchasePackage, purchaseStoreProduct, restorePurchases, isIOSNative, PRODUCT_MONTHLY, PRODUCT_YEARLY } from '@/lib/revenuecat';
-import LegalDialog, { type LegalKind } from '@/components/LegalDialog';
+import Paywall from '@/components/Paywall';
 
 
 const NO_MERCY_KEY = 'app_no_mercy_mode';
@@ -92,7 +92,6 @@ const SettingsTab = () => {
   const [restoring, setRestoring] = useState(false);
   const [subOpen, setSubOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<'monthly' | 'yearly'>('yearly');
-  const [legalDialog, setLegalDialog] = useState<LegalKind | null>(null);
   const catalogLoadPromiseRef = useRef<Promise<{ offering: RevenueCatOffering | null; products: RevenueCatStoreProduct[] }> | null>(null);
 
   const loadSubscriptionProducts = useCallback(async (reason: 'auto' | 'purchase' | 'refresh' = 'auto') => {
@@ -687,206 +686,8 @@ const SettingsTab = () => {
         </CardContent>
       </Card>
 
-      <Dialog open={subOpen} onOpenChange={setSubOpen}>
-        <DialogContent
-          className="rounded-none border-0 overflow-y-auto p-0"
-          style={{ left: 0, top: 0, transform: 'none', width: '100vw', maxWidth: '100vw', height: '100dvh', maxHeight: '100dvh' }}
-          dir="rtl"
-        >
-          <div className="flex flex-col px-6 pb-[calc(env(safe-area-inset-bottom,0px)+2rem)] pt-[calc(env(safe-area-inset-top,0px)+1.5rem)]">
-            <DialogHeader className="text-center items-center space-y-3">
-              <div className="grid place-items-center size-20 rounded-[22px] bg-gradient-to-br from-primary/30 to-primary/10 border border-primary/40 shadow-[0_0_30px_-5px_hsl(var(--primary)/0.5)]">
-                <Crown className="w-10 h-10 text-primary" />
-              </div>
-              <DialogTitle className="text-2xl font-bold tracking-tight text-center w-full">
-                מנוי תמיכה
-              </DialogTitle>
-              <DialogDescription className="text-sm text-muted-foreground text-center w-full">
-                כל פיצ׳רי האפליקציה זמינים לכולם בחינם. המנוי הוא דרך אופציונלית לתמוך בפיתוח.
-              </DialogDescription>
-            </DialogHeader>
+      <Paywall open={subOpen} onOpenChange={setSubOpen} />
 
-            <div className="mt-5 flex items-center justify-between bg-background/40 border border-border/40 rounded-lg p-3">
-              <div className="text-sm">
-                <div className="font-medium">סטטוס</div>
-                <div className="text-xs text-muted-foreground">
-                  {isPremium ? 'תומך פעיל — תודה!' : 'לא רשום'}
-                </div>
-              </div>
-              <span className={`text-xs font-bold px-2 py-1 rounded-full border ${isPremium ? 'bg-primary/10 text-primary border-primary/30' : 'bg-muted text-muted-foreground border-border'}`}>
-                {isPremium ? 'תומך' : 'חינמי'}
-              </span>
-            </div>
-
-            {(() => {
-              const activeProductKey = selectedPlan === 'monthly' ? PRODUCT_MONTHLY : PRODUCT_YEARLY;
-              const activePriceLabel = getPriceLabel(activeProductKey);
-              const activePeriodLabel = selectedPlan === 'monthly' ? 'לחודש' : 'לשנה';
-              return (
-                <>
-                  <div className="mt-5 space-y-2.5">
-                    <PlanRow
-                      selected={selectedPlan === 'yearly'}
-                      onSelect={() => setSelectedPlan('yearly')}
-                      title="שנתי"
-                      badge="חיסכון 62%"
-                      price={getPriceLabel(PRODUCT_YEARLY)}
-                      period="לשנה"
-                      subtitle={
-                        <span className="block space-y-0.5">
-                          <span className="block">מחויב פעם בשנה</span>
-                          <span className="block">שווה ערך ל־₪14.99 לחודש</span>
-                        </span>
-                      }
-                    />
-                    <PlanRow
-                      selected={selectedPlan === 'monthly'}
-                      onSelect={() => setSelectedPlan('monthly')}
-                      title="חודשי"
-                      price={getPriceLabel(PRODUCT_MONTHLY)}
-                      period="לחודש"
-                    />
-                  </div>
-
-                  <button
-                    onClick={() => handlePurchase(activeProductKey)}
-                    disabled={!!purchasing || isPremium}
-                    className="mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-primary text-base font-semibold text-primary-foreground shadow-[0_0_30px_-5px_hsl(var(--primary)/0.6)] transition active:scale-[0.98] disabled:opacity-60"
-                  >
-                    {purchasing ? (
-                      <Loader2 className="size-5 animate-spin" />
-                    ) : (
-                      <>
-                        <Sparkles className="size-5" />
-                        <span>המשך · {activePriceLabel} {activePeriodLabel}</span>
-                      </>
-                    )}
-                  </button>
-
-                  <p className="mt-2 text-[11px] leading-4 text-muted-foreground text-center">
-                    יחויב {activePriceLabel} בחשבון ה-Apple ID שלך בעת אישור הרכישה.
-                  </p>
-                </>
-              );
-            })()}
-
-            {isPremium && (
-              <div className="mt-5 rounded-2xl border border-border/50 bg-background/40 p-4 text-right">
-                <div className="text-sm font-semibold">ניהול וביטול מנוי</div>
-                <p className="mt-1 text-[11px] leading-5 text-muted-foreground">
-                  ביטול מנוי מתבצע דרך חשבון ה-Apple ID (אפל לא מאפשרת ביטול בתוך האפליקציה).
-                  הביטול עוצר את החידוש האוטומטי — הגישה נשארת עד סוף התקופה ששולמה.
-                  {expiresAt ? ` המנוי הנוכחי בתוקף עד ${new Date(expiresAt).toLocaleDateString('he-IL')}.` : ''}
-                </p>
-                <button
-                  onClick={() => {
-                    window.open('https://apps.apple.com/account/subscriptions', '_blank');
-                  }}
-                  className="mt-3 flex h-11 w-full items-center justify-center rounded-xl border border-primary/40 bg-primary/10 text-sm font-semibold text-primary transition active:scale-[0.98]"
-                >
-                  נהל / בטל מנוי ב-App Store
-                </button>
-              </div>
-            )}
-
-            {isIOSNative() && !offeringsLoaded && (
-              <div className="mt-3 text-[11px] text-muted-foreground text-center">
-                טוען מחירים עדכניים מ-App Store... המחירים המוצגים הם נכונים גם בלי טעינה.
-              </div>
-            )}
-
-            {isIOSNative() && offeringsLoaded && offeringsError && (
-              <div className="mt-3 flex flex-col items-center gap-2">
-                <div className="text-[11px] text-destructive text-center">
-                  {offeringsError}
-                </div>
-                <button
-                  onClick={() => {
-                    setOfferings(null);
-                    setStoreProducts([]);
-                    setOfferingsLoaded(false);
-                    setOfferingsError(null);
-                    void loadSubscriptionProducts('refresh');
-                  }}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-xs font-medium text-primary hover:bg-primary/20 transition"
-                >
-                  <RefreshCw className="size-3.5" />
-                  נסה שוב
-                </button>
-              </div>
-            )}
-
-            <button
-              onClick={handleRestore}
-              disabled={restoring}
-              className="mt-3 text-center text-sm text-muted-foreground underline-offset-4 hover:underline disabled:opacity-60"
-            >
-              {restoring ? 'משחזר...' : 'שחזר רכישות'}
-            </button>
-
-            <div className="mt-5 flex items-center justify-center gap-2 text-xs text-muted-foreground">
-              <ShieldCheck className="size-3.5" />
-              <span>תשלום מאובטח דרך App Store</span>
-            </div>
-
-            <div className="mt-4 space-y-2 text-[11px] leading-5 text-muted-foreground/80 text-right">
-              <p className="font-medium text-foreground/90 text-center">
-                מנוי תמיכה · מתחדש אוטומטית
-              </p>
-              <ul className="list-disc pr-4 space-y-1.5 marker:text-muted-foreground/50">
-                <li>
-                  <span className="font-medium text-foreground/80">מסלול חודשי:</span> {getPriceLabel(PRODUCT_MONTHLY)} לחודש, מתחדש כל חודש.
-                </li>
-                <li>
-                  <span className="font-medium text-foreground/80">מסלול שנתי:</span> {getPriceLabel(PRODUCT_YEARLY)} לשנה, מתחדש כל שנה.
-                </li>
-                <li>
-                  התשלום יחויב מחשבון ה-Apple ID שלך עם אישור הרכישה.
-                </li>
-                <li>
-                  המנוי מתחדש אוטומטית באותו מחיר, אלא אם החידוש האוטומטי כובה לפחות 24 שעות לפני תום התקופה הנוכחית.
-                </li>
-                <li>
-                  החשבון יחויב על החידוש תוך 24 שעות לפני תום התקופה הנוכחית, במחיר זהה.
-                </li>
-                <li>
-                  ניתן לנהל את המנוי ולכבות חידוש אוטומטי בכל עת דרך הגדרות חשבון ה-Apple ID לאחר הרכישה (Settings &gt; Apple ID &gt; Subscriptions).
-                </li>
-              </ul>
-            </div>
-
-            <div className="mt-4 flex items-center justify-center gap-4 text-[11px] text-muted-foreground pt-3 border-t border-border/30">
-              <button
-                type="button"
-                onClick={() => setLegalDialog('terms')}
-                className="hover:text-foreground underline-offset-2 hover:underline"
-              >
-                תנאי שימוש (EULA)
-              </button>
-              <span>·</span>
-              <button
-                type="button"
-                onClick={() => setLegalDialog('privacy')}
-                className="hover:text-foreground underline-offset-2 hover:underline"
-              >
-                מדיניות פרטיות
-              </button>
-            </div>
-
-            {!isIOSNative() && (
-              <div className="mt-3 text-[11px] text-muted-foreground text-center">
-                רכישות זמינות באפליקציה על iPhone בלבד
-              </div>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <LegalDialog
-        open={legalDialog !== null}
-        onOpenChange={(open) => { if (!open) setLegalDialog(null); }}
-        kind={legalDialog ?? 'terms'}
-      />
 
 
 
