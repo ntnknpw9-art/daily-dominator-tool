@@ -248,11 +248,18 @@ body.war-mode-active .glass-card {
      Dynamic Island and home indicator. The small reduction removes the
      excessive visual gap produced by the full native inset. */
   .app-header-safe {
-    padding-top: max(calc(env(safe-area-inset-top, 0px) - 8px), 0px);
+    padding-top: max(calc(env(safe-area-inset-top, 0px) - 14px), 0px);
   }
 
   .app-nav-safe {
-    padding-bottom: max(calc(env(safe-area-inset-bottom, 0px) - 8px), 0px);
+    padding-bottom: 0;
+  }
+
+  .app-notification-safe {
+    top: calc(env(safe-area-inset-top, 0px) + 52px);
+    left: 12px;
+    right: 12px;
+    width: auto;
   }
 
   /* Prevent iOS rubber-band scrolling from exposing area beneath the fixed bottom nav */
