@@ -81,14 +81,14 @@ const AppContent = () => {
 
   return (
     <SidebarProvider>
-      <div className="h-[100dvh] overflow-hidden bg-background flex w-full safe-top">
+      <div className="h-[100dvh] overflow-hidden bg-background flex w-full">
         <ConfettiOverlay particles={particles} />
         
         {/* Desktop Sidebar */}
         <AppSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
         
         <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
-          <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm shrink-0 z-40">
+          <header className="app-header-safe border-b border-border/50 bg-card/50 backdrop-blur-sm shrink-0 z-40">
             <div className="max-w-4xl mx-auto px-3 sm:px-4 py-2 flex items-center justify-between gap-1">
               <div className="flex items-center gap-2">
                 <SidebarTrigger className="hidden md:flex ml-2" />
@@ -185,7 +185,7 @@ const AppContent = () => {
           </div>
 
           {/* Mobile bottom nav */}
-          <nav className="md:hidden shrink-0 z-40 bg-card/95 backdrop-blur-md border-t border-border/50 safe-bottom">
+          <nav className="md:hidden shrink-0 z-40 bg-card/95 backdrop-blur-md border-t border-border/50 app-nav-safe">
 
           <div className="flex justify-around items-center px-1 py-1.5">
             {mobileBottomTabs.map(tab => {

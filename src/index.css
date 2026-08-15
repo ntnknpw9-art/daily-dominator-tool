@@ -244,6 +244,17 @@ body.war-mode-active .glass-card {
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
+  /* iOS app shell: paint edge-to-edge while keeping controls clear of the
+     Dynamic Island and home indicator. The small reduction removes the
+     excessive visual gap produced by the full native inset. */
+  .app-header-safe {
+    padding-top: max(calc(env(safe-area-inset-top, 0px) - 8px), 0px);
+  }
+
+  .app-nav-safe {
+    padding-bottom: max(calc(env(safe-area-inset-bottom, 0px) - 8px), 0px);
+  }
+
   /* Prevent iOS rubber-band scrolling from exposing area beneath the fixed bottom nav */
   html, body {
     overscroll-behavior-y: none;
@@ -252,7 +263,7 @@ body.war-mode-active .glass-card {
 
 /* Extend the mobile bottom nav background below the safe area
    so iOS overscroll never reveals the page background underneath. */
-nav.fixed.bottom-0::before {
+nav.app-nav-safe::before {
   content: '';
   position: absolute;
   left: 0;
