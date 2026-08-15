@@ -18,7 +18,7 @@ import { useHealthSync } from '@/hooks/useHealthSync';
 import { usePremium } from '@/hooks/usePremium';
 import { getOfferings, getStoreProducts, purchasePackage, purchaseStoreProduct, restorePurchases, isIOSNative, PRODUCT_MONTHLY, PRODUCT_YEARLY } from '@/lib/revenuecat';
 import Paywall from '@/components/Paywall';
-import { MANAGE_SUBSCRIPTIONS_URL } from '@/lib/subscription';
+import { openManageSubscriptions } from '@/lib/subscription';
 
 
 
@@ -688,12 +688,12 @@ const SettingsTab = () => {
           <Button
             variant="outline"
             className="w-full gap-2"
-            onClick={() => window.open(MANAGE_SUBSCRIPTIONS_URL, '_blank', 'noopener,noreferrer')}
+            onClick={() => { void openManageSubscriptions(); }}
           >
             ביטול או שינוי מנוי ב-Apple
           </Button>
           <div className="text-[11px] text-muted-foreground leading-relaxed">
-            לפי מדיניות Apple, ביטול מנוי מתבצע רק דרך הגדרות ה-Apple ID שלך. הכפתור פותח ישירות את מסך המנויים.
+            לפי מדיניות Apple, ביטול מנוי מתבצע רק דרך חשבון ה-Apple ID. הכפתור פותח את מסך המנויים של Apple מעל האפליקציה — אין צורך לצאת ידנית להגדרות.
           </div>
         </CardContent>
 
