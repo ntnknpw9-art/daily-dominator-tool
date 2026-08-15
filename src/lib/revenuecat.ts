@@ -405,7 +405,7 @@ export async function getRevenueCatRemoteOfferingSnapshot() {
 }
 
 let cachedOffering: RevenueCatOffering | null = null;
-let cachedProducts: RevenueCatProduct[] = [];
+let cachedProducts: RevenueCatStoreProduct[] = [];
 let warmupPromise: Promise<void> | null = null;
 
 export async function getOfferings() {
