@@ -81,7 +81,7 @@ const AppContent = () => {
 
   return (
     <SidebarProvider>
-      <div className="h-[100dvh] overflow-hidden bg-background flex w-full">
+      <div className="h-[100dvh] overflow-hidden bg-background flex w-full safe-top">
         <ConfettiOverlay particles={particles} />
         
         {/* Desktop Sidebar */}
