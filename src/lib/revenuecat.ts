@@ -404,6 +404,10 @@ export async function getRevenueCatRemoteOfferingSnapshot() {
   }
 }
 
+let cachedOffering: RevenueCatOffering | null = null;
+let cachedProducts: RevenueCatProduct[] = [];
+let warmupPromise: Promise<void> | null = null;
+
 export async function getOfferings() {
   try {
     const Purchases = await ensureInit();
@@ -416,11 +420,20 @@ export async function getOfferings() {
       packages: current?.availablePackages?.length ?? 0,
       allIds: Object.keys(allOfferings),
     });
-    return current;
+    if (current) cachedOffering = current;
+    return current ?? cachedOffering;
   } catch (e) {
     rememberRevenueCatError('RevenueCat getOfferings', e);
-    return null;
+    return cachedOffering;
   }
+}
+
+export function getCachedOffering() {
+  return cachedOffering;
+}
+
+export function getCachedProducts() {
+  return cachedProducts;
 }
 
 export async function getStoreProducts(productIds: string[] = ALL_PRODUCT_IDS) {
@@ -429,12 +442,36 @@ export async function getStoreProducts(productIds: string[] = ALL_PRODUCT_IDS) {
     if (!Purchases) return [];
     const result = await Purchases.getProducts({ productIdentifiers: productIds }) as unknown as RevenueCatProductsResult;
     rcLog('products', 'loaded', { count: result?.products?.length ?? 0 });
-    return result?.products ?? [];
+    const products = result?.products ?? [];
+    if (products.length) cachedProducts = products;
+    return products.length ? products : cachedProducts;
   } catch (e) {
     rememberRevenueCatError('RevenueCat getProducts', e);
-    return [];
+    return cachedProducts;
   }
 }
+
+/**
+ * Warm the StoreKit catalog at app launch so tapping "Subscribe" is instant.
+ * StoreKit's first product request can take 15-20s on a cold start; doing it
+ * up-front means the dialog reads from cache.
+ */
+export function warmupRevenueCat() {
+  if (!isIOS()) return Promise.resolve();
+  if (warmupPromise) return warmupPromise;
+  warmupPromise = (async () => {
+    try {
+      await getOfferings();
+      if (!cachedOffering?.availablePackages?.length) {
+        await getStoreProducts();
+      }
+    } catch {
+      warmupPromise = null;
+    }
+  })();
+  return warmupPromise;
+}
+
 
 
 async function syncToSupabase() {
