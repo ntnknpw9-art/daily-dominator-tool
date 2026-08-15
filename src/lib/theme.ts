@@ -18,10 +18,20 @@ const syncNativeStatusBar = async (theme: 'dark' | 'light') => {
     return;
   }
   try {
-    const bgColor = theme === 'light' ? '#fafafa' : '#0a0a0a';
-    await StatusBar.setStyle({ style: theme === 'light' ? Style.Light : Style.Dark });
-    await StatusBar.setBackgroundColor({ color: bgColor });
-    console.log(`[StatusBar] synced -> ${theme} (${bgColor}) on ${Capacitor.getPlatform()}`);
+    // Capacitor StatusBar style describes the TEXT color, not the background:
+    // - Style.Dark = dark text, for light backgrounds
+    // - Style.Light = light text, for dark backgrounds
+    await StatusBar.setStyle({ style: theme === 'light' ? Style.Dark : Style.Light });
+
+    // On Android we can also set the status bar background color. On iOS with
+    // overlaysWebView=true the status bar is transparent and the app header shows
+    // through, so the background color is ignored.
+    if (Capacitor.getPlatform() !== 'ios') {
+      const bgColor = theme === 'light' ? '#fafafa' : '#0a0a0a';
+      await StatusBar.setBackgroundColor({ color: bgColor });
+    }
+
+    console.log(`[StatusBar] synced -> ${theme} on ${Capacitor.getPlatform()}`);
   } catch (e) {
     console.error('[StatusBar] native call failed:', e);
   }
