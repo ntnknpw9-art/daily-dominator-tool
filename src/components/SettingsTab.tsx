@@ -18,6 +18,8 @@ import { useHealthSync } from '@/hooks/useHealthSync';
 import { usePremium } from '@/hooks/usePremium';
 import { getOfferings, getStoreProducts, purchasePackage, purchaseStoreProduct, restorePurchases, isIOSNative, PRODUCT_MONTHLY, PRODUCT_YEARLY } from '@/lib/revenuecat';
 import Paywall from '@/components/Paywall';
+import { MANAGE_SUBSCRIPTIONS_URL } from '@/lib/subscription';
+
 
 
 const NO_MERCY_KEY = 'app_no_mercy_mode';
