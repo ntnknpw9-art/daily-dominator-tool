@@ -18,6 +18,8 @@ import { useHealthSync } from '@/hooks/useHealthSync';
 import { usePremium } from '@/hooks/usePremium';
 import { getOfferings, getStoreProducts, purchasePackage, purchaseStoreProduct, restorePurchases, isIOSNative, PRODUCT_MONTHLY, PRODUCT_YEARLY } from '@/lib/revenuecat';
 import Paywall from '@/components/Paywall';
+import { MANAGE_SUBSCRIPTIONS_URL } from '@/lib/subscription';
+
 
 
 const NO_MERCY_KEY = 'app_no_mercy_mode';
@@ -683,7 +685,18 @@ const SettingsTab = () => {
             <Crown className="w-4 h-4" />
             {isPremium ? 'נהל מנוי' : 'הצטרף כתומך'}
           </Button>
+          <Button
+            variant="outline"
+            className="w-full gap-2"
+            onClick={() => window.open(MANAGE_SUBSCRIPTIONS_URL, '_blank', 'noopener,noreferrer')}
+          >
+            ביטול או שינוי מנוי ב-Apple
+          </Button>
+          <div className="text-[11px] text-muted-foreground leading-relaxed">
+            לפי מדיניות Apple, ביטול מנוי מתבצע רק דרך הגדרות ה-Apple ID שלך. הכפתור פותח ישירות את מסך המנויים.
+          </div>
         </CardContent>
+
       </Card>
 
       <Paywall open={subOpen} onOpenChange={setSubOpen} />
