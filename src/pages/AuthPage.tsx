@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Capacitor } from '@capacitor/core';
 import { SocialLogin } from '@capgo/capacitor-social-login';
 
-const PUBLISHED_APP_ORIGIN = 'https://daily-dominator-tool.lovable.app';
+
 const GOOGLE_IOS_CLIENT_ID = '309108409035-3sl22316bkmuom32e1c2jtjjbmgava6i.apps.googleusercontent.com';
 const GOOGLE_WEB_CLIENT_ID = '309108409035-jdt751p79apqvbsqdtmkl3vud34clqhi.apps.googleusercontent.com';
 
