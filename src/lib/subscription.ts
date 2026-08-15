@@ -6,6 +6,26 @@
 export const MONTHLY_PRODUCT_ID = 'premium_monthly';
 export const YEARLY_PRODUCT_ID = 'premium_yearly';
 export const ENTITLEMENT_ID = 'premium';
+// RevenueCat entitlement identifiers can differ between dashboard setups
+// ('pro' / 'PRO' / 'premium'). Any ACTIVE entitlement means the purchase went
+// through — otherwise a successful payment is reported as "not completed".
+const isEntitled = (customerInfo: AnyRecord | undefined | null) => {
+  const active = (customerInfo?.entitlements?.active ?? {}) as AnyRecord;
+  const keys = Object.keys(active);
+  console.log('[SUBSCRIPTION] active entitlements', keys);
+  return keys.length > 0;
+};
+
+const activeEntitlement = (customerInfo: AnyRecord | undefined | null) => {
+  const active = (customerInfo?.entitlements?.active ?? {}) as AnyRecord;
+  return (
+    active[ENTITLEMENT_ID] ??
+    active['pro'] ??
+    active['PRO'] ??
+    active[Object.keys(active)[0] ?? ''] ??
+    null
+  );
+};
 export const MANAGE_SUBSCRIPTIONS_URL = 'https://apps.apple.com/account/subscriptions';
 
 // `appl_` keys are publishable — safe to ship in the bundle.
@@ -91,6 +111,14 @@ async function ensureConfigured(): Promise<boolean> {
       const rc = await loadPlugin();
       if (!rc || !API_KEY) return false;
       await rc.Purchases.configure({ apiKey: API_KEY });
+      // Attach the purchase to the signed-in account so it is not lost.
+      try {
+        const { supabase } = await import('@/integrations/supabase/client');
+        const { data } = await supabase.auth.getUser();
+        if (data?.user?.id) await rc.Purchases.logIn({ appUserID: data.user.id });
+      } catch (e) {
+        console.warn('[SUBSCRIPTION] logIn skipped', e);
+      }
       return true;
     })();
   }
@@ -136,11 +164,11 @@ export async function loadSubscriptionState(): Promise<SubscriptionState> {
     .filter((p): p is PlanOption => p !== null)
     .sort((a, b) => (a.period === 'year' ? -1 : b.period === 'year' ? 1 : 0));
 
-  const entitlement = customer?.customerInfo?.entitlements?.active?.[ENTITLEMENT_ID];
+  const entitlement = activeEntitlement(customer?.customerInfo);
 
   return {
     plans,
-    isSubscribed: Boolean(entitlement),
+    isSubscribed: isEntitled(customer?.customerInfo),
     renewsAt: (entitlement as AnyRecord)?.expirationDate ?? null,
     storeUnavailable: false,
   };
@@ -159,7 +187,7 @@ export async function purchasePlan(packageIdentifier: string): Promise<boolean> 
   if (!aPackage) throw new Error('המנוי המבוקש אינו זמין כרגע');
 
   const { customerInfo } = await rc.Purchases.purchasePackage({ aPackage });
-  return Boolean(customerInfo?.entitlements?.active?.[ENTITLEMENT_ID]);
+  return isEntitled(customerInfo);
 }
 
 export async function restorePurchases(): Promise<boolean> {
@@ -169,7 +197,7 @@ export async function restorePurchases(): Promise<boolean> {
   if (!rc || !configured) throw new StoreUnavailableError();
 
   const { customerInfo } = await rc.Purchases.restorePurchases();
-  return Boolean(customerInfo?.entitlements?.active?.[ENTITLEMENT_ID]);
+  return isEntitled(customerInfo);
 }
 
 /** Warm the StoreKit catalog at launch — the first request can take 15-20s cold. */
