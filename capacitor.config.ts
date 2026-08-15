@@ -27,9 +27,8 @@ const config: CapacitorConfig = {
   backgroundColor: '#0a0a0a',
   plugins: {
     StatusBar: {
-      style: 'DARK',
-      backgroundColor: '#0a0a0a',
-      overlaysWebView: false,
+      style: 'LIGHT', // default dark mode: light text on dark background
+      overlaysWebView: true, // status bar is transparent; app header fills the safe area
     },
     SplashScreen: {
       backgroundColor: '#0a0a0a',
