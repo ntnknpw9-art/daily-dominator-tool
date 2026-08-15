@@ -209,7 +209,10 @@ const AppContent = () => {
               );
             })}
           </div>
-        </nav>
+          </nav>
+        </div>
+
+        {activeTab !== 'workouts' && <QuickActionFAB setActiveTab={setActiveTab} />}
       </div>
       <AiCoach />
       <SmartNotifications />
