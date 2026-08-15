@@ -448,7 +448,13 @@ export const PREMIUM_ENTITLEMENT = 'PRO';
 
 function extractActive(customerInfo?: RevenueCatCustomerInfo): { isPremium: boolean; productId: string | null; expiresAt: string | null } {
   const active = customerInfo?.entitlements?.active || {};
-  const premium = active[PREMIUM_ENTITLEMENT];
+  // Match the configured entitlement first, then common aliases, then ANY active
+  // entitlement — so a dashboard rename can never lock a paying user out.
+  const premium =
+    active[PREMIUM_ENTITLEMENT] ||
+    active['premium'] ||
+    active['pro'] ||
+    Object.values(active)[0];
   rcLog('entitlement', 'extractActive', {
     expectedEntitlement: PREMIUM_ENTITLEMENT,
     activeEntitlementIds: Object.keys(active),
@@ -457,6 +463,7 @@ function extractActive(customerInfo?: RevenueCatCustomerInfo): { isPremium: bool
   if (premium) {
     return { isPremium: true, productId: premium?.productIdentifier ?? null, expiresAt: premium?.expirationDate ?? null };
   }
+
   return { isPremium: false, productId: null, expiresAt: null };
 }
 
