@@ -110,12 +110,12 @@ type RevenueCatLastError = {
 
 export const PRODUCTS = {
   monthly: {
-    id: 'com.natanknafo.dailydominator',
+    id: 'premium_monthly',
     label: 'תמיכה חודשית',
     period: 'month' as const,
   },
   yearly: {
-    id: 'com.natanknafo.dailydominatork',
+    id: 'premium_yearly',
     label: 'תמיכה שנתית',
     period: 'year' as const,
   },
@@ -130,7 +130,7 @@ export const PRODUCT_YEARLY = PRODUCTS.yearly.id;
 export const getProductById = (id: string | null | undefined) =>
   Object.values(PRODUCTS).find((p) => p.id === id) ?? null;
 
-const REVENUECAT_IOS_API_KEY = import.meta.env?.VITE_REVENUECAT_IOS_API_KEY || 'appl_OsIuxnzzmIfeIVgsxDoYxxuxgDF';
+const REVENUECAT_IOS_API_KEY = import.meta.env?.VITE_REVENUECAT_IOS_API_KEY || 'appl_FjjpXFIxixSDQVCgXkqwTSSKmVR';
 
 let initialized = false;
 let initializePromise: Promise<unknown> | null = null;
@@ -521,7 +521,7 @@ async function syncToSupabase() {
   }
 }
 
-export const PREMIUM_ENTITLEMENT = 'pro';
+export const PREMIUM_ENTITLEMENT = 'PRO';
 
 function extractActive(customerInfo?: RevenueCatCustomerInfo): { isPremium: boolean; productId: string | null; expiresAt: string | null } {
   const active = customerInfo?.entitlements?.active || {};
