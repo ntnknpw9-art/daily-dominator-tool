@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { SeoHead } from '@/components/SeoHead';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -69,9 +69,10 @@ const AppContent = () => {
 
   const [showSplash, setShowSplash] = useState(true);
   const { fire: fireConfetti, particles } = useConfetti();
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   }, [activeTab]);
 
   if (showSplash) {
@@ -80,13 +81,14 @@ const AppContent = () => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen bg-background pb-20 sm:pb-0 flex w-full">
+      <div className="h-[100dvh] overflow-hidden bg-background flex w-full">
         <ConfettiOverlay particles={particles} />
         
         {/* Desktop Sidebar */}
         <AppSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
         
-        <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+          <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain">
           {/* Header */}
           <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-40 safe-top">
             <div className="max-w-4xl mx-auto px-3 sm:px-4 py-2 flex items-center justify-between gap-1">
@@ -180,12 +182,11 @@ const AppContent = () => {
               {activeTab === 'settings' && <SettingsTab />}
             </div>
           </main>
-        </div>
+          </div>
 
-        {activeTab !== 'workouts' && <QuickActionFAB setActiveTab={setActiveTab} />}
+          {/* Mobile bottom nav */}
+          <nav className="md:hidden shrink-0 z-40 bg-card/95 backdrop-blur-md border-t border-border/50 safe-bottom">
 
-        {/* Mobile bottom nav */}
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-card/95 backdrop-blur-md border-t border-border/50 safe-bottom">
           <div className="flex justify-around items-center px-1 py-1.5">
             {mobileBottomTabs.map(tab => {
               const Icon = tab.icon;
@@ -208,7 +209,10 @@ const AppContent = () => {
               );
             })}
           </div>
-        </nav>
+          </nav>
+        </div>
+
+        {activeTab !== 'workouts' && <QuickActionFAB setActiveTab={setActiveTab} />}
       </div>
       <AiCoach />
       <SmartNotifications />
