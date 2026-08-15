@@ -403,13 +403,16 @@ export async function getRevenueCatRemoteOfferingSnapshot() {
 
 export async function getOfferings() {
   try {
-    const Purchases = await withTimeout(ensureInit(), INIT_TIMEOUT_MS, 'RevenueCat initialize');
+    const Purchases = await ensureInit();
     if (!Purchases) return null;
-    const start = Date.now();
-    const offerings = await withTimeout(Purchases.getOfferings(), STOREKIT_FETCH_TIMEOUT_MS, 'RevenueCat getOfferings') as unknown as RevenueCatOfferings;
+    const offerings = await Purchases.getOfferings() as unknown as RevenueCatOfferings;
     const allOfferings = offerings?.all ?? {};
-    const defaultOffering = allOfferings.default ?? null;
-    const current = defaultOffering ?? offerings?.current ?? null;
+    const current = offerings?.current ?? allOfferings.default ?? Object.values(allOfferings)[0] ?? null;
+    rcLog('offerings', 'loaded', {
+      currentId: current?.identifier,
+      packages: current?.availablePackages?.length ?? 0,
+      allIds: Object.keys(allOfferings),
+    });
     return current;
   } catch (e) {
     rememberRevenueCatError('RevenueCat getOfferings', e);
@@ -419,20 +422,17 @@ export async function getOfferings() {
 
 export async function getStoreProducts(productIds: string[] = ALL_PRODUCT_IDS) {
   try {
-    const Purchases = await withTimeout(ensureInit(), INIT_TIMEOUT_MS, 'RevenueCat initialize');
+    const Purchases = await ensureInit();
     if (!Purchases) return [];
-    const start = Date.now();
-    const result = await withTimeout(
-      Purchases.getProducts({ productIdentifiers: productIds }),
-      STOREKIT_FETCH_TIMEOUT_MS,
-      'RevenueCat getProducts'
-    ) as unknown as RevenueCatProductsResult;
+    const result = await Purchases.getProducts({ productIdentifiers: productIds }) as unknown as RevenueCatProductsResult;
+    rcLog('products', 'loaded', { count: result?.products?.length ?? 0 });
     return result?.products ?? [];
   } catch (e) {
     rememberRevenueCatError('RevenueCat getProducts', e);
     return [];
   }
 }
+
 
 async function syncToSupabase() {
   try {
