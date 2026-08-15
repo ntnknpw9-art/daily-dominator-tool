@@ -8,7 +8,6 @@
         "@capacitor-community/apple-sign-in": "^7.1.0",
         "@capacitor-mlkit/barcode-scanning": "^8.1.0",
         "@capacitor/android": "^8.3.0",
-        "@capacitor/app-launcher": "^8.0.1",
         "@capacitor/browser": "^8.0.3",
         "@capacitor/cli": "^8.3.0",
         "@capacitor/core": "^8.3.0",
@@ -116,8 +115,6 @@
     "@capacitor-mlkit/barcode-scanning": ["@capacitor-mlkit/barcode-scanning@8.1.0", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@capacitor-mlkit/barcode-scanning/-/barcode-scanning-8.1.0.tgz", { "peerDependencies": { "@capacitor/core": ">=8.0.0" } }, "sha512-lhOYHZINLOCT0i5YSbSMkouik3zh0BncJouumNTgXCT0/533Z4733jAX9zv+nEd++bE8QHeUl2g0NrewreumnQ=="],
 
     "@capacitor/android": ["@capacitor/android@8.3.0", "", { "peerDependencies": { "@capacitor/core": "^8.3.0" } }, "sha512-EQy6ByUuKayQBJmMm/e0byJiHavqsQHrvW23BuT2GNVQvenAvipqwaePiJHzrv2PZr7A0T0+se4kgDCeROj0mQ=="],
-
-    "@capacitor/app-launcher": ["@capacitor/app-launcher@8.0.1", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@capacitor/app-launcher/-/app-launcher-8.0.1.tgz", { "peerDependencies": { "@capacitor/core": ">=8.0.0" } }, "sha512-23D8zi74sn7kxvISix8qYwgqdxGJN+4NImcNGvHen98LB1zb4eZfkJvFvp7pwntxGw4OjIE7yuf4wbzZxQHpog=="],
 
     "@capacitor/browser": ["@capacitor/browser@8.0.3", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@capacitor/browser/-/browser-8.0.3.tgz", { "peerDependencies": { "@capacitor/core": ">=8.0.0" } }, "sha512-WJWPHEPbweiFoHYmVlCbZf5yrqJ2Rchx2Xvbmd+3Lf+Zkpq3nXBThThY2CF69lYEg1NINGF9BcHThIOEU1gZlQ=="],
 
