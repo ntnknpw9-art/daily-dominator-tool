@@ -187,7 +187,7 @@ export async function purchasePlan(packageIdentifier: string): Promise<boolean> 
   if (!aPackage) throw new Error('המנוי המבוקש אינו זמין כרגע');
 
   const { customerInfo } = await rc.Purchases.purchasePackage({ aPackage });
-  return Boolean(customerInfo?.entitlements?.active?.[ENTITLEMENT_ID]);
+  return isEntitled(customerInfo);
 }
 
 export async function restorePurchases(): Promise<boolean> {
@@ -197,7 +197,7 @@ export async function restorePurchases(): Promise<boolean> {
   if (!rc || !configured) throw new StoreUnavailableError();
 
   const { customerInfo } = await rc.Purchases.restorePurchases();
-  return Boolean(customerInfo?.entitlements?.active?.[ENTITLEMENT_ID]);
+  return isEntitled(customerInfo);
 }
 
 /** Warm the StoreKit catalog at launch — the first request can take 15-20s cold. */
