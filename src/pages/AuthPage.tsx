@@ -7,8 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Capacitor } from '@capacitor/core';
 import { SocialLogin } from '@capgo/capacitor-social-login';
+import { SignInWithApple, type SignInWithAppleOptions } from '@capacitor-community/apple-sign-in';
 
-
+const PUBLISHED_APP_ORIGIN = 'https://daily-dominator-tool.lovable.app';
 const GOOGLE_IOS_CLIENT_ID = '309108409035-3sl22316bkmuom32e1c2jtjjbmgava6i.apps.googleusercontent.com';
 const GOOGLE_WEB_CLIENT_ID = '309108409035-jdt751p79apqvbsqdtmkl3vud34clqhi.apps.googleusercontent.com';
 
@@ -204,22 +205,22 @@ const AuthPage = () => {
     setAppleError('');
     setLoading(true);
     try {
-      // On iOS use the NATIVE Sign in with Apple sheet and exchange the identity
-      // token directly — a browser redirect lands back inside the Capacitor
-      // webview on an unknown path and renders a 404 screen.
+      // Keep iOS on the dedicated native Apple plugin. This is the flow that
+      // returns Apple's identityToken directly without a WebView redirect.
       if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios') {
         const rawNonce = generateNonce();
         const hashedNonce = await sha256Hex(rawNonce);
-        await SocialLogin.initialize({
-          apple: {},
-        });
-        const res: any = await SocialLogin.login({
-          provider: 'apple',
-          options: { scopes: ['email', 'name'], nonce: hashedNonce },
-        });
-        const idToken = res?.result?.idToken;
+        const options: SignInWithAppleOptions = {
+          clientId: 'com.natanknafo.app',
+          redirectURI: PUBLISHED_APP_ORIGIN,
+          scopes: 'email name',
+          state: generateNonce(),
+          nonce: hashedNonce,
+        };
+        const res = await SignInWithApple.authorize(options);
+        const idToken = res.response?.identityToken;
         if (!idToken) {
-          setAppleError('לא התקבל token מ-Apple. נסה שוב.');
+          setAppleError('לא התקבל token מאפל. נסה שוב.');
           return;
         }
         const { error } = await supabase.auth.signInWithIdToken({
