@@ -63,12 +63,16 @@
       (function () {
         try {
           var t = localStorage.getItem('app_theme');
-          if (t !== 'light') {
-            document.documentElement.classList.remove('light');
-          } else {
+          var isLight = t === 'light';
+          var bg = isLight ? '#fafafa' : '#0a0a0a';
+          var metaTheme = document.querySelector('meta[name="theme-color"]');
+          if (metaTheme) metaTheme.setAttribute('content', bg);
+          document.documentElement.style.background = bg;
+          document.body && (document.body.style.background = bg);
+          if (isLight) {
             document.documentElement.classList.add('light');
-            document.documentElement.style.background = '#fafafa';
-            document.body && (document.body.style.background = '#fafafa');
+          } else {
+            document.documentElement.classList.remove('light');
           }
         } catch (e) {}
       })();
