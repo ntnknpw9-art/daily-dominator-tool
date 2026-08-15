@@ -185,7 +185,7 @@ const AppContent = () => {
           </div>
 
           {/* Mobile bottom nav */}
-          <nav className="md:hidden shrink-0 z-40 bg-card/95 backdrop-blur-md border-t border-border/50 app-nav-safe">
+          <nav className="relative md:hidden shrink-0 z-40 bg-card/95 backdrop-blur-md border-t border-border/50 app-nav-safe">
 
           <div className="flex justify-around items-center px-1 py-1.5">
             {mobileBottomTabs.map(tab => {
