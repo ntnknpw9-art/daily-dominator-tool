@@ -236,9 +236,11 @@ body.war-mode-active .glass-card {
 
   /* Safe area for mobile notch */
   .safe-top {
+    padding-top: constant(safe-area-inset-top, 0px);
     padding-top: env(safe-area-inset-top, 0px);
   }
   .safe-bottom {
+    padding-bottom: constant(safe-area-inset-bottom, 0px);
     padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 
