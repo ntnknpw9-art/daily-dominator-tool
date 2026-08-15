@@ -1,9 +1,6 @@
 // =============================================================
-// Subscription layer (RevenueCat) — iOS native only.
-// Mirrors the standalone paywall implementation that works:
-//  - dynamic plugin import (never crashes web/SSR)
-//  - single merged configure() promise
-//  - prices ALWAYS come from the store, never hardcoded
+// Subscription layer (RevenueCat) — identical logic to the
+// standalone paywall app that works on device.
 // =============================================================
 
 export const MONTHLY_PRODUCT_ID = 'premium_monthly';
@@ -12,12 +9,13 @@ export const ENTITLEMENT_ID = 'premium';
 export const MANAGE_SUBSCRIPTIONS_URL = 'https://apps.apple.com/account/subscriptions';
 
 // `appl_` keys are publishable — safe to ship in the bundle.
+const DEFAULT_IOS_API_KEY = 'appl_FjjpXFIxixSDQVCgXkqwTSSKmVR';
 const API_KEY =
-  (import.meta.env?.VITE_REVENUECAT_IOS_API_KEY as string | undefined) ||
-  'appl_FjjpXFIxixSDQVCgXkqwTSSKmVR';
+  ((import.meta.env['VITE_REVENUECAT_IOS_API_KEY'] as string | undefined) || '').trim() ||
+  DEFAULT_IOS_API_KEY;
 
 export class StoreUnavailableError extends Error {
-  constructor(message = 'החנות אינה זמינה במכשיר הזה') {
+  constructor(message = 'החנות אינה זמינה בסביבה זו') {
     super(message);
     this.name = 'StoreUnavailableError';
   }
@@ -52,7 +50,7 @@ export const PREVIEW_PLANS: PlanOption[] = [
   {
     packageIdentifier: '$rc_annual',
     productIdentifier: YEARLY_PRODUCT_ID,
-    priceString: '₪179.90',
+    priceString: '‏179.90 ₪',
     price: 179.9,
     currencyCode: 'ILS',
     period: 'year',
@@ -61,7 +59,7 @@ export const PREVIEW_PLANS: PlanOption[] = [
   {
     packageIdentifier: '$rc_monthly',
     productIdentifier: MONTHLY_PRODUCT_ID,
-    priceString: '₪39.90',
+    priceString: '‏39.90 ₪',
     price: 39.9,
     currencyCode: 'ILS',
     period: 'month',
@@ -71,31 +69,30 @@ export const PREVIEW_PLANS: PlanOption[] = [
 
 type AnyRecord = Record<string, any>;
 
-let configurePromise: Promise<AnyRecord> | null = null;
+let configurePromise: Promise<boolean> | null = null;
 
 async function loadPlugin(): Promise<AnyRecord | null> {
+  if (typeof window === 'undefined') return null;
   try {
-    const { Capacitor } = await import('@capacitor/core');
+    const [{ Capacitor }, rc] = await Promise.all([
+      import('@capacitor/core'),
+      import('@revenuecat/purchases-capacitor'),
+    ]);
     if (!Capacitor.isNativePlatform()) return null;
-    const mod = await import('@revenuecat/purchases-capacitor');
-    return (mod as AnyRecord).Purchases ?? null;
+    return rc as unknown as AnyRecord;
   } catch {
     return null;
   }
 }
 
-async function ensureConfigured(): Promise<AnyRecord> {
-  const Purchases = await loadPlugin();
-  if (!Purchases) throw new StoreUnavailableError();
-  if (!API_KEY) throw new MissingApiKeyError();
+async function ensureConfigured(): Promise<boolean> {
   if (!configurePromise) {
     configurePromise = (async () => {
-      await Purchases.configure({ apiKey: API_KEY });
-      return Purchases;
-    })().catch((e) => {
-      configurePromise = null;
-      throw e;
-    });
+      const rc = await loadPlugin();
+      if (!rc || !API_KEY) return false;
+      await rc.Purchases.configure({ apiKey: API_KEY });
+      return true;
+    })();
   }
   return configurePromise;
 }
@@ -104,86 +101,75 @@ export async function isStoreAvailable() {
   return (await loadPlugin()) !== null;
 }
 
-const periodOf = (pkg: AnyRecord): PlanOption['period'] => {
-  const raw = `${pkg?.identifier ?? ''} ${pkg?.packageType ?? ''}`.toLowerCase();
-  const sp = pkg?.product?.subscriptionPeriod;
-  const spText = typeof sp === 'string' ? sp.toLowerCase() : String(sp?.unit ?? '').toLowerCase();
-  if (raw.includes('annual') || raw.includes('year') || spText.includes('year') || spText === 'y') return 'year';
-  if (raw.includes('month') || spText.includes('month') || spText === 'm') return 'month';
-  return 'other';
-};
-
-const toPlan = (pkg: AnyRecord): PlanOption => ({
-  packageIdentifier: pkg?.identifier ?? '',
-  productIdentifier: pkg?.product?.identifier ?? '',
-  priceString: pkg?.product?.priceString ?? '',
-  price: Number(pkg?.product?.price ?? 0),
-  currencyCode: pkg?.product?.currencyCode ?? 'ILS',
-  period: periodOf(pkg),
-});
-
-const readEntitlement = (customerInfo: AnyRecord | undefined) => {
-  const active = customerInfo?.entitlements?.active ?? {};
-  const ent =
-    active[ENTITLEMENT_ID] || active.PRO || active.pro || Object.values(active)[0];
+const planFromPackage = (pkg: AnyRecord): PlanOption | null => {
+  const productIdentifier: string = pkg?.product?.identifier ?? '';
+  const period: PlanOption['period'] = productIdentifier.startsWith(YEARLY_PRODUCT_ID)
+    ? 'year'
+    : productIdentifier.startsWith(MONTHLY_PRODUCT_ID)
+      ? 'month'
+      : 'other';
+  if (period === 'other') return null;
   return {
-    isSubscribed: Boolean(ent),
-    renewsAt: (ent as AnyRecord)?.expirationDate ?? null,
+    packageIdentifier: pkg?.identifier ?? '',
+    productIdentifier,
+    priceString: pkg?.product?.priceString ?? '',
+    price: Number(pkg?.product?.price ?? 0),
+    currencyCode: pkg?.product?.currencyCode ?? 'ILS',
+    period,
   };
 };
 
 export async function loadSubscriptionState(): Promise<SubscriptionState> {
-  const Purchases = await ensureConfigured();
-  const [offeringsRes, customerRes] = await Promise.all([
-    Purchases.getOfferings(),
-    Purchases.getCustomerInfo(),
-  ]);
-
-  const all = offeringsRes?.all ?? {};
-  const current = offeringsRes?.current ?? all.default ?? Object.values(all)[0] ?? null;
-  let plans: PlanOption[] = ((current as AnyRecord)?.availablePackages ?? []).map(toPlan);
-
-  // Fallback: offering misconfigured — read the products straight from StoreKit.
-  if (plans.length === 0) {
-    const res = await Purchases.getProducts({
-      productIdentifiers: [YEARLY_PRODUCT_ID, MONTHLY_PRODUCT_ID],
-    });
-    plans = ((res?.products ?? []) as AnyRecord[]).map((product) =>
-      toPlan({ identifier: product?.identifier, packageType: '', product })
-    );
+  const rc = await loadPlugin();
+  const configured = await ensureConfigured();
+  if (!rc || !configured) {
+    return { plans: PREVIEW_PLANS, isSubscribed: false, renewsAt: null, storeUnavailable: true };
   }
 
-  plans.sort((a, b) => (a.period === 'year' ? -1 : b.period === 'year' ? 1 : 0));
+  const [offerings, customer] = await Promise.all([
+    rc.Purchases.getOfferings(),
+    rc.Purchases.getCustomerInfo(),
+  ]);
 
-  const { isSubscribed, renewsAt } = readEntitlement(customerRes?.customerInfo ?? customerRes);
-  return { plans, isSubscribed, renewsAt, storeUnavailable: false };
+  const plans = ((offerings?.current?.availablePackages ?? []) as AnyRecord[])
+    .map(planFromPackage)
+    .filter((p): p is PlanOption => p !== null)
+    .sort((a, b) => (a.period === 'year' ? -1 : b.period === 'year' ? 1 : 0));
+
+  const entitlement = customer?.customerInfo?.entitlements?.active?.[ENTITLEMENT_ID];
+
+  return {
+    plans,
+    isSubscribed: Boolean(entitlement),
+    renewsAt: (entitlement as AnyRecord)?.expirationDate ?? null,
+    storeUnavailable: false,
+  };
 }
 
 export async function purchasePlan(packageIdentifier: string): Promise<boolean> {
-  const Purchases = await ensureConfigured();
-  const offeringsRes = await Purchases.getOfferings();
-  const all = offeringsRes?.all ?? {};
-  const current = offeringsRes?.current ?? all.default ?? Object.values(all)[0] ?? null;
-  const pkg = ((current as AnyRecord)?.availablePackages ?? []).find(
+  const rc = await loadPlugin();
+  const configured = await ensureConfigured();
+  if (rc && !API_KEY) throw new MissingApiKeyError();
+  if (!rc || !configured) throw new StoreUnavailableError();
+
+  const { current } = await rc.Purchases.getOfferings();
+  const aPackage = (current?.availablePackages ?? []).find(
     (p: AnyRecord) => p?.identifier === packageIdentifier
   );
+  if (!aPackage) throw new Error('המנוי המבוקש אינו זמין כרגע');
 
-  let result: AnyRecord;
-  if (pkg) {
-    result = await Purchases.purchasePackage({ aPackage: pkg });
-  } else {
-    const res = await Purchases.getProducts({ productIdentifiers: [packageIdentifier] });
-    const product = (res?.products ?? [])[0];
-    if (!product) throw new StoreUnavailableError('המוצר אינו זמין כרגע ב-App Store');
-    result = await Purchases.purchaseStoreProduct({ product });
-  }
-  return readEntitlement(result?.customerInfo).isSubscribed;
+  const { customerInfo } = await rc.Purchases.purchasePackage({ aPackage });
+  return Boolean(customerInfo?.entitlements?.active?.[ENTITLEMENT_ID]);
 }
 
 export async function restorePurchases(): Promise<boolean> {
-  const Purchases = await ensureConfigured();
-  const result = await Purchases.restorePurchases();
-  return readEntitlement(result?.customerInfo ?? result).isSubscribed;
+  const rc = await loadPlugin();
+  const configured = await ensureConfigured();
+  if (rc && !API_KEY) throw new MissingApiKeyError();
+  if (!rc || !configured) throw new StoreUnavailableError();
+
+  const { customerInfo } = await rc.Purchases.restorePurchases();
+  return Boolean(customerInfo?.entitlements?.active?.[ENTITLEMENT_ID]);
 }
 
 /** Warm the StoreKit catalog at launch — the first request can take 15-20s cold. */

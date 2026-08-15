@@ -1,17 +1,20 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   loadSubscriptionState,
   purchasePlan,
   restorePurchases as restoreStorePurchases,
-  isStoreAvailable,
-  PREVIEW_PLANS,
-  MissingApiKeyError,
-  StoreUnavailableError,
-  type PlanOption,
+  type SubscriptionState,
 } from '@/lib/subscription';
 import { supabase } from '@/integrations/supabase/client';
 
 export type SubscriptionStatus = 'loading' | 'ready' | 'error';
+
+const EMPTY: SubscriptionState = {
+  plans: [],
+  isSubscribed: false,
+  renewsAt: null,
+  storeUnavailable: false,
+};
 
 const syncToBackend = async () => {
   try {
@@ -25,94 +28,56 @@ const syncToBackend = async () => {
 
 export function useSubscription() {
   const [status, setStatus] = useState<SubscriptionStatus>('loading');
+  const [snapshot, setSnapshot] = useState<SubscriptionState>(EMPTY);
   const [error, setError] = useState<string | null>(null);
   const [isWorking, setIsWorking] = useState(false);
-  const [plans, setPlans] = useState<PlanOption[]>([]);
-  const [isSubscribed, setIsSubscribed] = useState(false);
-  const [renewsAt, setRenewsAt] = useState<string | null>(null);
-  const [storeUnavailable, setStoreUnavailable] = useState(false);
-  const mounted = useRef(true);
-
-  useEffect(() => {
-    mounted.current = true;
-    return () => { mounted.current = false; };
-  }, []);
 
   const refresh = useCallback(async () => {
     setStatus('loading');
     setError(null);
     try {
-      if (!(await isStoreAvailable())) {
-        if (!mounted.current) return;
-        setPlans(PREVIEW_PLANS);
-        setStoreUnavailable(true);
-        setStatus('ready');
-        return;
-      }
-      const state = await loadSubscriptionState();
-      if (!mounted.current) return;
-      setPlans(state.plans);
-      setIsSubscribed(state.isSubscribed);
-      setRenewsAt(state.renewsAt);
-      setStoreUnavailable(state.plans.length === 0);
+      setSnapshot(await loadSubscriptionState());
       setStatus('ready');
-    } catch (e) {
-      if (!mounted.current) return;
-      if (e instanceof StoreUnavailableError) {
-        setPlans(PREVIEW_PLANS);
-        setStoreUnavailable(true);
-        setStatus('ready');
-        return;
-      }
-      setError(
-        e instanceof MissingApiKeyError
-          ? e.message
-          : (e as Error)?.message || 'שגיאה בטעינת המנויים מ-App Store'
-      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'טעינת המנויים נכשלה');
       setStatus('error');
     }
   }, []);
 
-  useEffect(() => { void refresh(); }, [refresh]);
-
-  const purchase = useCallback(async (packageIdentifier: string) => {
-    setIsWorking(true);
-    try {
-      const ok = await purchasePlan(packageIdentifier);
-      if (ok) {
-        await syncToBackend();
-        await refresh();
-      }
-      return ok;
-    } finally {
-      if (mounted.current) setIsWorking(false);
-    }
+  useEffect(() => {
+    void refresh();
   }, [refresh]);
+
+  const purchase = useCallback(
+    async (packageIdentifier: string) => {
+      setIsWorking(true);
+      try {
+        const active = await purchasePlan(packageIdentifier);
+        if (active) {
+          void syncToBackend();
+          await refresh();
+        }
+        return active;
+      } finally {
+        setIsWorking(false);
+      }
+    },
+    [refresh],
+  );
 
   const restore = useCallback(async () => {
     setIsWorking(true);
     try {
-      const ok = await restoreStorePurchases();
-      if (ok) {
-        await syncToBackend();
+      const active = await restoreStorePurchases();
+      if (active) {
+        void syncToBackend();
         await refresh();
       }
-      return ok;
+      return active;
     } finally {
-      if (mounted.current) setIsWorking(false);
+      setIsWorking(false);
     }
   }, [refresh]);
 
-  return {
-    status,
-    error,
-    isWorking,
-    plans,
-    isSubscribed,
-    renewsAt,
-    storeUnavailable,
-    refresh,
-    purchase,
-    restore,
-  };
+  return { status, error, isWorking, refresh, purchase, restore, ...snapshot };
 }
