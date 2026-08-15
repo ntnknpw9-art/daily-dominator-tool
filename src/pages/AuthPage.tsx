@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Capacitor } from '@capacitor/core';
 import { SocialLogin } from '@capgo/capacitor-social-login';
-import { SignInWithApple, SignInWithAppleOptions } from '@capacitor-community/apple-sign-in';
 
 const PUBLISHED_APP_ORIGIN = 'https://daily-dominator-tool.lovable.app';
 const GOOGLE_IOS_CLIENT_ID = '309108409035-3sl22316bkmuom32e1c2jtjjbmgava6i.apps.googleusercontent.com';
@@ -205,36 +204,11 @@ const AuthPage = () => {
     setAppleError('');
     setLoading(true);
     try {
-      // באפליקציית iOS - שימוש ב-Sign in with Apple נייטיבי
-      if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'ios') {
-        const rawNonce = generateNonce();
-        const hashedNonce = await sha256Hex(rawNonce);
-        const options: SignInWithAppleOptions = {
-          clientId: 'com.natanknafo.app',
-          redirectURI: PUBLISHED_APP_ORIGIN,
-          scopes: 'email name',
-          state: generateNonce(),
-          nonce: hashedNonce,
-        };
-        const res = await SignInWithApple.authorize(options);
-        const idToken = res.response?.identityToken;
-        if (!idToken) {
-          setAppleError('לא התקבל token מאפל. נסה שוב.');
-          return;
-        }
-        const { error } = await supabase.auth.signInWithIdToken({
-          provider: 'apple',
-          token: idToken,
-          nonce: rawNonce,
-        });
-        if (error) {
-          setAppleError(friendlyAppleError(error.message));
-        }
-        return;
-      }
-      // בדפדפן - OAuth רגיל
+      // Use the managed Apple OAuth flow everywhere. Passing a native Apple
+      // identity token directly caused its Bundle ID audience to be rejected
+      // by the web Services ID configuration.
       const result = await lovable.auth.signInWithOAuth('apple', {
-        redirect_uri: window.location.origin,
+        redirect_uri: Capacitor.isNativePlatform() ? PUBLISHED_APP_ORIGIN : window.location.origin,
       });
       if (result?.error) {
         setAppleError(friendlyAppleError(result.error.message));
