@@ -6,6 +6,26 @@
 export const MONTHLY_PRODUCT_ID = 'premium_monthly';
 export const YEARLY_PRODUCT_ID = 'premium_yearly';
 export const ENTITLEMENT_ID = 'premium';
+// RevenueCat entitlement identifiers can differ between dashboard setups
+// ('pro' / 'PRO' / 'premium'). Any ACTIVE entitlement means the purchase went
+// through — otherwise a successful payment is reported as "not completed".
+const isEntitled = (customerInfo: AnyRecord | undefined | null) => {
+  const active = (customerInfo?.entitlements?.active ?? {}) as AnyRecord;
+  const keys = Object.keys(active);
+  console.log('[SUBSCRIPTION] active entitlements', keys);
+  return keys.length > 0;
+};
+
+const activeEntitlement = (customerInfo: AnyRecord | undefined | null) => {
+  const active = (customerInfo?.entitlements?.active ?? {}) as AnyRecord;
+  return (
+    active[ENTITLEMENT_ID] ??
+    active['pro'] ??
+    active['PRO'] ??
+    active[Object.keys(active)[0] ?? ''] ??
+    null
+  );
+};
 export const MANAGE_SUBSCRIPTIONS_URL = 'https://apps.apple.com/account/subscriptions';
 
 // `appl_` keys are publishable — safe to ship in the bundle.
