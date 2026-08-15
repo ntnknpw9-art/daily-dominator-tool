@@ -303,108 +303,32 @@ const isIOS = () =>
   Capacitor.getPlatform() === 'ios';
 
 async function ensureInit(userId?: string) {
-  rcLog('init-trace', 'ensureInit entered', { userId: userId ?? '(anonymous)' });
   if (!isIOS()) return null;
   if (!REVENUECAT_IOS_API_KEY) {
     rcLog('init', 'NO API KEY configured');
     return null;
   }
-  rcLog('init-trace', 'before import @revenuecat/purchases-capacitor');
+
   const { Purchases, LOG_LEVEL } = await import('@revenuecat/purchases-capacitor');
-  rcLog('init-trace', 'after import @revenuecat/purchases-capacitor', {
-    hasPurchases: Boolean(Purchases),
-    hasConfigure: typeof Purchases?.configure === 'function',
-    hasIsConfigured: typeof Purchases?.isConfigured === 'function',
-    hasGetAppUserID: typeof Purchases?.getAppUserID === 'function',
-    hasGetStorefront: typeof Purchases?.getStorefront === 'function',
-  });
-  rcLog('init-trace', 'post-import checkpoint: module bindings selected', {
-    purchasesType: typeof Purchases,
-    logLevelType: typeof LOG_LEVEL,
-    hasVerboseLogLevel: Boolean(LOG_LEVEL?.VERBOSE),
-  });
-  rcLog('init-trace', 'post-import checkpoint: runtime platform state', {
-    platform: Capacitor.getPlatform(),
-    isNative: Capacitor.isNativePlatform(),
-    isIOS: isIOS(),
-  });
-  rcLog('init-trace', 'post-import checkpoint: initialized flag read', { initialized });
+
   if (!initialized) {
-    rcLog('init-trace', 'post-import checkpoint: entered !initialized branch');
-    rcLog('init-trace', 'post-import checkpoint: initializePromise state before stale check', {
-      hasInitializePromise: Boolean(initializePromise),
-      initializeStartedAt,
-      elapsedMs: initializeStartedAt ? Date.now() - initializeStartedAt : null,
-      staleThresholdMs: INIT_TIMEOUT_MS + 2000,
-    });
-    if (initializePromise && initializeStartedAt && Date.now() - initializeStartedAt > INIT_TIMEOUT_MS + 2000) {
-      rcLog('init-trace', 'discarding stale initializePromise', {
-        elapsedMs: Date.now() - initializeStartedAt,
-      });
-      initializePromise = null;
-      initializeStartedAt = 0;
-      rcLog('init-trace', 'post-import checkpoint: stale initializePromise cleared');
-    }
-    rcLog('init-trace', 'post-import checkpoint: initializePromise state after stale check', {
-      hasInitializePromise: Boolean(initializePromise),
-      initializeStartedAt,
-    });
     if (!initializePromise) {
-      rcLog('init-trace', 'post-import checkpoint: entered !initializePromise branch');
       initializeStartedAt = Date.now();
-      rcLog('init-trace', 'post-import checkpoint: initializeStartedAt assigned', { initializeStartedAt });
-      const configureOptions = {
-        apiKey: REVENUECAT_IOS_API_KEY,
-        appUserID: userId,
-        storeKitVersion: IOS_STOREKIT_VERSION,
-      } as never;
-      rcLog('init-trace', 'post-import checkpoint: configure options built', {
-        apiKeyPrefix: REVENUECAT_IOS_API_KEY.slice(0, 10),
-        apiKeyLength: REVENUECAT_IOS_API_KEY.length,
-        hasUserId: Boolean(userId),
-        appUserID: userId ?? '(anonymous)',
-        storeKitVersion: IOS_STOREKIT_VERSION,
-      });
       initializePromise = (async () => {
-        rcLog('init-trace', 'post-import checkpoint: initializePromise async body entered');
-        rcLog('init-trace', 'before non-blocking configure', {
-          storeKitVersion: IOS_STOREKIT_VERSION,
-          appUserID: userId ?? '(anonymous)',
-        });
-
-        // Capacitor's iOS plugin resolves configure immediately after the native
-        // RevenueCat singleton is configured. Never mark the JS integration as
-        // ready before that acknowledgement, otherwise every later StoreKit call
-        // can run against an unconfigured native SDK and appear as "0 products".
-        await withTimeout(
-          Purchases.configure(configureOptions),
-          CONFIGURE_TIMEOUT_MS,
-          'RevenueCat configure acknowledgement'
-        );
-        rcLog('init-trace', 'configure acknowledgement received');
-
-        const configuredStatus = await withTimeout(
-          Purchases.isConfigured(),
-          RUNTIME_DIAGNOSTIC_TIMEOUT_MS,
-          'RevenueCat isConfigured verification'
-        );
-        rcLog('init-trace', 'post-config isConfigured verification', configuredStatus);
-        if (!configuredStatus?.isConfigured) {
-          throw new Error('RevenueCat native SDK did not report a configured state');
-        }
-
+        await Purchases.setLogLevel({ level: LOG_LEVEL.VERBOSE }).catch(() => {});
+        // Minimal configure — exactly like the standalone paywall that worked.
+        await Purchases.configure({
+          apiKey: REVENUECAT_IOS_API_KEY,
+          ...(userId ? { appUserID: userId } : {}),
+        } as never);
         initialized = true;
         configuredAppUserID = userId ?? null;
-        await Purchases.setLogLevel({ level: LOG_LEVEL.VERBOSE }).catch(() => {});
-        rcLog('init-trace', 'native configure verified; product loading unblocked');
+        rcLog('init', 'configure ok');
       })();
     }
     try {
-      rcLog('init-trace', 'before await initializePromise');
       await initializePromise;
-      rcLog('init-trace', 'after await initializePromise');
     } catch (e) {
-      rcLog('init-trace', 'initializePromise rejected', errorDebug(e));
       initialized = false;
       initializePromise = null;
       initializeStartedAt = 0;
@@ -413,9 +337,7 @@ async function ensureInit(userId?: string) {
     }
   } else if (userId && configuredAppUserID !== userId) {
     try {
-      rcLog('init-trace', 'before logIn', { appUserID: userId });
-      const result = await Purchases.logIn({ appUserID: userId });
-      rcLog('init-trace', 'after logIn', result);
+      await Purchases.logIn({ appUserID: userId });
       configuredAppUserID = userId;
     } catch (e) {
       rememberRevenueCatError('logIn', e);
@@ -423,6 +345,7 @@ async function ensureInit(userId?: string) {
   }
   return Purchases;
 }
+
 
 export async function getRevenueCatRuntimeDiagnostics() {
   const start = Date.now();
