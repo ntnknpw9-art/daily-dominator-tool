@@ -111,6 +111,14 @@ async function ensureConfigured(): Promise<boolean> {
       const rc = await loadPlugin();
       if (!rc || !API_KEY) return false;
       await rc.Purchases.configure({ apiKey: API_KEY });
+      // Attach the purchase to the signed-in account so it is not lost.
+      try {
+        const { supabase } = await import('@/integrations/supabase/client');
+        const { data } = await supabase.auth.getUser();
+        if (data?.user?.id) await rc.Purchases.logIn({ appUserID: data.user.id });
+      } catch (e) {
+        console.warn('[SUBSCRIPTION] logIn skipped', e);
+      }
       return true;
     })();
   }
