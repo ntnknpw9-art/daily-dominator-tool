@@ -18,11 +18,10 @@ const syncNativeStatusBar = async (theme: 'dark' | 'light') => {
     return;
   }
   try {
+    const bgColor = theme === 'light' ? '#fafafa' : '#0a0a0a';
     await StatusBar.setStyle({ style: theme === 'light' ? Style.Light : Style.Dark });
-    if (Capacitor.getPlatform() === 'android') {
-      await StatusBar.setBackgroundColor({ color: theme === 'light' ? '#fafafa' : '#0a0a0a' });
-    }
-    console.log(`[StatusBar] synced -> ${theme} on ${Capacitor.getPlatform()}`);
+    await StatusBar.setBackgroundColor({ color: bgColor });
+    console.log(`[StatusBar] synced -> ${theme} (${bgColor}) on ${Capacitor.getPlatform()}`);
   } catch (e) {
     console.error('[StatusBar] native call failed:', e);
   }
