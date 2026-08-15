@@ -237,7 +237,7 @@ export const getRevenueCatClientConfig = () => ({
   purchaseTimeoutMs: PURCHASE_TIMEOUT_MS,
   runtimeDiagnosticTimeoutMs: RUNTIME_DIAGNOSTIC_TIMEOUT_MS,
   restSnapshotTimeoutMs: REST_SNAPSHOT_TIMEOUT_MS,
-  expectedBundleId: 'com.natanknafo.dailydominator',
+  expectedBundleId: 'com.natanknafo.app',
   expectedDefaultOfferingId: 'default',
   expectedPackages: ['$rc_monthly', '$rc_annual'],
   expectedProductIds: ALL_PRODUCT_IDS,

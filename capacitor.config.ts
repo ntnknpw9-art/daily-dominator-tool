@@ -11,7 +11,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 const liveServerUrl = process.env.CAP_SERVER_URL;
 
 const config: CapacitorConfig = {
-  appId: 'com.natanknafo.dailydominator',
+  appId: 'com.natanknafo.app',
   appName: 'Daily Dominator',
   webDir: 'dist',
   ...(liveServerUrl && {

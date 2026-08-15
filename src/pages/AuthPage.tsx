@@ -210,7 +210,7 @@ const AuthPage = () => {
         const rawNonce = generateNonce();
         const hashedNonce = await sha256Hex(rawNonce);
         const options: SignInWithAppleOptions = {
-          clientId: 'com.natanknafo.dailydominator',
+          clientId: 'com.natanknafo.app',
           redirectURI: PUBLISHED_APP_ORIGIN,
           scopes: 'email name',
           state: generateNonce(),
