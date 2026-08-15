@@ -470,13 +470,9 @@ function extractActive(customerInfo?: RevenueCatCustomerInfo): { isPremium: bool
 export async function purchasePackage(pkg: RevenueCatPackage) {
   try {
     const { data: auth } = await supabase.auth.getUser();
-    const Purchases = await withTimeout(ensureInit(auth.user?.id), INIT_TIMEOUT_MS, 'RevenueCat initialize');
+    const Purchases = await ensureInit(auth.user?.id);
     if (!Purchases) throw new Error('iOS only');
-    const result: RevenueCatPurchaseResult = await withTimeout(
-      Purchases.purchasePackage({ aPackage: pkg as any }),
-      PURCHASE_TIMEOUT_MS,
-      'RevenueCat purchasePackage'
-    );
+    const result: RevenueCatPurchaseResult = await Purchases.purchasePackage({ aPackage: pkg as any });
     const active = extractActive(result.customerInfo);
     await syncToSupabase();
     return active;
@@ -489,13 +485,9 @@ export async function purchasePackage(pkg: RevenueCatPackage) {
 export async function purchaseStoreProduct(product: RevenueCatStoreProduct) {
   try {
     const { data: auth } = await supabase.auth.getUser();
-    const Purchases = await withTimeout(ensureInit(auth.user?.id), INIT_TIMEOUT_MS, 'RevenueCat initialize');
+    const Purchases = await ensureInit(auth.user?.id);
     if (!Purchases) throw new Error('iOS only');
-    const result: RevenueCatPurchaseResult = await withTimeout(
-      Purchases.purchaseStoreProduct({ product: product as any }),
-      PURCHASE_TIMEOUT_MS,
-      'RevenueCat purchaseStoreProduct'
-    );
+    const result: RevenueCatPurchaseResult = await Purchases.purchaseStoreProduct({ product: product as any });
     const active = extractActive(result.customerInfo);
     await syncToSupabase();
     return active;
@@ -504,6 +496,7 @@ export async function purchaseStoreProduct(product: RevenueCatStoreProduct) {
     throw e;
   }
 }
+
 
 export async function restorePurchases() {
   try {
