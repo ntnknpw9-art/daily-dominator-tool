@@ -164,11 +164,11 @@ export async function loadSubscriptionState(): Promise<SubscriptionState> {
     .filter((p): p is PlanOption => p !== null)
     .sort((a, b) => (a.period === 'year' ? -1 : b.period === 'year' ? 1 : 0));
 
-  const entitlement = customer?.customerInfo?.entitlements?.active?.[ENTITLEMENT_ID];
+  const entitlement = activeEntitlement(customer?.customerInfo);
 
   return {
     plans,
-    isSubscribed: Boolean(entitlement),
+    isSubscribed: isEntitled(customer?.customerInfo),
     renewsAt: (entitlement as AnyRecord)?.expirationDate ?? null,
     storeUnavailable: false,
   };
