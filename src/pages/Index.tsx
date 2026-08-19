@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
+import { Capacitor } from '@capacitor/core';
+
 import { SeoHead } from '@/components/SeoHead';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -53,8 +55,11 @@ const mobileBottomTabs = [
   { id: 'analytics', label: 'נתונים', icon: BarChart3 },
 ];
 
+const isNative = Capacitor.isNativePlatform();
+
 const AppContent = () => {
   const { signOut } = useAuth();
+
   const [activeTab, setActiveTab] = useState(() => {
     // Resume an in-progress workout after the app was backgrounded/reloaded
     try {
@@ -84,14 +89,15 @@ const AppContent = () => {
       <div className="h-[100dvh] overflow-hidden bg-background flex w-full">
         <ConfettiOverlay particles={particles} />
         
-        {/* Desktop Sidebar */}
-        <AppSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+        {/* Desktop Sidebar (web only — native uses the phone layout) */}
+        {!isNative && <AppSidebar activeTab={activeTab} setActiveTab={setActiveTab} />}
+
         
         <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
           <header className="app-header-safe border-b border-border/50 bg-card/50 backdrop-blur-sm shrink-0 z-40">
             <div className="max-w-4xl mx-auto px-3 sm:px-4 py-2 flex items-center justify-between gap-1">
               <div className="flex items-center gap-2">
-                <SidebarTrigger className="hidden lg:flex ml-2" />
+                {!isNative && <SidebarTrigger className="hidden lg:flex ml-2" />}
                 <h1 className="text-xl sm:text-2xl font-black text-foreground whitespace-nowrap tracking-tight">המעקב שלך 🎯</h1>
               </div>
               <div className="flex gap-1 sm:gap-2 shrink-0 items-center">
@@ -185,7 +191,7 @@ const AppContent = () => {
           </div>
 
           {/* Mobile bottom nav */}
-          <nav className="relative lg:hidden shrink-0 z-40 bg-card/95 backdrop-blur-md border-t border-border/50 app-nav-safe">
+          <nav className={`relative shrink-0 z-40 bg-card/95 backdrop-blur-md border-t border-border/50 app-nav-safe ${isNative ? '' : 'lg:hidden'}`}>
 
           <div className="flex justify-around items-center px-1 py-1.5">
             {mobileBottomTabs.map(tab => {
