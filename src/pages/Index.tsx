@@ -53,8 +53,11 @@ const mobileBottomTabs = [
   { id: 'analytics', label: 'נתונים', icon: BarChart3 },
 ];
 
+const isNative = Capacitor.isNativePlatform();
+
 const AppContent = () => {
   const { signOut } = useAuth();
+
   const [activeTab, setActiveTab] = useState(() => {
     // Resume an in-progress workout after the app was backgrounded/reloaded
     try {
