@@ -97,7 +97,7 @@ const AppContent = () => {
           <header className="app-header-safe border-b border-border/50 bg-card/50 backdrop-blur-sm shrink-0 z-40">
             <div className="max-w-4xl mx-auto px-3 sm:px-4 py-2 flex items-center justify-between gap-1">
               <div className="flex items-center gap-2">
-                <SidebarTrigger className="hidden lg:flex ml-2" />
+                {!isNative && <SidebarTrigger className="hidden lg:flex ml-2" />}
                 <h1 className="text-xl sm:text-2xl font-black text-foreground whitespace-nowrap tracking-tight">המעקב שלך 🎯</h1>
               </div>
               <div className="flex gap-1 sm:gap-2 shrink-0 items-center">
