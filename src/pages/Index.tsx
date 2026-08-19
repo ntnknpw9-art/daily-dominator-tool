@@ -89,8 +89,9 @@ const AppContent = () => {
       <div className="h-[100dvh] overflow-hidden bg-background flex w-full">
         <ConfettiOverlay particles={particles} />
         
-        {/* Desktop Sidebar */}
-        <AppSidebar activeTab={activeTab} setActiveTab={setActiveTab} />
+        {/* Desktop Sidebar (web only — native uses the phone layout) */}
+        {!isNative && <AppSidebar activeTab={activeTab} setActiveTab={setActiveTab} />}
+
         
         <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
           <header className="app-header-safe border-b border-border/50 bg-card/50 backdrop-blur-sm shrink-0 z-40">
