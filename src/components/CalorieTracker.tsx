@@ -544,65 +544,98 @@ const CalorieTracker = () => {
     try {
       const { Capacitor } = await import('@capacitor/core');
       if (Capacitor.isNativePlatform()) {
-        // Native: use MLKit barcode scanner (Apple Vision / Google MLKit)
-        const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
+        // Native: try MLKit scanner if the plugin is actually available
         try {
+          const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
           const { supported } = await BarcodeScanner.isSupported();
-          if (!supported) {
-            toast.error('סריקת ברקוד לא נתמכת במכשיר הזה. הזן ברקוד ידנית.');
+          if (supported) {
+            const { camera } = await BarcodeScanner.requestPermissions();
+            if (camera !== 'granted' && camera !== 'limited') {
+              toast.error('נדרשת הרשאת מצלמה כדי לסרוק ברקוד');
+              return;
+            }
+            const { barcodes } = await BarcodeScanner.scan();
+            if (barcodes && barcodes.length > 0) {
+              const code = barcodes[0].rawValue;
+              if (code) lookupBarcode(code);
+            }
             return;
-          }
-          const { camera } = await BarcodeScanner.requestPermissions();
-          if (camera !== 'granted' && camera !== 'limited') {
-            toast.error('נדרשת הרשאת מצלמה כדי לסרוק ברקוד');
-            return;
-          }
-          const { barcodes } = await BarcodeScanner.scan();
-          if (barcodes && barcodes.length > 0) {
-            const code = barcodes[0].rawValue;
-            if (code) lookupBarcode(code);
           }
         } catch (err: any) {
-          const msg = String(err?.message || err || '');
-          if (!msg.toLowerCase().includes('cancel')) {
-            console.error('barcode scan error:', msg);
-            toast.error(msg ? `שגיאה בסריקה: ${msg}` : 'שגיאה בסריקת הברקוד');
-          }
+          const msg = String(err?.message || err || '').toLowerCase();
+          if (msg.includes('cancel')) return;
+          // plugin missing / not implemented → fall through to in-app camera scanner
+          console.warn('MLKit scanner unavailable, using in-app scanner:', msg);
         }
-        return;
-
       }
 
-      // Web fallback: in-page camera + BarcodeDetector
+      // In-app camera scanner (works in browser and inside the native WebView)
       setBarcodeMode(true);
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
+        video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
       });
       streamRef.current = stream;
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        videoRef.current.setAttribute('playsinline', 'true');
+        try { await videoRef.current.play(); } catch {}
       }
+
+      // Try to enable continuous autofocus / torch-capable track settings
+      try {
+        const track = stream.getVideoTracks()[0];
+        const caps: any = track.getCapabilities?.() || {};
+        const adv: any[] = [];
+        if (caps.focusMode?.includes?.('continuous')) adv.push({ focusMode: 'continuous' });
+        if (adv.length) await track.applyConstraints({ advanced: adv } as any);
+      } catch {}
+
+      const onCode = (code: string) => {
+        if (!code) return;
+        stopBarcodeScanner();
+        lookupBarcode(code);
+      };
+
       if ('BarcodeDetector' in window) {
         const detector = new (window as any).BarcodeDetector({
-          formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39'],
+          formats: ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39', 'itf'],
         });
         const scanLoop = async () => {
           if (!videoRef.current || videoRef.current.readyState < 2) return;
           try {
             const barcodes = await detector.detect(videoRef.current);
-            if (barcodes.length > 0) {
-              const code = barcodes[0].rawValue;
-              stopBarcodeScanner();
-              lookupBarcode(code);
-            }
+            if (barcodes.length > 0) onCode(barcodes[0].rawValue);
           } catch {}
         };
-        barcodeIntervalRef.current = window.setInterval(scanLoop, 500);
-      } else {
-        toast.error('הדפדפן לא תומך בסריקת ברקוד. הזן ברקוד ידנית.');
+        barcodeIntervalRef.current = window.setInterval(scanLoop, 350);
+        return;
       }
-    } catch (err) {
-      toast.error('לא ניתן לגשת למצלמה');
+
+      // ZXing fallback (iOS WKWebView / Safari have no BarcodeDetector)
+      const { BrowserMultiFormatReader } = await import('@zxing/browser');
+      const { DecodeHintType, BarcodeFormat } = await import('@zxing/library');
+      const hints = new Map();
+      hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+        BarcodeFormat.EAN_13,
+        BarcodeFormat.EAN_8,
+        BarcodeFormat.UPC_A,
+        BarcodeFormat.UPC_E,
+        BarcodeFormat.CODE_128,
+        BarcodeFormat.CODE_39,
+        BarcodeFormat.ITF,
+      ]);
+      hints.set(DecodeHintType.TRY_HARDER, true);
+      const reader = new BrowserMultiFormatReader(hints, { delayBetweenScanAttempts: 150 });
+      zxingControlsRef.current = await reader.decodeFromStream(
+        stream,
+        videoRef.current!,
+        (result) => {
+          if (result) onCode(result.getText());
+        }
+      );
+    } catch (err: any) {
+      console.error('camera error:', err);
+      toast.error(err?.name === 'NotAllowedError' ? 'נדרשת הרשאת מצלמה' : 'לא ניתן לגשת למצלמה');
       setBarcodeMode(false);
     }
   };
@@ -612,12 +645,18 @@ const CalorieTracker = () => {
       clearInterval(barcodeIntervalRef.current);
       barcodeIntervalRef.current = null;
     }
+    if (zxingControlsRef.current) {
+      try { zxingControlsRef.current.stop(); } catch {}
+      zxingControlsRef.current = null;
+    }
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
       streamRef.current = null;
     }
+    if (videoRef.current) videoRef.current.srcObject = null;
     setBarcodeMode(false);
   };
+
 
   const lookupBarcode = async (code: string) => {
     setBarcodeScanning(true);
