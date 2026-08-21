@@ -90,6 +90,8 @@ const CalorieTracker = () => {
   const [barcodeResult, setBarcodeResult] = useState<any>(null);
   const [servingCount, setServingCount] = useState(1);
   const barcodeIntervalRef = useRef<number | null>(null);
+  const zxingControlsRef = useRef<{ stop: () => void } | null>(null);
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
