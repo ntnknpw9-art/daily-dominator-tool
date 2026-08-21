@@ -20,8 +20,9 @@ serve(async (req) => {
       });
     }
 
-    const { barcode } = await req.json();
-    if (!barcode || typeof barcode !== "string" || barcode.length < 4) {
+    const body = await req.json().catch(() => ({}));
+    const barcode = String(body?.barcode ?? "").trim();
+    if (barcode.replace(/\D/g, "").length < 6) {
       return new Response(
         JSON.stringify({ error: "ברקוד לא תקין" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -30,6 +31,7 @@ serve(async (req) => {
 
     // Query Open Food Facts API (free, no API key needed)
     const code = barcode.replace(/\D/g, "");
+
     const notFound = () =>
       new Response(
         JSON.stringify({ found: false, error: "המוצר לא נמצא במאגר. נסה להוסיף ידנית." }),
