@@ -20,8 +20,9 @@ serve(async (req) => {
       });
     }
 
-    const { barcode } = await req.json();
-    if (!barcode || typeof barcode !== "string" || barcode.length < 4) {
+    const body = await req.json().catch(() => ({}));
+    const barcode = String(body?.barcode ?? "").trim();
+    if (barcode.replace(/\D/g, "").length < 6) {
       return new Response(
         JSON.stringify({ error: "ברקוד לא תקין" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -29,30 +30,48 @@ serve(async (req) => {
     }
 
     // Query Open Food Facts API (free, no API key needed)
-    const response = await fetch(
-      `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(barcode)}?fields=product_name,brands,nutriments,serving_size,image_url,quantity`,
-      {
-        headers: {
-          "User-Agent": "LovableDisciplineApp/1.0",
-        },
-      }
-    );
+    const code = barcode.replace(/\D/g, "");
 
-    if (!response.ok) {
-      return new Response(
-        JSON.stringify({ error: "שגיאה בחיפוש המוצר" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const data = await response.json();
-
-    if (data.status === 0 || !data.product) {
-      return new Response(
+    const notFound = () =>
+      new Response(
         JSON.stringify({ found: false, error: "המוצר לא נמצא במאגר. נסה להוסיף ידנית." }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+
+    let response: Response;
+    try {
+      response = await fetch(
+        `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code)}?fields=product_name,brands,nutriments,serving_size,image_url,quantity`,
+        { headers: { "User-Agent": "DailyDominator/1.0 (support@dailydominator.org)" } }
+      );
+    } catch (fetchErr) {
+      console.error("OFF fetch failed:", fetchErr);
+      return new Response(
+        JSON.stringify({ error: "שגיאה בחיבור למאגר המוצרים. נסה שוב." }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
+
+    // OFF returns 404 for unknown barcodes — that's "not found", not a server error
+    if (response.status === 404) return notFound();
+
+    if (!response.ok) {
+      console.error("OFF error status:", response.status);
+      return new Response(
+        JSON.stringify({ error: "שגיאה בחיפוש המוצר" }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    let data: any;
+    try {
+      data = await response.json();
+    } catch {
+      return notFound();
+    }
+
+    if (data.status === 0 || !data.product) return notFound();
+
 
     const p = data.product;
     const n = p.nutriments || {};

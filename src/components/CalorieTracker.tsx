@@ -547,6 +547,11 @@ const CalorieTracker = () => {
         // Native: use MLKit barcode scanner (Apple Vision / Google MLKit)
         const { BarcodeScanner } = await import('@capacitor-mlkit/barcode-scanning');
         try {
+          const { supported } = await BarcodeScanner.isSupported();
+          if (!supported) {
+            toast.error('סריקת ברקוד לא נתמכת במכשיר הזה. הזן ברקוד ידנית.');
+            return;
+          }
           const { camera } = await BarcodeScanner.requestPermissions();
           if (camera !== 'granted' && camera !== 'limited') {
             toast.error('נדרשת הרשאת מצלמה כדי לסרוק ברקוד');
@@ -558,11 +563,14 @@ const CalorieTracker = () => {
             if (code) lookupBarcode(code);
           }
         } catch (err: any) {
-          if (!String(err?.message || '').toLowerCase().includes('cancel')) {
-            toast.error('שגיאה בסריקת הברקוד');
+          const msg = String(err?.message || err || '');
+          if (!msg.toLowerCase().includes('cancel')) {
+            console.error('barcode scan error:', msg);
+            toast.error(msg ? `שגיאה בסריקה: ${msg}` : 'שגיאה בסריקת הברקוד');
           }
         }
         return;
+
       }
 
       // Web fallback: in-page camera + BarcodeDetector
