@@ -36,7 +36,13 @@ const DisciplineDNA = () => {
   }, [profile]);
 
   useEffect(() => {
-    if (profile) drawRadar();
+    if (!profile || !canvasRef.current) return;
+
+    drawRadar();
+    const resizeObserver = new ResizeObserver(drawRadar);
+    resizeObserver.observe(canvasRef.current);
+
+    return () => resizeObserver.disconnect();
   }, [profile]);
 
   const analyzeProfile = async () => {
@@ -121,7 +127,18 @@ const DisciplineDNA = () => {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const size = canvas.width;
+    const size = canvas.clientWidth || 300;
+    const dpr = Math.min(window.devicePixelRatio || 1, 3);
+
+    // Keep drawing coordinates in CSS pixels while backing the canvas with
+    // enough physical pixels for Retina and other high-density screens.
+    const pixelSize = Math.round(size * dpr);
+    if (canvas.width !== pixelSize || canvas.height !== pixelSize) {
+      canvas.width = pixelSize;
+      canvas.height = pixelSize;
+    }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
     const center = size / 2;
     const radius = center - 40;
     const labels = ['עקביות', 'בוקר', 'ערב', 'ספורט', 'לימודים', 'משמעת', 'התאוששות', 'סטריק'];
@@ -141,6 +158,8 @@ const DisciplineDNA = () => {
     const dataFill = isLight ? 'hsla(72, 85%, 32%, 0.22)' : 'hsla(72, 88%, 46%, 0.2)';
 
     ctx.clearRect(0, 0, size, size);
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
 
     // Draw grid
     for (let level = 1; level <= 5; level++) {
@@ -230,7 +249,13 @@ const DisciplineDNA = () => {
             </div>
 
             <div className="flex justify-center">
-              <canvas ref={canvasRef} width={300} height={300} />
+              <canvas
+                ref={canvasRef}
+                width={300}
+                height={300}
+                className="aspect-square w-full max-w-[300px]"
+                aria-label="גרף DNA המשמעת האישי"
+              />
             </div>
 
             <div className="grid grid-cols-4 gap-2">
