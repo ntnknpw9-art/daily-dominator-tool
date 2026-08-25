@@ -30,6 +30,12 @@ const DisciplineDNA = () => {
   }, [user]);
 
   useEffect(() => {
+    const obs = new MutationObserver(() => { if (profile) drawRadar(); });
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => obs.disconnect();
+  }, [profile]);
+
+  useEffect(() => {
     if (profile) drawRadar();
   }, [profile]);
 
@@ -127,6 +133,13 @@ const DisciplineDNA = () => {
     const sides = labels.length;
     const angle = (2 * Math.PI) / sides;
 
+    const isLight = document.documentElement.classList.contains('light');
+    const gridColor = isLight ? 'rgba(0,0,0,0.10)' : 'rgba(255,255,255,0.08)';
+    const axisColor = isLight ? 'rgba(0,0,0,0.14)' : 'rgba(255,255,255,0.1)';
+    const labelColor = isLight ? 'rgba(20,20,20,0.85)' : 'rgba(255,255,255,0.7)';
+    const dataStroke = isLight ? 'hsl(72, 85%, 32%)' : 'hsl(72, 88%, 46%)';
+    const dataFill = isLight ? 'hsla(72, 85%, 32%, 0.22)' : 'hsla(72, 88%, 46%, 0.2)';
+
     ctx.clearRect(0, 0, size, size);
 
     // Draw grid
@@ -140,7 +153,7 @@ const DisciplineDNA = () => {
         if (i === 0) ctx.moveTo(x, y);
         else ctx.lineTo(x, y);
       }
-      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.strokeStyle = gridColor;
       ctx.lineWidth = 1;
       ctx.stroke();
     }
@@ -151,7 +164,7 @@ const DisciplineDNA = () => {
       ctx.beginPath();
       ctx.moveTo(center, center);
       ctx.lineTo(center + radius * Math.cos(a), center + radius * Math.sin(a));
-      ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+      ctx.strokeStyle = axisColor;
       ctx.stroke();
     }
 
@@ -166,9 +179,9 @@ const DisciplineDNA = () => {
       else ctx.lineTo(x, y);
     });
     ctx.closePath();
-    ctx.fillStyle = 'hsla(72, 88%, 46%, 0.2)';
+    ctx.fillStyle = dataFill;
     ctx.fill();
-    ctx.strokeStyle = 'hsl(72, 88%, 46%)';
+    ctx.strokeStyle = dataStroke;
     ctx.lineWidth = 2;
     ctx.stroke();
 
@@ -181,13 +194,13 @@ const DisciplineDNA = () => {
 
       ctx.beginPath();
       ctx.arc(x, y, 4, 0, 2 * Math.PI);
-      ctx.fillStyle = 'hsl(72, 88%, 46%)';
+      ctx.fillStyle = dataStroke;
       ctx.fill();
 
       // Label
       const lx = center + (radius + 25) * Math.cos(a);
       const ly = center + (radius + 25) * Math.sin(a);
-      ctx.fillStyle = 'rgba(255,255,255,0.7)';
+      ctx.fillStyle = labelColor;
       ctx.font = '11px Heebo, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
