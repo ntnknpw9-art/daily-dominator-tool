@@ -127,6 +127,13 @@ const DisciplineDNA = () => {
     const sides = labels.length;
     const angle = (2 * Math.PI) / sides;
 
+    const isLight = document.documentElement.classList.contains('light');
+    const gridColor = isLight ? 'rgba(0,0,0,0.10)' : 'rgba(255,255,255,0.08)';
+    const axisColor = isLight ? 'rgba(0,0,0,0.14)' : 'rgba(255,255,255,0.1)';
+    const labelColor = isLight ? 'rgba(20,20,20,0.85)' : 'rgba(255,255,255,0.7)';
+    const dataStroke = isLight ? 'hsl(72, 85%, 32%)' : 'hsl(72, 88%, 46%)';
+    const dataFill = isLight ? 'hsla(72, 85%, 32%, 0.22)' : 'hsla(72, 88%, 46%, 0.2)';
+
     ctx.clearRect(0, 0, size, size);
 
     // Draw grid
