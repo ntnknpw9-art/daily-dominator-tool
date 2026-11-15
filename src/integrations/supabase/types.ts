@@ -1184,6 +1184,34 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      find_profile_by_name: {
+        Args: { _query: string }
+        Returns: {
+          display_name: string
+          user_id: string
+        }[]
+      }
+      get_leaderboard: {
+        Args: never
+        Returns: {
+          current_streak: number
+          display_name: string
+          level: number
+          longest_streak: number
+          total_tasks_completed: number
+          user_id: string
+          xp: number
+        }[]
+      }
+      get_season_leaderboard: {
+        Args: { _season: number }
+        Returns: {
+          display_name: string
+          league: string
+          season_xp: number
+          user_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1192,6 +1220,7 @@ export type Database = {
         Returns: boolean
       }
       is_blocked_with: { Args: { _other: string }; Returns: boolean }
+      is_friend_of: { Args: { _other: string }; Returns: boolean }
       move_to_dlq: {
         Args: {
           dlq_name: string
