@@ -1,3 +1,4 @@
+import { authErrorMessage, authRequest, isAuthServiceUnavailable } from '@/lib/auth-errors';
 import { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { lovable } from '@/integrations/lovable/index';
@@ -51,22 +52,22 @@ const AuthPage = () => {
       return;
     }
     setLoading(true);
-    const { error } = await supabase.auth.verifyOtp({
+    const { error } = await authRequest(() => supabase.auth.verifyOtp({
       email,
       token: otpCode,
       type: 'signup',
-    });
+    }));
     setLoading(false);
-    if (error) setError('קוד שגוי או שפג תוקפו. נסה שוב.');
+    if (error) setError(isAuthServiceUnavailable(error) ? authErrorMessage(error) : 'קוד שגוי או שפג תוקפו. נסה שוב.');
     // success → onAuthStateChange ייכנס למשתמש אוטומטית
   };
 
   const handleResendOtp = async () => {
     setError(''); setSuccessMsg('');
     setLoading(true);
-    const { error } = await supabase.auth.resend({ type: 'signup', email });
+    const { error } = await authRequest(() => supabase.auth.resend({ type: 'signup', email }));
     setLoading(false);
-    if (error) setError(error.message);
+    if (error) setError(authErrorMessage(error));
     else setSuccessMsg('קוד חדש נשלח למייל שלך');
   };
 
@@ -74,9 +75,9 @@ const AuthPage = () => {
     setError(''); setSuccessMsg('');
     if (!email) { setError('הזן את כתובת המייל שלך'); return; }
     setLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email);
+    const { error } = await authRequest(() => supabase.auth.resetPasswordForEmail(email));
     setLoading(false);
-    if (error) { setError(error.message); return; }
+    if (error) { setError(authErrorMessage(error)); return; }
     setResetStep('code');
     setSuccessMsg('שלחנו קוד בן 8 ספרות למייל שלך');
   };
@@ -88,19 +89,19 @@ const AuthPage = () => {
     if (newPassword.length < 6) { setError('הסיסמה חייבת להכיל לפחות 6 תווים'); return; }
     if (newPassword !== confirmNewPassword) { setError('הסיסמאות אינן תואמות'); return; }
     setLoading(true);
-    const { error: verifyError } = await supabase.auth.verifyOtp({
+    const { error: verifyError } = await authRequest(() => supabase.auth.verifyOtp({
       email,
       token: resetCode,
       type: 'recovery',
-    });
+    }));
     if (verifyError) {
       setLoading(false);
-      setError('קוד שגוי או שפג תוקפו. נסה שוב.');
+      setError(isAuthServiceUnavailable(verifyError) ? authErrorMessage(verifyError) : 'קוד שגוי או שפג תוקפו. נסה שוב.');
       return;
     }
-    const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+    const { error: updateError } = await authRequest(() => supabase.auth.updateUser({ password: newPassword }));
     setLoading(false);
-    if (updateError) { setError(updateError.message); return; }
+    if (updateError) { setError(authErrorMessage(updateError)); return; }
     setSuccessMsg('הסיסמה עודכנה בהצלחה! מתחבר...');
     setResetStep('none');
     setResetCode(''); setNewPassword(''); setConfirmNewPassword('');
@@ -116,16 +117,17 @@ const AuthPage = () => {
       return;
     }
     setLoading(true);
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    const { error } = await authRequest(() => supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,
-    });
+    }));
     setLoading(false);
-    if (error) setError(error.message);
+    if (error) setError(authErrorMessage(error));
     else setSuccessMsg('נשלח מייל לאיפוס סיסמה. בדוק את תיבת הדואר שלך.');
   };
 
   const friendlyAppleError = (msg?: string) => {
     const m = (msg || '').toLowerCase();
+    if (isAuthServiceUnavailable({ message: msg })) return authErrorMessage({ message: msg });
     if (!msg) return 'ההתחברות עם Apple נכשלה. נסה שוב.';
     if (m.includes('cancel') || m.includes('closed') || m.includes('popup') || m.includes('denied') || m.includes('access_denied'))
       return 'ביטלת את ההתחברות עם Apple. אפשר לנסות שוב.';
@@ -140,6 +142,7 @@ const AuthPage = () => {
 
   const friendlyGoogleError = (msg?: string) => {
     const m = (msg || '').toLowerCase();
+    if (isAuthServiceUnavailable({ message: msg })) return authErrorMessage({ message: msg });
     if (!msg) return 'ההתחברות עם Google נכשלה. נסה שוב.';
     if (m.includes('cancel') || m.includes('12501') || m.includes('canceled')) return '';
     if (m.includes('unacceptable audience') || m.includes('audience'))
@@ -178,12 +181,12 @@ const AuthPage = () => {
           setError('לא התקבל token מ-Google. נסה שוב.');
           return;
         }
-        const { error } = await supabase.auth.signInWithIdToken({
+        const { error } = await authRequest(() => supabase.auth.signInWithIdToken({
           provider: 'google',
           token: idToken,
           nonce: rawNonce,
-        });
-        if (error) setError(friendlyGoogleError(error.message));
+        }));
+        if (error) setError(isAuthServiceUnavailable(error) ? authErrorMessage(error) : friendlyGoogleError(error.message));
         return;
       }
 
@@ -223,12 +226,12 @@ const AuthPage = () => {
           setAppleError('לא התקבל token מאפל. נסה שוב.');
           return;
         }
-        const { error } = await supabase.auth.signInWithIdToken({
+        const { error } = await authRequest(() => supabase.auth.signInWithIdToken({
           provider: 'apple',
           token: idToken,
           nonce: rawNonce,
-        });
-        if (error) setAppleError(friendlyAppleError(error.message));
+        }));
+        if (error) setAppleError(isAuthServiceUnavailable(error) ? authErrorMessage(error) : friendlyAppleError(error.message));
         return;
       }
 
@@ -282,11 +285,11 @@ const AuthPage = () => {
             // ignore — fall through to original error
           }
         }
-        if (error) setError(error.message);
+        if (error) setError(authErrorMessage(error));
       }
     } else {
       const { error } = await signUp(email, password, displayName);
-      if (error) setError(error.message);
+      if (error) setError(authErrorMessage(error));
       else {
         setOtpStep(true);
         setSuccessMsg('שלחנו קוד בן 8 ספרות למייל שלך');

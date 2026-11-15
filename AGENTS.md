@@ -1,0 +1,2 @@
+# Architecture rules
+- Use the shared auth error classifier and request wrapper across authentication screens so service outages are not reported as bad credentials and thrown transport errors release busy states; never automatically retry identity or password mutations.

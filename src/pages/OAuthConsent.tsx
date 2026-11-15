@@ -1,3 +1,4 @@
+import { authErrorMessage, authRequest } from '@/lib/auth-errors';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -71,7 +72,11 @@ const OAuthConsent = () => {
         return;
       }
       setDetails(details);
-    })();
+    })().catch((error) => {
+      if (!active) return;
+      setError(authErrorMessage(error));
+      setSession(false);
+    });
     return () => {
       active = false;
     };
@@ -80,14 +85,15 @@ const OAuthConsent = () => {
   const decide = async (approve: boolean) => {
     setBusy(true);
     setError(null);
-    const { data, error } = approve
-      ? await oauth().approveAuthorization(authorizationId)
-      : await oauth().denyAuthorization(authorizationId);
-    if (error) {
+    const result = await authRequest(() => approve
+      ? oauth().approveAuthorization(authorizationId)
+      : oauth().denyAuthorization(authorizationId));
+    if (result.error) {
       setBusy(false);
-      setError(error.message);
+      setError(authErrorMessage(result.error));
       return;
     }
+    const data = 'data' in result ? result.data : null;
     const target = data?.redirect_url ?? data?.redirect_to;
     if (!target) {
       setBusy(false);
@@ -101,10 +107,10 @@ const OAuthConsent = () => {
     e.preventDefault();
     setAuthError('');
     setBusy(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await authRequest(() => supabase.auth.signInWithPassword({ email, password }));
     setBusy(false);
     if (error) {
-      setAuthError('אימייל או סיסמה שגויים');
+      setAuthError(authErrorMessage(error));
       return;
     }
     window.location.href = consentUrl;
@@ -112,13 +118,20 @@ const OAuthConsent = () => {
 
   const signInWithGoogle = async () => {
     setAuthError('');
-    const result = await lovable.auth.signInWithOAuth('google', { redirect_uri: consentUrl });
-    if (result.error) {
-      setAuthError('ההתחברות עם Google נכשלה');
-      return;
+    setBusy(true);
+    try {
+      const result = await lovable.auth.signInWithOAuth('google', { redirect_uri: consentUrl });
+      if (result.error) {
+        setAuthError(authErrorMessage(result.error));
+        return;
+      }
+      if (result.redirected) return;
+      window.location.href = consentUrl;
+    } catch (error) {
+      setAuthError(authErrorMessage(error));
+    } finally {
+      setBusy(false);
     }
-    if (result.redirected) return;
-    window.location.href = consentUrl;
   };
 
   const clientName = details?.client?.name ?? 'האפליקציה המבקשת';
@@ -164,7 +177,7 @@ const OAuthConsent = () => {
             <Button type="submit" className="w-full" disabled={busy}>
               {busy ? 'מתחבר…' : 'התחבר והמשך'}
             </Button>
-            <Button type="button" variant="outline" className="w-full" onClick={signInWithGoogle}>
+            <Button type="button" variant="outline" className="w-full" onClick={signInWithGoogle} disabled={busy}>
               התחבר עם Google
             </Button>
           </form>

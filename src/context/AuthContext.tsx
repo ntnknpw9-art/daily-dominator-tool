@@ -1,3 +1,4 @@
+import { authRequest } from '@/lib/auth-errors';
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -33,25 +34,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
+    }).catch(() => {
+      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
   const signUp = async (email: string, password: string, displayName?: string) => {
-    const { error } = await supabase.auth.signUp({
+    const { error } = await authRequest(() => supabase.auth.signUp({
       email,
       password,
       options: {
         data: { display_name: displayName },
         emailRedirectTo: window.location.origin,
       },
-    });
+    }));
     return { error };
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await authRequest(() => supabase.auth.signInWithPassword({ email, password }));
     return { error };
   };
 
