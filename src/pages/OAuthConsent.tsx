@@ -72,7 +72,11 @@ const OAuthConsent = () => {
         return;
       }
       setDetails(details);
-    })();
+    })().catch((error) => {
+      if (!active) return;
+      setError(authErrorMessage(error));
+      setSession(false);
+    });
     return () => {
       active = false;
     };
@@ -81,14 +85,15 @@ const OAuthConsent = () => {
   const decide = async (approve: boolean) => {
     setBusy(true);
     setError(null);
-    const { data, error } = approve
-      ? await oauth().approveAuthorization(authorizationId)
-      : await oauth().denyAuthorization(authorizationId);
+    const { data, error } = await authRequest(() => approve
+      ? oauth().approveAuthorization(authorizationId)
+      : oauth().denyAuthorization(authorizationId));
     if (error) {
       setBusy(false);
-      setError(error.message);
+      setError(authErrorMessage(error));
       return;
     }
+    if (!('data' in { data })) return;
     const target = data?.redirect_url ?? data?.redirect_to;
     if (!target) {
       setBusy(false);
@@ -172,7 +177,7 @@ const OAuthConsent = () => {
             <Button type="submit" className="w-full" disabled={busy}>
               {busy ? 'מתחבר…' : 'התחבר והמשך'}
             </Button>
-            <Button type="button" variant="outline" className="w-full" onClick={signInWithGoogle}>
+            <Button type="button" variant="outline" className="w-full" onClick={signInWithGoogle} disabled={busy}>
               התחבר עם Google
             </Button>
           </form>
