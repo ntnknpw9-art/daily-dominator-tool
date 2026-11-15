@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
+import { fetchLeaderboard } from '@/lib/leaderboard';
 import { Trophy, Flame, Star, Medal, Crown, TrendingUp, TrendingDown, Users, Calendar } from 'lucide-react';
 
 interface LeaderboardEntry {
@@ -128,27 +129,17 @@ const Leaderboard = () => {
   }, [user]);
 
   useEffect(() => {
-    const fetchLeaderboard = async () => {
+    const loadLeaderboard = async () => {
       setLoading(true);
-      const { data: stats } = await supabase.from('user_stats').select('*');
-      const { data: profiles } = await supabase.from('profiles').select('*');
-
-      if (stats && profiles) {
-        const profileMap = new Map(profiles.map(p => [p.user_id, p.display_name || 'משתמש']));
-        const combined: LeaderboardEntry[] = stats.map(s => ({
-          user_id: s.user_id,
-          display_name: profileMap.get(s.user_id) || 'משתמש',
-          xp: s.xp,
-          level: s.level,
-          current_streak: s.current_streak,
-          longest_streak: s.longest_streak,
-          total_tasks_completed: s.total_tasks_completed,
-        }));
-        setEntries(combined);
+      try {
+        const rows = await fetchLeaderboard();
+        setEntries(rows.map(r => ({ ...r, display_name: r.display_name || 'משתמש' })));
+      } catch (e) {
+        console.error('leaderboard load failed', e);
       }
       setLoading(false);
     };
-    fetchLeaderboard();
+    loadLeaderboard();
   }, []);
 
   let filtered = entries;

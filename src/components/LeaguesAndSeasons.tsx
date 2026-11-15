@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { fetchSeasonLeaderboard } from '@/lib/leaderboard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Crown, Medal, Gem, Shield, Star } from 'lucide-react';
 
@@ -65,23 +66,19 @@ const LeaguesAndSeasons = () => {
       setSeasonData(data ? { league: data.league, season_xp: data.season_xp, season_rank: data.season_rank } : null);
 
       // Load all season players
-      const { data: seasons } = await supabase
-        .from('user_seasons')
-        .select('*')
-        .eq('season_number', currentSeason)
-        .order('season_xp', { ascending: false });
-
-      const { data: profiles } = await supabase.from('profiles').select('user_id, display_name');
-      const profileMap = new Map(profiles?.map(p => [p.user_id, p.display_name || 'משתמש']) || []);
-
-      setAllPlayers(
-        (seasons || []).map(s => ({
-          userId: s.user_id,
-          name: profileMap.get(s.user_id) || 'משתמש',
-          xp: s.season_xp,
-          league: s.league,
-        }))
-      );
+      try {
+        const seasons = await fetchSeasonLeaderboard(currentSeason);
+        setAllPlayers(
+          seasons.map(s => ({
+            userId: s.user_id,
+            name: s.display_name || 'משתמש',
+            xp: s.season_xp,
+            league: s.league,
+          }))
+        );
+      } catch (e) {
+        console.error('season leaderboard load failed', e);
+      }
     };
 
     loadSeason();

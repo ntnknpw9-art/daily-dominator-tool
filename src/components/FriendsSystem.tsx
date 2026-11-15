@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { findProfileByName } from '@/lib/leaderboard';
 import { Users, UserPlus, Check, X, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -76,14 +77,12 @@ const FriendsSystem = () => {
     if (!user || !searchEmail.trim()) return;
     setSearching(true);
 
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('user_id, display_name')
-      .neq('user_id', user.id);
-
-    const match = profiles?.find(p =>
-      p.display_name?.toLowerCase().includes(searchEmail.toLowerCase())
-    );
+    let match: { user_id: string; display_name: string } | null = null;
+    try {
+      match = await findProfileByName(searchEmail.trim());
+    } catch (e) {
+      console.error('friend search failed', e);
+    }
 
     if (!match) {
       toast({ title: 'לא נמצא משתמש', description: 'נסה שם תצוגה אחר', variant: 'destructive' });
