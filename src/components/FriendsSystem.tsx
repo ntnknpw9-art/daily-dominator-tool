@@ -135,7 +135,7 @@ const FriendsSystem = () => {
             value={searchEmail}
             onChange={e => setSearchEmail(e.target.value)}
             placeholder="חפש לפי שם תצוגה..."
-            className="flex-1 text-sm"
+            className="flex-1 text-base"
             onKeyDown={e => e.key === 'Enter' && addFriend()}
           />
           <Button size="sm" onClick={addFriend} disabled={searching || !searchEmail.trim()}>
