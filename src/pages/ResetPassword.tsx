@@ -1,3 +1,4 @@
+import { authErrorMessage, authRequest } from '@/lib/auth-errors';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -31,9 +32,9 @@ const ResetPassword = () => {
     if (password.length < 6) { setError('הסיסמה חייבת להכיל לפחות 6 תווים'); return; }
     if (password !== confirm) { setError('הסיסמאות אינן תואמות'); return; }
     setLoading(true);
-    const { error } = await supabase.auth.updateUser({ password });
+    const { error } = await authRequest(() => supabase.auth.updateUser({ password }));
     setLoading(false);
-    if (error) setError(error.message);
+    if (error) setError(authErrorMessage(error));
     else {
       setSuccess('הסיסמה עודכנה בהצלחה! מעביר...');
       setTimeout(() => navigate('/'), 1500);

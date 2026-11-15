@@ -1,3 +1,4 @@
+import { authErrorMessage, authRequest } from '@/lib/auth-errors';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -101,10 +102,10 @@ const OAuthConsent = () => {
     e.preventDefault();
     setAuthError('');
     setBusy(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await authRequest(() => supabase.auth.signInWithPassword({ email, password }));
     setBusy(false);
     if (error) {
-      setAuthError('אימייל או סיסמה שגויים');
+      setAuthError(authErrorMessage(error));
       return;
     }
     window.location.href = consentUrl;
@@ -112,13 +113,20 @@ const OAuthConsent = () => {
 
   const signInWithGoogle = async () => {
     setAuthError('');
-    const result = await lovable.auth.signInWithOAuth('google', { redirect_uri: consentUrl });
-    if (result.error) {
-      setAuthError('ההתחברות עם Google נכשלה');
-      return;
+    setBusy(true);
+    try {
+      const result = await lovable.auth.signInWithOAuth('google', { redirect_uri: consentUrl });
+      if (result.error) {
+        setAuthError(authErrorMessage(result.error));
+        return;
+      }
+      if (result.redirected) return;
+      window.location.href = consentUrl;
+    } catch (error) {
+      setAuthError(authErrorMessage(error));
+    } finally {
+      setBusy(false);
     }
-    if (result.redirected) return;
-    window.location.href = consentUrl;
   };
 
   const clientName = details?.client?.name ?? 'האפליקציה המבקשת';

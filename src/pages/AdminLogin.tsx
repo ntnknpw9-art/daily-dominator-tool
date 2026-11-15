@@ -1,3 +1,4 @@
+import { authErrorMessage, authRequest } from '@/lib/auth-errors';
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,10 +25,10 @@ export default function AdminLogin() {
     e.preventDefault();
     setErr(null);
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await authRequest(() => supabase.auth.signInWithPassword({ email, password }));
     setLoading(false);
     if (error) {
-      setErr("פרטי התחברות שגויים");
+      setErr(authErrorMessage(error));
       return;
     }
     navigate("/admin", { replace: true });
