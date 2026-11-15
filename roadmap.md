@@ -5,6 +5,6 @@
 - [ ] Verify real Apple/Google login and outage recovery — requires an interactive provider session/native iOS device and recovery of the external key-fetch service.
 # Database pressure (Nov 2026)
 - [x] Diagnose: 5-second email-queue background job filled its run history (~3.4 GB) and drained the Tiny disk I/O budget.
-- [ ] Clear background-job history and schedule a daily purge — blocked: database unreachable.
-- [ ] Optional compute upgrade Tiny → Mini — waits on user approval card.
-- [ ] Restrict leaderboard tables (user_stats, user_seasons, profiles) to safe columns — waits on user decision + database availability.
+- [x] Cleared background-job history (3.39 GB → 18 MB) and scheduled a nightly purge.
+- [x] Compute upgraded Tiny → Mini.
+- [x] Leaderboard tables restricted to owner/friends; rankings served via name-and-score-only functions.

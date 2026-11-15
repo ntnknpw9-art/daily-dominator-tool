@@ -1,2 +1,3 @@
 # Architecture rules
-- Use the shared auth error classifier and request wrapper across authentication screens so service outages are not reported as bad credentials and thrown transport errors release busy states; never automatically retry identity or password mutations.
+- Use the shared auth error classifier and request wrapper across authentication screens so service outages are not reported as bad credentials and thrown transport errors release busy states; never automatically retry identity or password mutations.- Read other users' names and scores only through the ranking/search database functions (see src/lib/leaderboard.ts); profile, stats and season tables stay owner-or-friend readable so full records are never exposed to every signed-in user.
+- Every pg_cron job must have a retention purge for cron.job_run_details and net._http_response; unpurged run history from high-frequency jobs exhausted the database disk I/O budget.
