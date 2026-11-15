@@ -8,6 +8,13 @@
       "when": 1794732567076,
       "tag": "0000_leaderboard_safe_access",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794732858392,
+      "tag": "0001_progress_photos_storage_owner_bound",
+      "breakpoints": true
     }
   ]
 }
