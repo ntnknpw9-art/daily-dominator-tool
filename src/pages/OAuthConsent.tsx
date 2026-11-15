@@ -85,15 +85,15 @@ const OAuthConsent = () => {
   const decide = async (approve: boolean) => {
     setBusy(true);
     setError(null);
-    const { data, error } = await authRequest(() => approve
+    const result = await authRequest(() => approve
       ? oauth().approveAuthorization(authorizationId)
       : oauth().denyAuthorization(authorizationId));
-    if (error) {
+    if (result.error) {
       setBusy(false);
-      setError(authErrorMessage(error));
+      setError(authErrorMessage(result.error));
       return;
     }
-    if (!('data' in { data })) return;
+    const data = 'data' in result ? result.data : null;
     const target = data?.redirect_url ?? data?.redirect_to;
     if (!target) {
       setBusy(false);
