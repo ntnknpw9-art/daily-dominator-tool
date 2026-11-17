@@ -3,3 +3,4 @@
 - Every pg_cron job must have a retention purge for cron.job_run_details and net._http_response; unpurged run history from high-frequency jobs exhausted the database disk I/O budget.
 - Shared-file storage reads must bind the file to its uploader (owner folder = the sharing row's user_id) and honor user blocks; matching only on a client-written URL lets anyone unlock others' private files.
 - iOS Info.plist must not set FacebookAppID unless FacebookClientToken is also set (Facebook auto-init stays off otherwise); the Facebook SDK bundled with the social-login plugin crashes TestFlight/App Store builds at launch without a client token.
+- The iOS app must use the UIScene life cycle (SceneDelegate creates the window and forwards URLs to Capacitor's SceneDelegateProxy; AppDelegate creates no window); apps built with the iOS 27 SDK without it crash immediately at launch.
