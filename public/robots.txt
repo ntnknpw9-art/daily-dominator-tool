@@ -13,4 +13,4 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://daily-dominator-tool.lovable.app/sitemap.xml
+Sitemap: https://dailydominator.org/sitemap.xml

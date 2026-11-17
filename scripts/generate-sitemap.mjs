@@ -2,7 +2,7 @@
 import { writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-const BASE_URL = "https://daily-dominator-tool.lovable.app";
+const BASE_URL = "https://dailydominator.org";
 
 const entries = [
   { path: "/", changefreq: "weekly", priority: "1.0" },

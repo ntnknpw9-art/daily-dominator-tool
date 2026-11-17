@@ -10,7 +10,7 @@ import { Capacitor } from '@capacitor/core';
 import { SocialLogin } from '@capgo/capacitor-social-login';
 import { SignInWithApple, type SignInWithAppleOptions } from '@capacitor-community/apple-sign-in';
 
-const PUBLISHED_APP_ORIGIN = 'https://daily-dominator-tool.lovable.app';
+const PUBLISHED_APP_ORIGIN = 'https://dailydominator.org';
 const GOOGLE_IOS_CLIENT_ID = '309108409035-3sl22316bkmuom32e1c2jtjjbmgava6i.apps.googleusercontent.com';
 const GOOGLE_WEB_CLIENT_ID = '309108409035-jdt751p79apqvbsqdtmkl3vud34clqhi.apps.googleusercontent.com';
 

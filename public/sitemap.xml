@@ -1,27 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://daily-dominator-tool.lovable.app/</loc>
+    <loc>https://dailydominator.org/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://daily-dominator-tool.lovable.app/support</loc>
+    <loc>https://dailydominator.org/support</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://daily-dominator-tool.lovable.app/privacy</loc>
+    <loc>https://dailydominator.org/privacy</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://daily-dominator-tool.lovable.app/terms</loc>
+    <loc>https://dailydominator.org/terms</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://daily-dominator-tool.lovable.app/reset-password</loc>
+    <loc>https://dailydominator.org/reset-password</loc>
     <changefreq>yearly</changefreq>
     <priority>0.1</priority>
   </url>

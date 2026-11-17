@@ -1,6 +1,6 @@
 import { Helmet } from "react-helmet-async";
 
-const BASE_URL = "https://daily-dominator-tool.lovable.app";
+const BASE_URL = "https://dailydominator.org";
 
 interface SeoHeadProps {
   title: string;
