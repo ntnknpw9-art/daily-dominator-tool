@@ -406,14 +406,29 @@ const SettingsTab = () => {
   const handleDeleteAccount = async () => {
     setDeleting(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        // Nothing to delete with: the account is already gone or the login expired.
+        await signOut();
+        toast.info('החשבון כבר נמחק או שההתחברות פגה. אפשר להתחבר מחדש.');
+        return;
+      }
       const { error } = await supabase.functions.invoke('delete-account');
-      if (error) throw error;
+      if (error) {
+        const status = (error as { context?: { status?: number } }).context?.status;
+        if (status === 401) {
+          await signOut();
+          toast.info('החשבון כבר נמחק או שההתחברות פגה. אפשר להתחבר מחדש.');
+          return;
+        }
+        throw error;
+      }
+      await signOut();
       try { localStorage.clear(); } catch (e) { console.warn('localStorage clear failed', e); }
       toast.success('החשבון נמחק');
-      await signOut();
     } catch (e) {
-      const error = e as { message?: string };
-      toast.error('שגיאה במחיקת החשבון: ' + (error?.message || ''));
+      console.error('delete account failed', e);
+      toast.error('לא הצלחנו למחוק את החשבון כרגע. נסה שוב בעוד רגע.');
       setDeleting(false);
     }
   };

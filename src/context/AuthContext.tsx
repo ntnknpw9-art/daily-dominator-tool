@@ -31,9 +31,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setLoading(false);
+      // A session whose account was deleted (e.g. on another device) must not
+      // keep the app looking signed in. Only sign out when the server says the
+      // user no longer exists — never on outages or network errors.
+      if (session) {
+        const { error } = await supabase.auth.getUser();
+        const code = (error as { code?: string } | null)?.code;
+        if (code === 'user_not_found') {
+          await supabase.auth.signOut({ scope: 'local' });
+        }
+      }
     }).catch(() => {
       setLoading(false);
     });
@@ -60,9 +70,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     // Clear the RevenueCat identity first so entitlements never carry over
-    // to the next account signing in on this device.
-    await logOutRevenueCat();
-    await supabase.auth.signOut();
+    // to the next account signing in on this device. The native bridge can
+    // hang, so never let it block the actual sign-out.
+    try {
+      await Promise.race([
+        logOutRevenueCat(),
+        new Promise((resolve) => setTimeout(resolve, 3000)),
+      ]);
+    } catch (e) {
+      console.warn('RevenueCat logout failed', e);
+    }
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) await supabase.auth.signOut({ scope: 'local' });
+    } catch {
+      await supabase.auth.signOut({ scope: 'local' });
+    }
   };
 
   return (
