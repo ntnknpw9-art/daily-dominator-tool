@@ -8,3 +8,6 @@
 - [x] Cleared background-job history (3.39 GB → 18 MB) and scheduled a nightly purge.
 - [x] Compute upgraded Tiny → Mini.
 - [x] Leaderboard tables restricted to owner/friends; rankings served via name-and-score-only functions.
+# Account deletion (Nov 2026)
+- [x] Deletion removes every table the account owns plus its private photo files, and still deletes the account if one table fails.
+- [x] Verified in the running app: confirm dialog, "החשבון נמחק", login screen shown, local session cleared, no rows left for the account.
