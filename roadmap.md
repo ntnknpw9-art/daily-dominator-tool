@@ -11,3 +11,5 @@
 # Account deletion (Nov 2026)
 - [x] Deletion removes every table the account owns plus its private photo files, and still deletes the account if one table fails.
 - [x] Verified in the running app: confirm dialog, "החשבון נמחק", login screen shown, local session cleared, no rows left for the account.
+# Radar labels (Nov 2026)
+- [x] Performance-profile radar: RTL page flipped Recharts' start/end tick anchors, pulling long labels inside the chart; custom tick renderer now places every label outside the grid. Verified in the running app.

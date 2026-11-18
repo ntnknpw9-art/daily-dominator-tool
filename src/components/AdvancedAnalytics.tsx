@@ -12,6 +12,32 @@ import {
 
 const DAY_NAMES = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
 
+// The page is RTL, so Recharts' default 'start'/'end' tick anchors flip and
+// pull long labels inward over the chart. This places every label outside the
+// grid, growing away from the center.
+const renderRadarTick = (props: any) => {
+  const { payload, x, y, cx, cy } = props;
+  const dx = x - cx;
+  const dy = y - cy;
+  const len = Math.hypot(dx, dy) || 1;
+  const nx = dx / len;
+  const ny = dy / len;
+  const anchor = nx > 0.25 ? 'end' : nx < -0.25 ? 'start' : 'middle';
+  const baseline = ny > 0.55 ? 'hanging' : ny < -0.55 ? 'auto' : 'middle';
+  return (
+    <text
+      x={x + nx * 4}
+      y={y + ny * 4}
+      textAnchor={anchor}
+      dominantBaseline={baseline}
+      fill="hsl(var(--muted-foreground))"
+      fontSize={11}
+    >
+      {payload.value}
+    </text>
+  );
+};
+
 const AdvancedAnalytics = () => {
   const { user } = useAuth();
   const { tasks, getDailyCompletionPercent } = useTaskContext();
@@ -160,7 +186,7 @@ const AdvancedAnalytics = () => {
                 <PolarGrid stroke="hsl(var(--border))" strokeOpacity={0.3} />
                 <PolarAngleAxis
                   dataKey="metric"
-                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }}
+                  tick={renderRadarTick}
                 />
                 <Radar
                   name="ביצועים"
